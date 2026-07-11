@@ -13,6 +13,7 @@ layout(location = 6) in vec3 aInstanceColor;
 uniform mat4 M, V, P;
 uniform float point_size;
 uniform int instanced;
+uniform vec3 camera_pos;
 
 out vec3 frag_normal;
 out vec3 frag_pos;
@@ -37,6 +38,8 @@ void main()
 
     frag_pos = vec3(M * inv_scale_model * scale_primitive * vec4(aPosition, 1) + instanced * M * vec4(aInstanceOffset, 0));
 
+    vec3 view_dir = normalize(camera_pos - frag_pos);
+
     gl_Position = P * V * vec4(frag_pos, 1);
 
     // This could eventually lead to problems if we allow the client to do instance rendering of arbitrary meshes
@@ -45,6 +48,12 @@ void main()
     // Calculate tangent vectors
     mat4 normal_matrix = transpose(inverse(M)); //TODO: Compute on host
     vec3 axis = normalize(vec3(normal_matrix * vec4(aNormal, 0)));
+
+    if(dot(axis, view_dir) < 0)
+    {
+        axis *= -1.0;
+    }
+
     vec3 tangent = normalize(vec3(normal_matrix * vec4(aTangent + 1e-5, 0))); // Numerical stability
     vec3 bitangent = normalize(cross(axis, tangent));
     mat3 tbn = mat3(tangent, bitangent, axis);

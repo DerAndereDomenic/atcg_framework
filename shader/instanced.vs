@@ -11,6 +11,7 @@ layout(location = 5) in mat4 aInstanceModel;
 layout(location = 9) in vec4 aInstanceColor;
 
 uniform mat4 M, V, P;
+uniform vec3 camera_pos;
 
 out vec3 frag_normal;
 out vec3 frag_pos;
@@ -28,6 +29,12 @@ void main()
     // frag_normal = normalize(vec3(inverse(transpose((1-instanced) * M + instanced * M)) * vec4(aNormal, 0)));
     mat4 normal_matrix = transpose(inverse(M * aInstanceModel));
     vec3 axis = normalize(vec3(normal_matrix * vec4(aNormal, 0)));
+
+    if(dot(axis, normalize(camera_pos - frag_pos)) < 0)
+    {
+        axis *= -1.0;
+    }
+
     vec3 tangent = normalize(vec3(normal_matrix * vec4(aTangent + 1e-5, 0))); // Numerical stability
     vec3 bitangent = normalize(cross(axis, tangent));
     mat3 tbn = mat3(tangent, bitangent, axis);
