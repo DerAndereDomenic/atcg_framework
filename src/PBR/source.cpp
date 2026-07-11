@@ -496,7 +496,8 @@ public:
                     auto entity = atcg::Project::getActive()->getActiveScene()->createEntity(filepath.stem().string());
                     entity.addComponent<atcg::TransformComponent>();
                     entity.addComponent<atcg::GeometryComponent>(graph);
-                    entity.addComponent<atcg::MeshRenderComponent>();
+                    auto& renderer     = entity.addComponent<atcg::MeshRenderComponent>();
+                    renderer.cull_mode = atcg::CullMode::ATCG_NO_CULLING;
                 }
             }
             else if(file_ending == ".png" || file_ending == ".jpg" || file_ending == ".jpeg" || file_ending == ".hdr")
