@@ -7,6 +7,8 @@
 #include <Scene/ComponentSerializer.h>
 #include <DataStructure/Statistics.h>
 
+#include <fstream>
+
 namespace atcg
 {
 class ATCG_API HomogeneousMedium : public Medium, public Differentiable
@@ -68,6 +70,9 @@ private:
     atcg::CyclicCollection<float> density_collection = atcg::CyclicCollection<float>("Density Collection", 35 * 60 / 5);
     atcg::CyclicCollection<float> density_grad_collection =
         atcg::CyclicCollection<float>("Density grad Collection", 35 * 60 / 5);
+
+    std::ofstream _density_file;
+    std::ofstream _density_grad_file;
 };
 
 }    // namespace atcg

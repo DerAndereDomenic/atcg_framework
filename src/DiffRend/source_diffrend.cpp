@@ -105,6 +105,9 @@ public:
         createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
 
         atcg::SceneRenderer::setNumberMSAASamples(msaa_samples[current_msaa_selection_index]);
+
+        losses_file = std::ofstream("losses.txt", std::ios::out);
+        times_file  = std::ofstream("times.txt", std::ios::out);
     }
 
     // This gets called each frame
@@ -129,6 +132,7 @@ public:
 
             if(optimize)
             {
+                atcg::Timer timer;
                 optimizer->zero_grad(false);
                 // integrator->zeroGrad();
                 uint32_t num_samples = 128;
@@ -173,11 +177,12 @@ public:
                 L.backward();
                 optimizer->step();
 
+                float time = timer.elapsedMillis();
+
                 ATCG_TRACE("Iteration {}: Loss = {}", iteration_count, L.item<float>());
                 time_collection.addSample((float)iteration_count);
                 loss_collection.addSample(L.item<float>());
 
-                ++iteration_count;
 
                 {
                     torch::NoGradGuard no_grad;
@@ -196,6 +201,18 @@ public:
                         {torch::indexing::Slice(), torch::indexing::Slice(), torch::indexing::Slice(0, 3)},
                         (tonemapped * 255.0f).to(torch::kUInt8));
                     output_texture->setData(output_img);
+
+                    if(iteration_count < 256 && export_images)
+                    {
+                        torch::NoGradGuard no_grad;
+                        losses_file << iteration_count << " " << L.item<float>() << "\n";
+                        times_file << iteration_count << " " << timer.elapsedMillis() << "\n";
+
+                        ATCG_DEBUG(result.sizes());
+                        atcg::Image img(output_img.cpu());
+                        img.store("output_" + std::to_string(iteration_count) + ".png");
+                    }
+                    ++iteration_count;
                 }
             }
             else
@@ -454,6 +471,8 @@ public:
             }
         }
 
+        ImGui::Checkbox("Export Images", &export_images);
+
         // ImPlot::SetNextAxisLimits(ImAxis_Y1, 0, 100);
         if(ImPlot::BeginPlot("Loss"))
         {
@@ -643,6 +662,10 @@ private:
 
     atcg::CyclicCollection<float> time_collection = atcg::CyclicCollection<float>("Time Collection", 35 * 60 / 5);
     atcg::CyclicCollection<float> loss_collection = atcg::CyclicCollection<float>("Loss Collection", 35 * 60 / 5);
+
+    std::ofstream losses_file;
+    std::ofstream times_file;
+    bool export_images = false;
 };
 
 class DiffRend : public atcg::Application

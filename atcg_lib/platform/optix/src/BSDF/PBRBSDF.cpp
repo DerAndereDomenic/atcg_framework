@@ -26,17 +26,20 @@ PBRBSDF::PBRBSDF(const Dictionary& dict)
     PBRBSDFData data;
 
     data.diffuse_texture         = TextureSampler<glm::vec3>((std::byte*)_diffuse_texture.data_ptr(),
-                                                     material->getDiffuseTexture()->getSpecification());
+                                                             material->getDiffuseTexture()->getSpecification());
     data.metallic_texture        = TextureSampler<float>((std::byte*)_metallic_texture.data_ptr(),
-                                                  material->getMetallicTexture()->getSpecification());
+                                                         material->getMetallicTexture()->getSpecification());
     data.roughness_texture       = TextureSampler<float>((std::byte*)_roughness_texture.data_ptr(),
-                                                   material->getRoughnessTexture()->getSpecification());
+                                                         material->getRoughnessTexture()->getSpecification());
     data.fixed_roughness_texture = TextureSampler<float>((std::byte*)_fixed_roughness_texture.data_ptr(),
                                                          material->getRoughnessTexture()->getSpecification());
 
     _flags = BSDFComponentType::GlossyReflection | BSDFComponentType::DiffuseReflection;
 
     _bsdf_data_buffer.upload(&data);
+
+    _roughness_file      = std::ofstream("roughness.txt");
+    _roughness_grad_file = std::ofstream("roughness_grad.txt");
 }
 
 PBRBSDF::~PBRBSDF() {}
@@ -157,8 +160,8 @@ void PBRBSDF::onImGuiRender()
         spec_float.height        = _optimization_height;
         spec_float.format        = TextureFormat::RFLOAT;
         _roughness_texture       = torch::full({spec_float.height, spec_float.height, 1},
-                                         0.8f,
-                                         TensorOptions::floatDeviceOptions().requires_grad(true));    // TODO
+                                               0.8f,
+                                               TensorOptions::floatDeviceOptions().requires_grad(true));    // TODO
         _fixed_roughness_texture = _roughness_texture.clone();
 
         _roughness_texture_grad = torch::zeros_like(_roughness_texture);
@@ -322,9 +325,9 @@ void PBRBSDF::markOptimizable()
     spec_float.format = TextureFormat::RFLOAT;
 
     _diffuse_texture   = torch::zeros({spec_diffuse.height, spec_diffuse.width, 3},
-                                    TensorOptions::floatDeviceOptions().requires_grad(true));
+                                      TensorOptions::floatDeviceOptions().requires_grad(true));
     _metallic_texture  = torch::zeros({spec_float.height, spec_float.height, 1},
-                                     TensorOptions::floatDeviceOptions().requires_grad(true));
+                                      TensorOptions::floatDeviceOptions().requires_grad(true));
     _roughness_texture = torch::ones({spec_float.height, spec_float.height, 1},
                                      TensorOptions::floatDeviceOptions().requires_grad(true));    // TODO
 
@@ -366,6 +369,14 @@ void PBRBSDF::markOptimizable()
 void PBRBSDF::clampParameters()
 {
     if(!_optimizable) return;
+
+    float roughness_value = _roughness_texture.cpu().item<float>();
+    float roughness_grad_value =
+        _roughness_texture.grad().defined() ? _roughness_texture.grad().cpu().item<float>() : 0.0f;
+
+    _roughness_file << roughness_value << std::endl;
+    _roughness_grad_file << roughness_grad_value << std::endl;
+
     if(_diffuse_optimized)
     {
         _diffuse_texture.clamp_(0.0f, 1.0f);

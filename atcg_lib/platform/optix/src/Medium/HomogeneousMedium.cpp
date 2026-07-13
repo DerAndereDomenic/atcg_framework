@@ -23,6 +23,9 @@ HomogeneousMedium::HomogeneousMedium(const atcg::Dictionary& dict) : Medium(dict
     data.Le      = glm::vec3(dict.getValueOr<glm::vec3>("Le", glm::vec3(0)));
 
     _data_buffer.upload(&data);
+
+    _density_file      = std::ofstream("density.txt");
+    _density_grad_file = std::ofstream("density_grad.txt");
 }
 
 HomogeneousMedium::~HomogeneousMedium() {}
@@ -103,7 +106,7 @@ void HomogeneousMedium::onImGuiRender()
 
     if(ImGui::Button("Optimize Density"))
     {
-        _density_tensor      = torch::ones({1}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
+        _density_tensor      = torch::full({1}, 0.5f, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
         _density_grad_tensor = torch::zeros({1}, atcg::TensorOptions::floatDeviceOptions());
 
         HomogeneousMediumData data;
@@ -210,6 +213,12 @@ void HomogeneousMedium::markOptimizable()
 
 void HomogeneousMedium::clampParameters()
 {
+    float density_value      = _density_tensor.cpu().item<float>();
+    float density_grad_value = _density_tensor.grad().defined() ? _density_tensor.grad().cpu().item<float>() : 0.0f;
+
+    _density_file << density_value << std::endl;
+    _density_grad_file << density_grad_value << std::endl;
+
     if(_optimize_albedo)
     {
         _albedo_tensor.clamp_(0.0f, 1.0f);

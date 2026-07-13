@@ -5,6 +5,8 @@
 #include <Renderer/Material.h>
 #include <DataStructure/Statistics.h>
 
+#include <fstream>
+
 namespace atcg
 {
 /**
@@ -73,5 +75,7 @@ private:
         atcg::CyclicCollection<float>("Roughness Collection", 35 * 60 / 5);
     atcg::CyclicCollection<float> roughness_grad_collection =
         atcg::CyclicCollection<float>("Roughness grad Collection", 35 * 60 / 5);
+
+    std::ofstream _roughness_file, _roughness_grad_file;
 };
 }    // namespace atcg
