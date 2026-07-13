@@ -139,9 +139,12 @@ inline void defineBindings(py::module_& m)
     auto m_asset_data  = py::class_<atcg::AssetMetaData>(m, "AssetMetaData");
     auto m_asset_manager_system =
         py::class_<atcg::AssetManagerSystem, atcg::ref_ptr<atcg::AssetManagerSystem>>(m, "AssetManagerSystem");
-    auto m_asset_manager = m.def_submodule("AssetManager");
-    auto m_asset_panel   = py::class_<atcg::GUI::AssetPanel, atcg::ref_ptr<atcg::GUI::AssetPanel>>(m, "AssetPanel");
-    auto m_project       = py::class_<atcg::Project, atcg::ref_ptr<atcg::Project>>(m, "Project");
+    auto m_asset_manager     = m.def_submodule("AssetManager");
+    auto m_asset_panel       = py::class_<atcg::GUI::AssetPanel, atcg::ref_ptr<atcg::GUI::AssetPanel>>(m, "AssetPanel");
+    auto m_project           = py::class_<atcg::Project, atcg::ref_ptr<atcg::Project>>(m, "Project");
+    auto m_plugin_manager    = m.def_submodule("PluginManager");
+    auto m_material_registry = m.def_submodule("MaterialRegistry");
+    auto m_dictionary        = py::class_<atcg::Dictionary>(m, "Dictionary");
 
 #ifdef ATCG_CUDA_BACKEND
     auto m_raytracing_context_manager = m.def_submodule("RaytracingContextManager");
@@ -152,6 +155,10 @@ inline void defineBindings(py::module_& m)
     auto m_volpath_integrator =
         py::class_<atcg::VolPathtracingIntegrator, atcg::ref_ptr<atcg::VolPathtracingIntegrator>>(m,
                                                                                                   "VolPathIntegrator");
+    auto m_photon_mapping_integrator =
+        py::class_<atcg::PhotonMapIntegrator, atcg::ref_ptr<atcg::PhotonMapIntegrator>>(m, "PhotonMapIntegrator");
+    auto m_integrator_registry = m.def_submodule("IntegratorRegistry");
+    auto m_bsdf_registry       = m.def_submodule("BSDFRegistry");
 #endif
 
 #ifndef ATCG_HEADLESS
@@ -1635,6 +1642,11 @@ inline void defineBindings(py::module_& m)
     m.def("handleScriptEvents", &atcg::Scripting::handleScriptEvents);
     m.def("handleScriptUpdates", &atcg::Scripting::handleScriptUpdates);
 
+    // ------------------- Plugins ---------------------------------
+    m_plugin_manager.def("loadPlugin", &atcg::PluginManager::loadPlugin)
+        .def("releasePlugin", &atcg::PluginManager::releasePlugin)
+        .def("releaseAllPlugins", &atcg::PluginManager::releaseAllPlugins);
+
 // ------------------- Pathtracing ---------------------------------
 #ifdef ATCG_CUDA_BACKEND
     m_raytracing_context_manager.def("createContext", &atcg::RaytracingContextManager::createContext)
@@ -1683,6 +1695,48 @@ inline void defineBindings(py::module_& m)
                  self->generateRays(dict);
                  return dict.getValue<torch::Tensor>("output");
              });
+
+    m_photon_mapping_integrator
+        .def(py::init(
+            [](const atcg::ref_ptr<atcg::RaytracingContext>& context,
+               const atcg::ref_ptr<atcg::Scene>& scene,
+               const uint32_t width,
+               const uint32_t height)
+            {
+                atcg::Dictionary dict;
+                dict.setValue("scene", scene);
+                dict.setValue("width", width);
+                dict.setValue("height", height);
+                atcg::ref_ptr<atcg::PhotonMapIntegrator> integrator =
+                    atcg::make_ref<atcg::PhotonMapIntegrator>(context, dict);
+                return integrator;
+            }))
+        .def("generateRays",
+             [](const atcg::ref_ptr<atcg::PhotonMapIntegrator>& self)
+             {
+                 atcg::Dictionary dict;
+                 self->generateRays(dict);
+                 return dict.getValue<torch::Tensor>("output");
+             });
+
+    m_integrator_registry.def("createIntegrator",
+                              [](const std::string& integrator_type,
+                                 const atcg::ref_ptr<atcg::RaytracingContext>& context,
+                                 const atcg::ref_ptr<atcg::Scene>& scene,
+                                 const uint32_t width,
+                                 const uint32_t height)
+                              {
+                                  atcg::Dictionary dict;
+                                  dict.setValue("scene", scene);
+                                  dict.setValue("width", width);
+                                  dict.setValue("height", height);
+                                  return atcg::IntegratorRegistry::createIntegrator(integrator_type, context, dict);
+                              });
+
+    m_integrator_registry.def(
+        "createIntegrator",
+        [](const std::string& type, const atcg::ref_ptr<atcg::RaytracingContext>& context, const atcg::Dictionary& dict)
+        { return atcg::IntegratorRegistry::createIntegrator(type, context, dict); });
 #endif
     // IMGUI BINDINGS
 
