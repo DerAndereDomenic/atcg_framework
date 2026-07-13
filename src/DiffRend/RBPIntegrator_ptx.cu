@@ -51,15 +51,15 @@ ATCG_INLINE ATCG_DEVICE glm::vec3 Li(const atcg::Ray& ray_,
         if(!ray.valid) return ray.radiance;
         ray.valid = false;
 
-        float rr_prob = glm::max(glm::max(ray.throughput.r, ray.throughput.g), ray.throughput.b);
-        if(rng.nextFloat() < rr_prob)
-        {
-            ray.throughput /= rr_prob;
-        }
-        else
-        {
-            return ray.radiance;
-        }
+        // float rr_prob = glm::max(glm::max(ray.throughput.r, ray.throughput.g), ray.throughput.b);
+        // if(rng.nextFloat() < rr_prob)
+        // {
+        //     ray.throughput /= rr_prob;
+        // }
+        // else
+        // {
+        //     return ray.radiance;
+        // }
 
         atcg::SurfaceInteraction si;
         atcg::traceWithDataPointer<atcg::SurfaceInteraction>(params.handle,
@@ -202,15 +202,15 @@ ATCG_INLINE ATCG_DEVICE void dLi(const glm::vec3& grad_out,
         if(!ray.valid) return;
         ray.valid = false;
 
-        float rr_prob = glm::max(glm::max(ray.throughput.r, ray.throughput.g), ray.throughput.b);
-        if(rng.nextFloat() < rr_prob)
-        {
-            ray.throughput /= rr_prob;
-        }
-        else
-        {
-            return;
-        }
+        // float rr_prob = glm::max(glm::max(ray.throughput.r, ray.throughput.g), ray.throughput.b);
+        // if(rng.nextFloat() < rr_prob)
+        // {
+        //     ray.throughput /= rr_prob;
+        // }
+        // else
+        // {
+        //     return;
+        // }
 
         atcg::SurfaceInteraction si;
         atcg::traceWithDataPointer<atcg::SurfaceInteraction>(params.handle,
