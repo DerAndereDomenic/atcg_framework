@@ -208,3 +208,10 @@ extern "C" __declspec(dllexport) void registerPlugin(atcg::PluginRegistry& regis
     registry.registerMaterial<atcg::DiffuseMaterial>("Diffuse");
     registry.registerIntegrator<atcg::TestIntegrator>("TestIntegrator");
 }
+
+extern "C" __declspec(dllexport) void registerPythonBindings(pybind11::module& m)
+{
+    ATCG_DEBUG("Registering Python bindings for TestPlugin");
+    auto test_plugin = m.def_submodule("TestPlugin");
+    test_plugin.def("Test", []() { printf("TestPlugin::Test() called\n"); });
+}

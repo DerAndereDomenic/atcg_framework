@@ -1,5 +1,6 @@
 #include <Plugin/Plugin.h>
 #include <Windows.h>    // TODO
+#include <pybind11/pybind11.h>
 
 namespace atcg
 {
@@ -48,6 +49,26 @@ bool PluginManagerSystem::loadPlugin(const std::filesystem::path& path)
         return false;
     }
     registerSystems(ImGui::GetCurrentContext());
+
+    using RegisterPythonBindingsFunc = void (*)(pybind11::module&);
+    auto registerPythonBindings      = reinterpret_cast<RegisterPythonBindingsFunc>(
+        GetProcAddress(static_cast<HMODULE>(handle), "registerPythonBindings"));
+    if(registerPythonBindings)
+    {
+        try
+        {
+            auto pyatcg = pybind11::module_::import("pyatcg");
+            registerPythonBindings(pyatcg);
+        }
+        catch(const pybind11::error_already_set& e)
+        {
+            ATCG_ERROR(e.what());
+        }
+        catch(const std::exception& e)
+        {
+            ATCG_ERROR(e.what());
+        }
+    }
 
     PluginRegistry registry(handle);
     registerPlugin(registry);

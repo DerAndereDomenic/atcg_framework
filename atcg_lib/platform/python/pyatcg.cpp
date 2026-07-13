@@ -1643,8 +1643,8 @@ inline void defineBindings(py::module_& m)
     m.def("handleScriptUpdates", &atcg::Scripting::handleScriptUpdates);
 
     // ------------------- Plugins ---------------------------------
-    m_plugin_manager.def("loadPlugin", &atcg::PluginManager::loadPlugin)
-        .def("releasePlugin", &atcg::PluginManager::releasePlugin)
+    m_plugin_manager.def("loadPlugin", [](const std::string& path) { return atcg::PluginManager::loadPlugin(path); })
+        .def("releasePlugin", [](const std::string& path) { return atcg::PluginManager::releasePlugin(path); })
         .def("releaseAllPlugins", &atcg::PluginManager::releaseAllPlugins);
 
 // ------------------- Pathtracing ---------------------------------
