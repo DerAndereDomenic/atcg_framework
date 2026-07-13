@@ -63,6 +63,7 @@ struct NextVertexResult
     glm::mat3 dxdw;
     glm::vec3 transmittance_weight;
     atcg::mat6x3 dtransmittance_dx0x1;
+    float max_distance;
     bool valid;
 };
 
@@ -208,7 +209,7 @@ ATCG_INLINE ATCG_DEVICE atcg::mat6x3 handleDirectIlluminationSurface(RayContext&
         }
         else
         {
-            ray.JL -= (atcg::diag(radiance_nee / bsdf_result.bsdf_value) * Jbsdf_nee +
+            ray.JL -= (atcg::diag((radiance_nee + 1e-5f) / (bsdf_result.bsdf_value + 1e-5f)) * Jbsdf_nee +
                        mis_weight * atcg::diag(throughput_nee) * JLe_nee);
 
             glm::vec3 grad_out = (ray.delta_y * (radiance_nee + 1e-4f)) / (glm::vec3(bsdf_result.bsdf_value) + 1e-4f);
@@ -332,8 +333,8 @@ ATCG_INLINE ATCG_DEVICE void handleDirectIlluminationMedium(RayContext& ray,
         }
         else
         {
-            ray.JL -=
-                (atcg::diag(radiance_nee / weight) * Jweight_nee + mis_weight * atcg::diag(throughput_nee) * JLe_nee);
+            ray.JL -= (atcg::diag((radiance_nee + 1e-5f) / (weight + 1e-5f)) * Jweight_nee +
+                       mis_weight * atcg::diag(throughput_nee) * JLe_nee);
 
             glm::vec3 grad_out = ray.delta_y * radiance_nee;
 
@@ -448,8 +449,9 @@ ATCG_INLINE ATCG_DEVICE NextVertexResult traceNextVertex(RayContext& ray,
 
     if(ray.current_medium)
     {
-        float max_distance = next_dsi.incoming_distance.val();
-        auto medium_result = ray.current_medium->sampleMediumEventForward(x1, out_dir, max_distance, wavelengths, rng);
+        float max_distance  = next_dsi.incoming_distance.val();
+        result.max_distance = max_distance;
+        auto medium_result  = ray.current_medium->sampleMediumEventForward(x1, out_dir, max_distance, wavelengths, rng);
 
         result.transmittance_weight = medium_result.transmittance_weight;
         result.dtransmittance_dx0x1 = medium_result.dtransmittance_dx0x1;
@@ -510,7 +512,7 @@ ATCG_INLINE ATCG_DEVICE void updateDerivatives(RayContext& ray,
     }
 
     // ── Backward pass ────────────────────────────────────────────────────────
-    ray.JL -= (atcg::diag(ray.radiance / (dir.bsdf_weight * next.transmittance_weight)) * Jweight +
+    ray.JL -= (atcg::diag((ray.radiance + 1e-5f) / (dir.bsdf_weight * next.transmittance_weight + 1e-5f)) * Jweight +
                atcg::diag(ray.throughput) * JLe);
 
     auto Jray_inv    = atcg::pseudoinverse(Jray);
@@ -544,7 +546,7 @@ ATCG_INLINE ATCG_DEVICE void updateDerivatives(RayContext& ray,
     if(ray.current_medium)
     {
         // Medium transmittance backward
-        float max_distance = next_ai->incoming_distance;
+        float max_distance = next.max_distance;
         glm::vec3 dLdw     = (ray.delta_y * (ray.radiance + 1e-4f)) / (next.transmittance_weight + 1e-4f);
 
         glm::vec3 dLdx2 = ray.delta_y * JL_.m01;
@@ -667,7 +669,7 @@ extern "C" __global__ void __raygen__forward()
 
 
         atcg::PCG32 rng_position = rng;
-        auto next                = traceNextVertex(ray, dual.x1, dir.out_dir, wavelengths, rng_position);
+        auto next                = traceNextVertex(ray, dual.x1, dir.out_dir, wavelengths, rng);
         if(!next.valid) continue;
 
         auto Jweight = atcg::diag(next.transmittance_weight) * dir.dbsdf_dx0x1 +
