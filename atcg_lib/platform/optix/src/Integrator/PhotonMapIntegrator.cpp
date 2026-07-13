@@ -193,4 +193,10 @@ void PhotonMapIntegrator::generateRays(Dictionary& in_out_dictionary)
 
     atcg::free3fBVH(_photon_bvh);
 }
+
+void PhotonMapIntegrator::registerIntegrator(IntegratorRegistry::Registry* registry)
+{
+    ATCG_REGISTER_INTEGRATOR(registry, "PhotonMapping", PhotonMapIntegrator);
+}
+
 }    // namespace atcg

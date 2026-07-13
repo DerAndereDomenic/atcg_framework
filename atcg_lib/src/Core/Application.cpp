@@ -14,6 +14,7 @@
     #include <BSDF/DielectricBSDF.h>
     #include <Integrator/PathtracingIntegrator.h>
     #include <Integrator/VolPathtracingIntegrator.h>
+    #include <Integrator/PhotonMapIntegrator.h>
 #endif
 
 namespace atcg
@@ -62,6 +63,7 @@ void Application::init(const WindowProps& props)
     _integrator_registry = atcg::make_ref<IntegratorRegistry::Registry>();
     VolPathtracingIntegrator::registerIntegrator(_integrator_registry.get());
     PathtracingIntegrator::registerIntegrator(_integrator_registry.get());
+    PhotonMapIntegrator::registerIntegrator(_integrator_registry.get());
     SystemRegistry::instance()->registerSystem(_integrator_registry.get());
 #endif
 
