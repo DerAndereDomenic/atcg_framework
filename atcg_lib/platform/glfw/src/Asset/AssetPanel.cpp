@@ -216,8 +216,7 @@ void AssetPanel::displayGraph(AssetHandle handle)
     atcg::GraphicsPipeline pipeline =
         atcg::GraphicsPipeline()
             .setShader(atcg::ShaderManager::getShader("mesh_preview"))
-            .setRasterizerState(
-                atcg::RasterizerState().setCullMode(CullMode::ATCG_BACK_FACE_CULLING).enableCulling(true));
+            .setRasterizerState(atcg::RasterizerState().setCullMode(CullMode::ATCG_NO_CULLING).enableCulling(true));
 
     atcg::GraphicsCommand::beginRenderPass(_preview_framebuffer);
 

@@ -39,7 +39,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
 
     // Direction towards viewer
     glm::vec3 view_dir = -si.incoming_direction;
-    glm::vec3 normal   = si.normal;
+    glm::vec3 normal   = atcg::faceForward(si.normal, view_dir);
 
     // Don't trace a new ray if surface is viewed from below
     float NdotV = glm::dot(normal, view_dir);
@@ -149,12 +149,13 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalPBR(const atcg::Surf
 
     glm::vec3 light_dir = outgoing_dir;
     glm::vec3 view_dir  = -si.incoming_direction;
+    glm::vec3 normal    = atcg::faceForward(si.normal, view_dir);
 
     glm::vec3 H = glm::normalize(light_dir + view_dir);
 
-    float NdotH = glm::max(glm::dot(si.normal, H), 0.0f);
-    float NdotV = glm::max(glm::dot(si.normal, view_dir), 0.0f);
-    float NdotL = glm::max(glm::dot(si.normal, light_dir), 0.0f);
+    float NdotH = glm::max(glm::dot(normal, H), 0.0f);
+    float NdotV = glm::max(glm::dot(normal, view_dir), 0.0f);
+    float NdotL = glm::max(glm::dot(normal, light_dir), 0.0f);
 
     if(NdotL <= 0.0f || NdotV <= 0.0f) return result;
 

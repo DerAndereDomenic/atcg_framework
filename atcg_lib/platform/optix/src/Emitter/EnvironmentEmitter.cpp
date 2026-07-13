@@ -8,6 +8,7 @@ namespace atcg
 EnvironmentEmitter::EnvironmentEmitter(const Dictionary& dict)
 {
     atcg::ref_ptr<atcg::Texture2D> texture = dict.getValue<atcg::ref_ptr<Texture2D>>("environment_texture");
+    atcg::BoundingBox scene_aabb           = dict.getValueOr<atcg::BoundingBox>("scene_aabb", atcg::BoundingBox());
 
     _flags               = EmitterFlags::DistantEmitter;
     _environment_texture = std::dynamic_pointer_cast<Texture2D>(texture->clone());
@@ -46,6 +47,7 @@ EnvironmentEmitter::EnvironmentEmitter(const Dictionary& dict)
     data.row_cdf                                  = _row_cdf.data_ptr<float>();
     data.width                                    = env_map.size(1);
     data.height                                   = env_map.size(0);
+    data.bounding_box                             = scene_aabb;
 
     _environment_emitter_data.upload(&data);
 }
@@ -65,15 +67,19 @@ void EnvironmentEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeli
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_environmentemitter"});
     auto evalpdf_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__evalpdf_environmentemitter"});
-    uint32_t sample_idx  = sbt->addCallableEntry(sample_prog_group, _environment_emitter_data.get());
-    uint32_t eval_idx    = sbt->addCallableEntry(eval_prog_group, _environment_emitter_data.get());
-    uint32_t evalpdf_idx = sbt->addCallableEntry(evalpdf_prog_group, _environment_emitter_data.get());
+    auto sample_photon_prog_group =
+        pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__samplephoton_environmentemitter"});
+    uint32_t sample_idx        = sbt->addCallableEntry(sample_prog_group, _environment_emitter_data.get());
+    uint32_t eval_idx          = sbt->addCallableEntry(eval_prog_group, _environment_emitter_data.get());
+    uint32_t evalpdf_idx       = sbt->addCallableEntry(evalpdf_prog_group, _environment_emitter_data.get());
+    uint32_t sample_photon_idx = sbt->addCallableEntry(sample_photon_prog_group, _environment_emitter_data.get());
 
     EmitterVPtrTable table;
-    table.flags            = _flags;
-    table.sampleCallIndex  = sample_idx;
-    table.evalCallIndex    = eval_idx;
-    table.evalPdfCallIndex = evalpdf_idx;
+    table.flags                 = _flags;
+    table.sampleCallIndex       = sample_idx;
+    table.evalCallIndex         = eval_idx;
+    table.evalPdfCallIndex      = evalpdf_idx;
+    table.samplePhotonCallIndex = sample_photon_idx;
 
     _vptr_table.upload(&table);
 

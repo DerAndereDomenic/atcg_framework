@@ -17,6 +17,7 @@ layout(location = 7) in float aRadius;
 uniform mat4 M, V, P;
 uniform int instanced;
 uniform float edge_radius;
+uniform vec3 camera_pos;
 
 out vec3 frag_normal;
 out vec3 frag_pos;
@@ -57,6 +58,13 @@ void main()
     gl_Position = P * V * vec4(frag_pos, 1);// + vec4(instanced * aInstanceStart, 0));
     mat4 normal_matrix = inverse(transpose(model_edge));
     frag_normal = normalize(vec3(normal_matrix * vec4(aNormal, 0)));
+
+    vec3 view_dir = normalize(camera_pos - frag_pos);
+    if(dot(frag_normal, view_dir) < 0)
+    {
+        frag_normal *= -1.0;
+    }
+
     vec3 tangent = normalize(vec3(normal_matrix * vec4(aTangent + 1e5, 0)));
     vec3 bitangent = normalize(cross(frag_normal, tangent));
     mat3 tbn = mat3(tangent, bitangent, frag_normal);

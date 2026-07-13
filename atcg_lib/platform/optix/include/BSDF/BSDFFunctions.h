@@ -77,4 +77,9 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE float G_SmithJointGGX(float NdotL, float Ndot
     float LambdaV = 0.5f * (-1 + glm::sqrt(1.0f + a2 * (1 - NdotV * NdotV) / (NdotV * NdotV)));
     return 1.0f / (1.0f + LambdaL + LambdaV);
 }
+
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 faceForward(const glm::vec3& normal, const glm::vec3& direction)
+{
+    return glm::dot(normal, direction) < 0.0f ? -normal : normal;
+}
 }

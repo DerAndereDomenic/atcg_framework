@@ -427,16 +427,6 @@ SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene, const uint32_t width, con
 
     atcg::ref_ptr<OptixScene> result = atcg::make_ref<OptixScene>();
     std::vector<const EmitterVPtrTable*> tables;
-    if(scene->hasSkybox())
-    {
-        auto skybox_texture = scene->getSkyboxTexture();
-
-        atcg::Dictionary emitter_dict;
-        emitter_dict.setValue("environment_texture", skybox_texture);
-        result->_environment_emitter = atcg::make_ref<atcg::EnvironmentEmitter>(emitter_dict);
-        result->_environment_emitter->initializePipeline(_pipeline, _sbt);
-        tables.push_back(result->_environment_emitter->getVPtrTable());
-    }
 
     auto light_view = scene->getAllEntitiesWith<atcg::TransformComponent, atcg::PointLightComponent>();
     for(auto e: light_view)
@@ -480,6 +470,19 @@ SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene, const uint32_t width, con
         result->_emitter.push_back(emitter);
         tables.push_back(emitter->getVPtrTable());
     }
+
+    if(scene->hasSkybox())
+    {
+        auto skybox_texture = scene->getSkyboxTexture();
+
+        atcg::Dictionary emitter_dict;
+        emitter_dict.setValue("environment_texture", skybox_texture);
+        emitter_dict.setValue("scene_aabb", _scene_aabb);
+        result->_environment_emitter = atcg::make_ref<atcg::EnvironmentEmitter>(emitter_dict);
+        result->_environment_emitter->initializePipeline(_pipeline, _sbt);
+        tables.push_back(result->_environment_emitter->getVPtrTable());
+    }
+
     result->_emitter_vptr_tables.upload(tables.data(), tables.size());
 
     auto shape_view = result->getAllEntitiesWith<int32_t>();
