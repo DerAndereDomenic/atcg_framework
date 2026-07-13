@@ -33,6 +33,7 @@ Application::Application(const WindowProps& props)
 
 Application::~Application()
 {
+    _layer_stack.clear();
     _revision_system->clearChache();
     if(_asset_manager) _asset_manager->destroy();
     if(_script_engine) _script_engine->destroy();
