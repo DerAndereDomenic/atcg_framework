@@ -11,6 +11,7 @@
 
 #include <Spectrum/SampledSpectrum.h>
 #include <Integrator/MIS.h>
+#include <BSDF/BSDFFunctions.h>
 
 #include <cuBQL/traversal/fixedRadiusQuery.h>
 
@@ -102,7 +103,7 @@ extern "C" __global__ void __raygen__sample_photons()
             atcg::PhotonMapData photon_data;
             photon_data.position   = si.position;
             photon_data.direction  = -direction;
-            photon_data.normal     = si.normal;
+            photon_data.normal     = atcg::faceForward(si.normal, -direction);
             photon_data.throughput = throughput;
 
             params.photon_data[photon_index] = photon_data;
@@ -198,10 +199,11 @@ extern "C" __global__ void __raygen__rg()
                         [&si, photon_data, &num_photons, &photon_power, &wavelengths](const uint32_t primID)
                     {
                         auto current_photon = photon_data[primID];
-                        if(glm::dot(si.normal, current_photon.normal) > 0.2f)
+                        glm::vec3 normal    = atcg::faceForward(current_photon.normal, current_photon.direction);
+                        if(glm::dot(normal, current_photon.normal) > 0.2f)
                         {
                             auto bsdf_val = si.bsdf->evalBSDF(si, current_photon.direction, wavelengths);
-                            float NdotL   = glm::max(1e-3f, glm::dot(si.normal, current_photon.direction));
+                            float NdotL   = glm::max(1e-3f, glm::dot(normal, current_photon.direction));
                             // Divide by NdotL because this cancels out with the bsdf's cosine when substituting
                             // radiance with power
                             photon_power += bsdf_val.bsdf_value * current_photon.throughput / NdotL;
