@@ -289,7 +289,10 @@ __direct_callable__homogeneousMedium_sampleFullBackward(const glm::vec3& origin,
         // sigma_t_scalar * T * output_grad / sigma_s * T
         glm::vec3 albedo_gradient = dLdw;    // dalbedo/dalbedo = 1
         // glm::dot((1.0f - sampled_distance * sigma_t_scalar) * albedo_ * T, output_grad) / (sigma_s * T)
-        float density_gradient = glm::dot(-albedo_ / sigma_t_scalar, dLdw);    // ?
+        // ! This derivative should be 0 because if we would do finite differences, it would also be 0 as this
+        // attenuation is only dependent on our variable alpha/albedo
+        // float density_gradient = glm::dot(-albedo_ /
+        // sigma_t_scalar, dLdw);    // ?
 
         // x2 = x1 + t * w
         // dL/dsigma_t = dL/dx2 * dx2/dsigma_t
@@ -298,7 +301,7 @@ __direct_callable__homogeneousMedium_sampleFullBackward(const glm::vec3& origin,
         //             = dL/dx2 * (0 + dt/dsigma_t * w + t * dw/dsigma_t)
         //             = dL/dx2 * (dt/dsigma_t * w)
         //             = dL/dx2 * (-t / sigma_t_scalar * w)
-        density_gradient += glm::dot(-sampled_distance / sigma_t_scalar * direction, dLdx2);
+        float density_gradient = glm::dot(-sampled_distance / sigma_t_scalar * direction, dLdx2);
 
         if(sbt_data->optimize_albedo)
         {
