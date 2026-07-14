@@ -64,7 +64,7 @@ def main():
 
     context = atcg.RaytracingContextManager.createContext(0)
 
-    integrator = atcg.PathIntegrator(context, scene, width, height)
+    integrator = atcg.IntegratorRegistry.createIntegrator("VolPathtracing", context, scene, width, height)
 
     for _ in range(1024):
         render = integrator.generateRays()

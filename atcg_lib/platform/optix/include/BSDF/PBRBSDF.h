@@ -6,6 +6,7 @@
 #include <DataStructure/Statistics.h>
 
 #include <fstream>
+#include <BSDF/BSDFRegistry.h>
 
 namespace atcg
 {
@@ -51,6 +52,8 @@ public:
      */
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
+
+    static void registerBSDF(BSDFRegistry::Registry* registry);
 
 private:
     torch::Tensor _diffuse_texture;

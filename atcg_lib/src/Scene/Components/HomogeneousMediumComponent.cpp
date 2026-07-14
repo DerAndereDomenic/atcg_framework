@@ -53,7 +53,7 @@ void ComponentRenderer<HomogeneousMediumComponent>::renderComponent(atcg::Render
     HomogeneousMediumComponent& medium = entity.getComponent<HomogeneousMediumComponent>();
     MeshRenderComponent& mesh_renderer = entity.getComponent<MeshRenderComponent>();
 
-    if(mesh_renderer.material()->getMaterialType() != MaterialType::MATERIAL_TYPE_NULL)
+    if(mesh_renderer.material()->getMaterialType() != "Null")    // TODO Flags
     {
         return;
     }

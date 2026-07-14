@@ -212,11 +212,22 @@ if(CMAKE_CUDA_COMPILER)
     add_library(atcg::optix ALIAS atcg_optix)
 endif()
 
+# cuBQL
+if(CMAKE_CUDA_COMPILER)
+    add_subdirectory(external/cuBQL)
+endif()
+
 #
 # ATCG_LIB
 #
 
 add_subdirectory(atcg_lib)
+
+#
+# PLUGINS
+#
+
+add_subdirectory(plugins)
 
 #
 # EXECUTABLES

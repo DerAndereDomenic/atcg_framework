@@ -38,7 +38,14 @@ public:
         dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width());
         dict.setValue<uint32_t>("height", atcg::Renderer::getFramebuffer()->height());
 
-        integrator = atcg::make_ref<atcg::VolPathtracingIntegrator>(optx_context, dict);
+        // integrator = plugin_manager.createClass<atcg::Integrator>("TestIntegrator", optx_context, dict);
+        // integrator = atcg::make_ref<atcg::VolPathtracingIntegrator>(optx_context, dict);
+        auto registry                                          = atcg::IntegratorRegistry::getRegistry();
+        const std::vector<std::string>& registered_integrators = registry->getRegisteredTypes();
+        integrator =
+            atcg::IntegratorRegistry::createIntegrator(registered_integrators[current_integrator_selection_index],
+                                                       optx_context,
+                                                       dict);
 #endif
     }
 
@@ -147,6 +154,7 @@ public:
 
         createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
 
+        atcg::PluginManager::loadPlugin("bin/Debug/TestPlugin.dll");
         atcg::SceneRenderer::setNumberMSAASamples(msaa_samples[current_msaa_selection_index]);
     }
 
@@ -378,6 +386,31 @@ public:
             {
                 if(enable_pathtracing) initializePathtracer();
             }
+
+            if(enable_pathtracing)
+            {
+                auto registry                                   = atcg::IntegratorRegistry::getRegistry();
+                const std::vector<std::string> integrator_names = registry->getRegisteredTypes();
+                const char* combo_preview_value_integrator =
+                    integrator_names[current_integrator_selection_index].c_str();
+
+                if(ImGui::BeginCombo("Integrator", combo_preview_value_integrator))
+                {
+                    for(int n = 0; n < integrator_names.size(); n++)
+                    {
+                        const bool is_selected = (current_integrator_selection_index == n);
+                        if(ImGui::Selectable(integrator_names[n].c_str(), is_selected))
+                        {
+                            current_integrator_selection_index = n;
+                            initializePathtracer();
+                        }
+
+                        // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                        if(is_selected) ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+            }
     #endif
 
             ImGui::End();
@@ -449,6 +482,22 @@ public:
         {
             current_operation = atcg::GuizmoOperation::SCALE;
         }
+
+        if(event->getKeyCode() == ATCG_KEY_P)
+        {
+            ATCG_DEBUG("Reloading Plugins");
+            if(integrator)
+            {
+                integrator.reset();
+            }
+            atcg::PluginManager::releasePlugin("bin/Debug/TestPlugin.dll");
+            atcg::PluginManager::loadPlugin("bin/Debug/TestPlugin.dll");
+
+            if(enable_pathtracing)
+            {
+                initializePathtracer();
+            }
+        }
         // if(event->getKeyCode() == ATCG_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
         return true;
@@ -496,7 +545,8 @@ public:
                     auto entity = atcg::Project::getActive()->getActiveScene()->createEntity(filepath.stem().string());
                     entity.addComponent<atcg::TransformComponent>();
                     entity.addComponent<atcg::GeometryComponent>(graph);
-                    entity.addComponent<atcg::MeshRenderComponent>();
+                    auto& renderer     = entity.addComponent<atcg::MeshRenderComponent>();
+                    renderer.cull_mode = atcg::CullMode::ATCG_NO_CULLING;
                 }
             }
             else if(file_ending == ".png" || file_ending == ".jpg" || file_ending == ".jpeg" || file_ending == ".hdr")
@@ -547,7 +597,8 @@ private:
 
 #ifdef ATCG_CUDA_BACKEND
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
-    atcg::ref_ptr<atcg::VolPathtracingIntegrator> integrator;
+    atcg::ref_ptr<atcg::Integrator> integrator;
+    uint32_t current_integrator_selection_index = 0;
 #endif
 
     atcg::ref_ptr<atcg::Texture2D> output_texture;

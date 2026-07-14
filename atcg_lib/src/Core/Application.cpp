@@ -8,6 +8,15 @@
 #include <Renderer/ShaderManager.h>
 #include <Asset/Project.h>
 
+#ifdef ATCG_CUDA_BACKEND
+    #include <BSDF/PBRBSDF.h>
+    #include <BSDF/NullBSDF.h>
+    #include <BSDF/DielectricBSDF.h>
+    #include <Integrator/PathtracingIntegrator.h>
+    #include <Integrator/VolPathtracingIntegrator.h>
+    #include <Integrator/PhotonMapIntegrator.h>
+#endif
+
 namespace atcg
 {
 Application* Application::s_instance = nullptr;
@@ -24,9 +33,11 @@ Application::Application(const WindowProps& props)
 
 Application::~Application()
 {
+    _layer_stack.clear();
     _revision_system->clearChache();
     if(_asset_manager) _asset_manager->destroy();
     if(_script_engine) _script_engine->destroy();
+    if(_plugin_manager) _plugin_manager->releaseAllPlugins();
 }
 
 void Application::init(const WindowProps& props)
@@ -43,6 +54,18 @@ void Application::init(const WindowProps& props)
 #ifdef ATCG_CUDA_BACKEND
     _rt_context_manager = atcg::make_ref<RaytracingContextManagerSystem>();
     SystemRegistry::instance()->registerSystem(_rt_context_manager.get());
+
+    _bsdf_registry = atcg::make_ref<BSDFRegistry::Registry>();
+    PBRBSDF::registerBSDF(_bsdf_registry.get());
+    DielectricBSDF::registerBSDF(_bsdf_registry.get());
+    NullBSDF::registerBSDF(_bsdf_registry.get());
+    SystemRegistry::instance()->registerSystem(_bsdf_registry.get());
+
+    _integrator_registry = atcg::make_ref<IntegratorRegistry::Registry>();
+    VolPathtracingIntegrator::registerIntegrator(_integrator_registry.get());
+    PathtracingIntegrator::registerIntegrator(_integrator_registry.get());
+    PhotonMapIntegrator::registerIntegrator(_integrator_registry.get());
+    SystemRegistry::instance()->registerSystem(_integrator_registry.get());
 #endif
 
     _shader_manager = atcg::make_ref<ShaderManagerSystem>();
@@ -78,6 +101,17 @@ void Application::init(const WindowProps& props)
 
     _scene_renderer = atcg::make_ref<SceneRendererSystem>(_renderer.get());
     SystemRegistry::instance()->registerSystem(_scene_renderer.get());
+
+    // Register the material types
+    _material_registry = atcg::make_ref<MaterialRegistry::Registry>();
+    OpaqueMaterial::registerMaterial(_material_registry.get());
+    DielectricMaterial::registerMaterial(_material_registry.get());
+    NullMaterial::registerMaterial(_material_registry.get());
+
+    SystemRegistry::instance()->registerSystem(_material_registry.get());
+
+    _plugin_manager = atcg::make_ref<PluginManagerSystem>();
+    SystemRegistry::instance()->registerSystem(_plugin_manager.get());
 
     // Create an active project
     atcg::Project::create("./DefaultProject");

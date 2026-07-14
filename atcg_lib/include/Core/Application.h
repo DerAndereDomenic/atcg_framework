@@ -1,22 +1,24 @@
 #pragma once
 
-#include <Core/API.h>
-#include <Core/Memory.h>
-#include <Core/LayerStack.h>
-#include <Core/Window.h>
-#include <Events/WindowEvent.h>
-#include <Events/KeyEvent.h>
-#include <Core/Platform.h>
-#include <Scene/RevisionStack.h>
-#include <Renderer/ShaderManager.h>
-#include <Renderer/Renderer.h>
-#include <Renderer/VRSystem.h>
-#include <Renderer/ContextManager.h>
-#include <Scripting/ScriptEngine.h>
 #include <Asset/AssetManagerSystem.h>
-#include <Scene/ComponentRegistry.h>
+#include <Core/API.h>
+#include <Core/LayerStack.h>
+#include <Core/Memory.h>
+#include <Core/Platform.h>
+#include <Core/Window.h>
+#include <Events/KeyEvent.h>
+#include <Events/WindowEvent.h>
+#include <Plugin/Plugin.h>
+#include <Renderer/ContextManager.h>
 #include <Renderer/GraphicsAPI.h>
+#include <Renderer/Material.h>
+#include <Renderer/Renderer.h>
+#include <Renderer/ShaderManager.h>
+#include <Renderer/VRSystem.h>
+#include <Scene/ComponentRegistry.h>
+#include <Scene/RevisionStack.h>
 #include <Scene/SceneRenderer.h>
+#include <Scripting/ScriptEngine.h>
 
 #ifndef ATCG_HEADLESS
     #include <ImGui/ImGuiLayer.h>
@@ -24,6 +26,8 @@
 
 #ifdef ATCG_CUDA_BACKEND
     #include <Core/RaytracingContextManager.h>
+    #include <BSDF/BSDFRegistry.h>
+    #include <Integrator/IntegratorRegistry.h>
 #endif
 namespace atcg
 {
@@ -112,6 +116,14 @@ public:
     ATCG_INLINE static Application* get() { return s_instance; }
 
     /**
+     * @brief Set the application instance. This should not be used by the client, it is used to initialize plugin
+     * libraries
+     *
+     * @param instance The application instance
+     */
+    ATCG_INLINE static void setApplicationInstance(Application* instance) { s_instance = instance; }
+
+    /**
      * @brief Enable or disable Dock spaces
      *
      * @param enable If dockspaces should be enabled
@@ -155,6 +167,8 @@ private:
     atcg::ref_ptr<ContextManagerSystem> _context_manager;
 #ifdef ATCG_CUDA_BACKEND
     atcg::ref_ptr<RaytracingContextManagerSystem> _rt_context_manager;
+    atcg::ref_ptr<BSDFRegistry::Registry> _bsdf_registry;
+    atcg::ref_ptr<IntegratorRegistry::Registry> _integrator_registry;
 #endif
     atcg::scope_ptr<Window> _window;
 #ifndef ATCG_HEADLESS
@@ -167,6 +181,7 @@ private:
     // Systems
     atcg::ref_ptr<AssetManagerSystem> _asset_manager;
     atcg::ref_ptr<ShaderManagerSystem> _shader_manager;
+    atcg::ref_ptr<MaterialRegistry::Registry> _material_registry;
     atcg::ref_ptr<SceneRendererSystem> _scene_renderer;
     atcg::ref_ptr<RendererSystem> _renderer;
     atcg::ref_ptr<VRSystem> _vr_system;
@@ -174,6 +189,7 @@ private:
     atcg::ref_ptr<RevisionSystem> _revision_system;
     atcg::ref_ptr<GraphicsAPI> _graphics_api;
     atcg::ref_ptr<ComponentRegistrySystem> _component_registry;
+    atcg::ref_ptr<PluginManagerSystem> _plugin_manager;
 
     friend int atcg::atcg_main();
     static Application* s_instance;

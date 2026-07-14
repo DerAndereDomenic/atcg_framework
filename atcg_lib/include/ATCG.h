@@ -125,6 +125,7 @@
     #include <Core/ShaderBindingTable.h>
     #include <Integrator/PathtracingIntegrator.h>
     #include <Integrator/VolPathtracingIntegrator.h>
+    #include <Integrator/PhotonMapIntegrator.h>
     #include <Core/RaytracingContextManager.h>
 #endif
 
@@ -132,3 +133,6 @@
 #include <Scripting/ScriptEngine.h>
 #include <Scripting/Script.h>
 #include <Scripting/Behavior.h>
+
+//-------- Plugin ------------
+#include <Plugin/Plugin.h>

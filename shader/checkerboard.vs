@@ -5,6 +5,7 @@ layout(location = 2) in vec3 aNormal;
 layout(location = 4) in vec3 aUV;
 
 uniform mat4 M, V, P;
+uniform vec3 camera_pos;
 
 out vec3 frag_normal;
 out vec2 frag_uv;
@@ -20,5 +21,11 @@ void main()
     mat4 normal_matrix = transpose(inverse(M)); //TODO: Compute on host
 
     frag_normal = normalize(vec3(normal_matrix * vec4(aNormal, 0)));
+
+    if(dot(frag_normal, normalize(camera_pos - frag_pos)) < 0)
+    {
+        frag_normal *= -1.0;
+    }
+
     frag_uv = aUV.xy;
 }

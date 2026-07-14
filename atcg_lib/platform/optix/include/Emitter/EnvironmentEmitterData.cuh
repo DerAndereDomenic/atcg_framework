@@ -2,6 +2,8 @@
 
 #include <Core/CUDA.h>
 #include <DataStructure/TextureSampler.h>
+#include <DataStructure/CUDATexture.h>
+#include <DataStructure/BoundingBox.h>
 
 namespace atcg
 {
@@ -16,5 +18,7 @@ struct EnvironmentEmitterData
 
     int width;
     int height;
+
+    atcg::BoundingBox bounding_box;    // This has to be set via emitter->setSceneAABB() manually
 };
 }    // namespace atcg

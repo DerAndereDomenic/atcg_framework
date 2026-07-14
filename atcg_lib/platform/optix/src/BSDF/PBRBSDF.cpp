@@ -1,7 +1,6 @@
 #include <BSDF/PBRBSDF.h>
 
 #include <Core/Common.h>
-#include <BSDF/BSDFFactory.h>
 #include <Renderer/Texture.h>
 #include <ATen/cuda/ApplyGridUtils.cuh>
 #include <c10/cuda/CUDAGuard.h>
@@ -409,5 +408,8 @@ void PBRBSDF::zeroGrad()
     }
 }
 
-ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_OPAQUE, PBRBSDF);
+void PBRBSDF::registerBSDF(BSDFRegistry::Registry* registry)
+{
+    ATCG_REGISTER_BSDF(registry, "Opaque", PBRBSDF);
+}
 }    // namespace atcg

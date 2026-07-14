@@ -23,14 +23,14 @@ computeMeshTrianglePDFKernel(const torch::PackedTensorAccessor32<float, 2, at::R
 
         glm::u32vec3 triangle_indices = glm::u32vec3(indices[tid][0], indices[tid][1], indices[tid][2]);
         glm::vec3 local_P0            = glm::vec3(positions[triangle_indices.x][0],
-                                       positions[triangle_indices.x][1],
-                                       positions[triangle_indices.x][2]);
+                                                  positions[triangle_indices.x][1],
+                                                  positions[triangle_indices.x][2]);
         glm::vec3 local_P1            = glm::vec3(positions[triangle_indices.y][0],
-                                       positions[triangle_indices.y][1],
-                                       positions[triangle_indices.y][2]);
+                                                  positions[triangle_indices.y][1],
+                                                  positions[triangle_indices.y][2]);
         glm::vec3 local_P2            = glm::vec3(positions[triangle_indices.z][0],
-                                       positions[triangle_indices.z][1],
-                                       positions[triangle_indices.z][2]);
+                                                  positions[triangle_indices.z][1],
+                                                  positions[triangle_indices.z][2]);
 
         glm::vec3 P0 = glm::vec3(transform * glm::vec4(local_P0, 1));
         glm::vec3 P1 = glm::vec3(transform * glm::vec4(local_P1, 1));
@@ -173,12 +173,16 @@ void MeshEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pi
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_edge_meshemitter"});
     auto sample_forward_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_forward_meshemitter"});
+    auto samplephoton_prog_group =
+        pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__samplephoton_meshemitter"});
+
     uint32_t sample_idx         = sbt->addCallableEntry(sample_prog_group, _mesh_emitter_data.get());
     uint32_t eval_idx           = sbt->addCallableEntry(eval_prog_group, _mesh_emitter_data.get());
     uint32_t eval_forward_idx   = sbt->addCallableEntry(eval_forward_prog_group, _mesh_emitter_data.get());
     uint32_t eval_pdf_idx       = sbt->addCallableEntry(evalpdf_prog_group, _mesh_emitter_data.get());
     uint32_t sample_edge_idx    = sbt->addCallableEntry(sample_edge_prog_group, _mesh_emitter_data.get());
     uint32_t sample_forward_idx = sbt->addCallableEntry(sample_forward_prog_group, _mesh_emitter_data.get());
+    uint32_t samplephoton_idx   = sbt->addCallableEntry(samplephoton_prog_group, _mesh_emitter_data.get());
 
     EmitterVPtrTable table;
     table.flags                  = _flags;
@@ -188,6 +192,7 @@ void MeshEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pi
     table.evalPdfCallIndex       = eval_pdf_idx;
     table.sampleEdgeCallIndex    = sample_edge_idx;
     table.sampleForwardCallIndex = sample_forward_idx;
+    table.samplePhotonCallIndex  = samplephoton_idx;
 
     _vptr_table.upload(&table);
 

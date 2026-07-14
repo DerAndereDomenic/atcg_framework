@@ -48,4 +48,9 @@ ATCG_HOST_DEVICE inline BSDFComponentType& operator^=(BSDFComponentType& a, BSDF
 {
     return (BSDFComponentType&)((int&)a ^= (int)b);
 }
+
+ATCG_HOST_DEVICE inline bool hasBSDFFlag(BSDFComponentType flags, BSDFComponentType flag)
+{
+    return (flags & flag) != BSDFComponentType::None;
+}
 }    // namespace atcg

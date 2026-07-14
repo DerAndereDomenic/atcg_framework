@@ -2,7 +2,6 @@
 
 #include <Renderer/Texture.h>
 #include <Renderer/Material.h>
-#include <BSDF/BSDFFactory.h>
 
 #include <Core/Common.h>
 
@@ -312,5 +311,8 @@ void DielectricBSDF::clampParameters()
     if(_optimize_ior) _ior_texture.clamp_(1.0f, 2.5f);
 }
 
-ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_DIELECTRIC, DielectricBSDF);
+void DielectricBSDF::registerBSDF(BSDFRegistry::Registry* registry)
+{
+    ATCG_REGISTER_BSDF(registry, "Dielectric", DielectricBSDF);
+}
 }    // namespace atcg
