@@ -148,11 +148,22 @@ inline void defineBindings(py::module_& m)
     auto m_raytracing_context_manager = m.def_submodule("RaytracingContextManager");
     auto m_raytracing_context =
         py::class_<atcg::RaytracingContext, atcg::ref_ptr<atcg::RaytracingContext>>(m, "RaytracingContext");
+
+    auto m_integrator = py::class_<atcg::Integrator, atcg::ref_ptr<atcg::Integrator>>(m, "Integrator");
     auto m_path_integrator =
-        py::class_<atcg::PathtracingIntegrator, atcg::ref_ptr<atcg::PathtracingIntegrator>>(m, "PathIntegrator");
+        py::class_<atcg::PathtracingIntegrator, atcg::Integrator, atcg::ref_ptr<atcg::PathtracingIntegrator>>(m,
+                                                                                                              "PathInte"
+                                                                                                              "grator");
     auto m_volpath_integrator =
-        py::class_<atcg::VolPathtracingIntegrator, atcg::ref_ptr<atcg::VolPathtracingIntegrator>>(m,
-                                                                                                  "VolPathIntegrator");
+        py::class_<atcg::VolPathtracingIntegrator, atcg::Integrator, atcg::ref_ptr<atcg::VolPathtracingIntegrator>>(
+            m,
+            "VolPathIntegrator");
+    auto m_photon_mapping_integrator =
+        py::class_<atcg::PhotonMapIntegrator, atcg::Integrator, atcg::ref_ptr<atcg::PhotonMapIntegrator>>(m,
+                                                                                                          "PhotonMapInt"
+                                                                                                          "egrator");
+    auto m_integrator_registry = m.def_submodule("IntegratorRegistry");
+    auto m_bsdf_registry       = m.def_submodule("BSDFRegistry");
 #endif
 
 #ifndef ATCG_HEADLESS
@@ -526,16 +537,18 @@ inline void defineBindings(py::module_& m)
         .def("selectAsset", &atcg::GUI::AssetPanel::selectAsset);
 
     m_project.def_static("create", &atcg::Project::create)
-        .def_static("load", &atcg::Project::load)
-        .def("save", py::overload_cast<>(&atcg::Project::save))
-        .def("save", py::overload_cast<const std::filesystem::path&>(&atcg::Project::save))
+        .def_static("load", [](const std::string& path) { return atcg::Project::load(path); })
+        .def("save", [](const atcg::ref_ptr<atcg::Project>& project) { return project->save(); })
+        .def("save",
+             [](const atcg::ref_ptr<atcg::Project>& project, const std::string& path) { return project->save(path); })
         .def("setActiveScene", py::overload_cast<const atcg::ref_ptr<atcg::Scene>&>(&atcg::Project::setActiveScene))
         .def("setActiveScene", py::overload_cast<atcg::AssetHandle>(&atcg::Project::setActiveScene))
         .def("getActiveScene", &atcg::Project::getActiveScene)
         .def_static("getActive", &atcg::Project::getActive)
-        .def_static("saveActive", py::overload_cast<>(&atcg::Project::saveActive))
-        .def_static("saveActive", py::overload_cast<const std::filesystem::path&>(&atcg::Project::saveActive))
-        .def("getFilePath", &atcg::Project::getFilePath);
+        .def_static("saveActive", []() { atcg::Project::saveActive(); })
+        .def_static("saveActive", [](const std::string& path) { atcg::Project::saveActive(path); })
+        .def("getFilePath",
+             [](const atcg::ref_ptr<atcg::Project>& project) { return project->getFilePath().string(); });
 
     // ------------------- Datastructure ---------------------------------
 
@@ -1644,6 +1657,15 @@ inline void defineBindings(py::module_& m)
 #ifdef ATCG_CUDA_BACKEND
     m_raytracing_context_manager.def("createContext", &atcg::RaytracingContextManager::createContext)
         .def("destroyContext", &atcg::RaytracingContextManager::destroyContext);
+
+    m_integrator.def("generateRays",
+                     [](const atcg::ref_ptr<atcg::Integrator>& self)
+                     {
+                         atcg::Dictionary dict;
+                         self->generateRays(dict);
+                         return dict.getValue<torch::Tensor>("output");
+                     });
+
     m_path_integrator
         .def(py::init(
             [](const atcg::ref_ptr<atcg::RaytracingContext>& context,
@@ -1666,6 +1688,7 @@ inline void defineBindings(py::module_& m)
                  self->generateRays(dict);
                  return dict.getValue<torch::Tensor>("output");
              });
+
     m_volpath_integrator
         .def(py::init(
             [](const atcg::ref_ptr<atcg::RaytracingContext>& context,
@@ -1683,6 +1706,29 @@ inline void defineBindings(py::module_& m)
             }))
         .def("generateRays",
              [](const atcg::ref_ptr<atcg::VolPathtracingIntegrator>& self)
+             {
+                 atcg::Dictionary dict;
+                 self->generateRays(dict);
+                 return dict.getValue<torch::Tensor>("output");
+             });
+
+    m_photon_mapping_integrator
+        .def(py::init(
+            [](const atcg::ref_ptr<atcg::RaytracingContext>& context,
+               const atcg::ref_ptr<atcg::Scene>& scene,
+               const uint32_t width,
+               const uint32_t height)
+            {
+                atcg::Dictionary dict;
+                dict.setValue("scene", scene);
+                dict.setValue("width", width);
+                dict.setValue("height", height);
+                atcg::ref_ptr<atcg::PhotonMapIntegrator> integrator =
+                    atcg::make_ref<atcg::PhotonMapIntegrator>(context, dict);
+                return integrator;
+            }))
+        .def("generateRays",
+             [](const atcg::ref_ptr<atcg::PhotonMapIntegrator>& self)
              {
                  atcg::Dictionary dict;
                  self->generateRays(dict);
