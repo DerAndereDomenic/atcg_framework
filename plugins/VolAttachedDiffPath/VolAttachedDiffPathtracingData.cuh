@@ -6,7 +6,7 @@
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <BSDF/BSDFVPtrTable.cuh>
 #include <Math/mat6.h>
-#include "DiffMode.h"
+#include <Integrator/DiffMode.h>
 
 namespace atcg
 {

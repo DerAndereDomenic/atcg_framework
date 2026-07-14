@@ -1,8 +1,6 @@
 #pragma once
 
-#include "DiffPathtracingIntegrator.h"
-#include "DifferentiableIntegrator.h"
-#include "VolAttachedDiffPathtracingIntegrator.h"
+#include <Integrator/DifferentiableIntegrator.h>
 
 #include <torch/torch.h>
 
@@ -10,7 +8,7 @@ namespace atcg
 {
 struct FiniteDiffPathNode : public torch::autograd::Node
 {
-    VolAttachedDiffPathtracingIntegrator* integrator;
+    DifferentiableIntegrator* integrator;
     uint32_t rng_index;
     uint32_t width, height;
     atcg::ref_ptr<PerspectiveCamera> camera;
@@ -19,16 +17,32 @@ struct FiniteDiffPathNode : public torch::autograd::Node
     virtual void release_variables() override;
 };
 
-class FiniteDiffPathtracingIntegrator : public VolAttachedDiffPathtracingIntegrator
+class FiniteDiffPathtracingIntegrator : public DifferentiableIntegrator
 {
 public:
     FiniteDiffPathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context, const Dictionary& dict);
 
     ~FiniteDiffPathtracingIntegrator();
 
+    virtual void onImGuiRender() override;
+
     virtual torch::Tensor sample(Dictionary& in_out_dictionary) override;
+
+    virtual void reset() override;
+
+    virtual std::vector<torch::Tensor> getParameters() const override;
+
+    virtual std::vector<torch::Tensor> getParameterGradients() const override;
+
+    virtual void clampParameters() override;
+
+    virtual void markOptimizable() override;
+
+    virtual void zeroGrad() override;
 
 private:
     friend class FiniteDiffPathNode;
+
+    atcg::ref_ptr<DifferentiableIntegrator> _integrator;
 };
 }    // namespace atcg

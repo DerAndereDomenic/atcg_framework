@@ -2,22 +2,22 @@
 
 #include <Integrator/Integrator.h>
 #include <Shape/IAS.h>
-#include "DiffPathtracingData.cuh"
+#include "VolDiffPathtracingData.cuh"
 #include <Emitter/EnvironmentEmitter.h>
 #include <Emitter/PointEmitter.h>
 #include <Scene/OptixScene.h>
 #include <Scene/SceneHierarchyPanel.h>
-#include "DifferentiableIntegrator.h"
+#include <Integrator/DifferentiableIntegrator.h>
 
 #include <torch/torch.h>
 
 namespace atcg
 {
-class DiffPathtracingIntegrator;
+class VolDiffPathtracingIntegrator;
 
-struct DiffPathNode : public torch::autograd::Node
+struct VolDiffPathNode : public torch::autograd::Node
 {
-    DiffPathtracingIntegrator* integrator;
+    VolDiffPathtracingIntegrator* integrator;
     torch::Tensor sample;
     uint32_t rng_index;
     PerspectiveCamera* camera;
@@ -29,7 +29,7 @@ struct DiffPathNode : public torch::autograd::Node
 /**
  * @brief A simple path tracer
  */
-class DiffPathtracingIntegrator : public DifferentiableIntegrator
+class VolDiffPathtracingIntegrator : public DifferentiableIntegrator
 {
 public:
     /**
@@ -38,12 +38,11 @@ public:
      * @param context The raytracing context
      * @param dict Additional parameters
      */
-    DiffPathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context, const atcg::Dictionary& dict);
-
+    VolDiffPathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context, const atcg::Dictionary& dict);
     /**
      * @brief Destructor
      */
-    ~DiffPathtracingIntegrator();
+    ~VolDiffPathtracingIntegrator();
 
     /**
      * @brief A callback to display debug information in imgui
@@ -68,7 +67,7 @@ public:
     virtual void zeroGrad() override;
 
 private:
-    friend class DiffPathNode;
+    friend class VolDiffPathNode;
     /**
      * @brief Initialize a pipeline.
      * This function should be overwritten by each child class and it should add its functions to the pipeline and the
@@ -89,7 +88,7 @@ private:
     uint32_t _occlusion_miss_index;
 
     atcg::ref_ptr<OptixScene> _optix_scene;
-    atcg::dref_ptr<DiffPathtracingParams> _launch_params;
+    atcg::dref_ptr<VolDiffPathtracingParams> _launch_params;
 
     std::vector<Differentiable*> _differentiable_components;
 

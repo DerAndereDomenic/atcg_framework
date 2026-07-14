@@ -49,8 +49,9 @@ void FiniteDiffPathNode::release_variables()
 
 FiniteDiffPathtracingIntegrator::FiniteDiffPathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context,
                                                                  const Dictionary& dict)
-    : VolAttachedDiffPathtracingIntegrator(context, dict)
+    : DifferentiableIntegrator(context, dict)
 {
+    _integrator = dict.getValue<atcg::ref_ptr<DifferentiableIntegrator>>("integrator");
 }
 
 FiniteDiffPathtracingIntegrator::~FiniteDiffPathtracingIntegrator() {}
@@ -65,7 +66,7 @@ torch::Tensor FiniteDiffPathtracingIntegrator::sample(Dictionary& in_out_diction
     torch::Tensor result;
     {
         torch::NoGradGuard no_grad;
-        result = VolAttachedDiffPathtracingIntegrator::sample(in_out_dictionary);
+        result = _integrator->sample(in_out_dictionary);
     }
 
     if(is_executable)
@@ -73,7 +74,7 @@ torch::Tensor FiniteDiffPathtracingIntegrator::sample(Dictionary& in_out_diction
         std::shared_ptr<FiniteDiffPathNode> node(new FiniteDiffPathNode(), torch::autograd::deleteNode);
         auto next_edges = torch::autograd::collect_next_edges(parameters);
         node->set_next_edges(std::move(next_edges));
-        node->integrator = this;
+        node->integrator = _integrator.get();
         node->rng_index  = in_out_dictionary.getValueOr<uint32_t>("rng_index", 0);
         node->camera     = in_out_dictionary.getValue<atcg::ref_ptr<atcg::PerspectiveCamera>>("camera");
         node->width      = in_out_dictionary.getValue<uint32_t>("width");
@@ -83,6 +84,41 @@ torch::Tensor FiniteDiffPathtracingIntegrator::sample(Dictionary& in_out_diction
     }
 
     return result;
+}
+
+void FiniteDiffPathtracingIntegrator::onImGuiRender()
+{
+    _integrator->onImGuiRender();
+}
+
+void FiniteDiffPathtracingIntegrator::reset()
+{
+    _integrator->reset();
+}
+
+std::vector<torch::Tensor> FiniteDiffPathtracingIntegrator::getParameters() const
+{
+    return _integrator->getParameters();
+}
+
+std::vector<torch::Tensor> FiniteDiffPathtracingIntegrator::getParameterGradients() const
+{
+    return _integrator->getParameterGradients();
+}
+
+void FiniteDiffPathtracingIntegrator::clampParameters()
+{
+    _integrator->clampParameters();
+}
+
+void FiniteDiffPathtracingIntegrator::markOptimizable()
+{
+    _integrator->markOptimizable();
+}
+
+void FiniteDiffPathtracingIntegrator::zeroGrad()
+{
+    _integrator->zeroGrad();
 }
 
 }    // namespace atcg

@@ -7,7 +7,7 @@
 #include <Emitter/PointEmitter.h>
 #include <Scene/OptixScene.h>
 #include <Scene/SceneHierarchyPanel.h>
-#include "DifferentiableIntegrator.h"
+#include <Integrator/DifferentiableIntegrator.h>
 
 #include <torch/torch.h>
 

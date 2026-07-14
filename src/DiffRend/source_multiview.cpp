@@ -11,7 +11,7 @@
 #include <Core/Common.h>
 #include <torch/optim.h>
 
-#include "VolDiffPathtracingIntegrator.h"
+#include <Integrator/DifferentiableIntegrator.h>
 
 #ifndef ATCG_HEADLESS
     #include <implot.h>
@@ -28,7 +28,9 @@ public:
         dict.setValue<uint32_t>("width", 256);
         dict.setValue<uint32_t>("height", 256);
 
-        integrator = atcg::make_ref<atcg::VolDiffPathtracingIntegrator>(optx_context, dict);
+        auto integrator_base =
+            atcg::IntegratorRegistry::createIntegrator("VolDiffPathtracingIntegrator", optx_context, dict);
+        integrator = std::dynamic_pointer_cast<atcg::DifferentiableIntegrator>(integrator_base);
 
 #endif
     }
@@ -52,6 +54,7 @@ public:
         camera_controller = atcg::make_ref<atcg::FirstPersonController>(
             atcg::make_ref<atcg::PerspectiveCamera>(extrinsics, intrinsics));
 
+        atcg::PluginManager::loadPlugin("./bin/RelWithDebInfo/VolDetachedDiffPath.dll");
 
         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
 

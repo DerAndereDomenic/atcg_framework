@@ -5,18 +5,15 @@
 #include <Core/TraceParameters.h>
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <BSDF/BSDFVPtrTable.cuh>
-#include "DiffMode.h"
-#include <Math/mat6.h>
+#include <Medium/MediumVPtrTable.cuh>
+#include <Integrator/DiffMode.h>
 
 namespace atcg
 {
-struct AttachedDiffPathtracingParams
+struct VolDiffPathtracingParams
 {
-    DiffMode diff_mode;
-
     glm::vec3* current_sample;
     glm::vec3* adjoint_y;
-    atcg::mat6x3* JL_buffer;
 
     uint32_t image_width;
     uint32_t image_height;
@@ -24,7 +21,6 @@ struct AttachedDiffPathtracingParams
     OptixTraversableHandle handle;
 
     TraceParameters surface_trace_params;
-    TraceParameters dual_trace_params;
     TraceParameters occlusion_trace_params;
 
     // Cam data
@@ -42,6 +38,6 @@ struct AttachedDiffPathtracingParams
 
     const EmitterVPtrTable* environment_emitter;
 
-    bool debug;
+    DiffMode diff_mode;
 };
 }    // namespace atcg

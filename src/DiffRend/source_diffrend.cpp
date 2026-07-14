@@ -11,12 +11,7 @@
 #include <Core/Common.h>
 #include <torch/optim.h>
 
-#include "AttachedDiffPathtracingIntegrator.h"
-#include "DiffPathtracingIntegrator.h"
-#include "FiniteDiffPathIntegrator.h"
-#include "VolDiffPathtracingIntegrator.h"
-#include "VolAttachedDiffPathtracingIntegrator.h"
-#include "RBPIntegrator.h"
+#include <Integrator/DifferentiableIntegrator.h>
 
 #ifndef ATCG_HEADLESS
     #include <implot.h>
@@ -40,7 +35,7 @@ public:
 #endif
     }
 
-    void initializePathtracer()
+    void initializePathtracer(const std::string& integrator_type)
     {
 #ifdef ATCG_CUDA_BACKEND
         atcg::Dictionary dict;
@@ -48,30 +43,8 @@ public:
         dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width() / 4);
         dict.setValue<uint32_t>("height", atcg::Renderer::getFramebuffer()->height() / 4);
 
-        if(current_integrator_index == 0)
-        {
-            integrator = atcg::make_ref<atcg::AttachedDiffPathtracingIntegrator>(optx_context, dict);
-        }
-        else if(current_integrator_index == 1)
-        {
-            integrator = atcg::make_ref<atcg::DiffPathtracingIntegrator>(optx_context, dict);
-        }
-        else if(current_integrator_index == 2)
-        {
-            integrator = atcg::make_ref<atcg::FiniteDiffPathtracingIntegrator>(optx_context, dict);
-        }
-        else if(current_integrator_index == 3)
-        {
-            integrator = atcg::make_ref<atcg::VolDiffPathtracingIntegrator>(optx_context, dict);
-        }
-        else if(current_integrator_index == 4)
-        {
-            integrator = atcg::make_ref<atcg::VolAttachedDiffPathtracingIntegrator>(optx_context, dict);
-        }
-        else if(current_integrator_index == 5)
-        {
-            integrator = atcg::make_ref<atcg::RBPIntegrator>(optx_context, dict);
-        }
+        auto base_integrator = atcg::IntegratorRegistry::createIntegrator(integrator_type, optx_context, dict);
+        integrator           = std::dynamic_pointer_cast<atcg::DifferentiableIntegrator>(base_integrator);
 #endif
     }
 
@@ -97,9 +70,23 @@ public:
 
         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
 
+        atcg::PluginManager::loadPlugin("./bin/RelWithDebInfo/AttachedDiffPath.dll");
+        atcg::PluginManager::loadPlugin("./bin/RelWithDebInfo/DetachedDiffPath.dll");
+        atcg::PluginManager::loadPlugin("./bin/RelWithDebInfo/VolAttachedDiffPath.dll");
+        atcg::PluginManager::loadPlugin("./bin/RelWithDebInfo/VolDetachedDiffPath.dll");
+        atcg::PluginManager::loadPlugin("./bin/RelWithDebInfo/RBPDiffPath.dll");
+
 #ifdef ATCG_CUDA_BACKEND
-        optx_context = atcg::RaytracingContextManager::createContext();
-        if(enable_pathtracing) initializePathtracer();
+        optx_context          = atcg::RaytracingContextManager::createContext();
+        auto integrator_names = atcg::IntegratorRegistry::getRegistry()->getRegisteredTypes();
+
+        auto it = std::find(integrator_names.begin(), integrator_names.end(), "VolDiffPathtracingIntegrator");
+        if(it != integrator_names.end())
+        {
+            current_integrator_selection_index = std::distance(integrator_names.begin(), it);
+        }
+
+        if(enable_pathtracing) initializePathtracer(integrator_names[current_integrator_selection_index]);
 #endif
 
         createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
@@ -283,9 +270,10 @@ public:
         uint32_t current_revision = atcg::RevisionStack::numUndos();
         if(current_revision != last_revision)
         {
-            last_revision = current_revision;
-            frame_counter = 0;
-            if(enable_pathtracing) initializePathtracer();
+            last_revision         = current_revision;
+            frame_counter         = 0;
+            auto integrator_names = atcg::IntegratorRegistry::getRegistry()->getRegisteredTypes();
+            if(enable_pathtracing) initializePathtracer(integrator_names[current_integrator_selection_index]);
         }
     }
 
@@ -340,7 +328,8 @@ public:
                     if(atcg::Project::getActive()->getActiveScene())
                     {
                         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
-                        initializePathtracer();
+                        auto integrator_names = atcg::IntegratorRegistry::getRegistry()->getRegisteredTypes();
+                        initializePathtracer(integrator_names[current_integrator_selection_index]);
                         frame_counter = 0;
                     }
                     atcg::RevisionStack::clearChache();
@@ -400,7 +389,11 @@ public:
     #ifdef ATCG_CUDA_BACKEND
             if(ImGui::Checkbox("Path Tracing", &enable_pathtracing))
             {
-                if(enable_pathtracing) initializePathtracer();
+                if(enable_pathtracing)
+                {
+                    auto integrator_names = atcg::IntegratorRegistry::getRegistry()->getRegisteredTypes();
+                    initializePathtracer(integrator_names[current_integrator_selection_index]);
+                }
             }
     #endif
 
@@ -412,32 +405,19 @@ public:
         ImGui::Begin("Optimization");
 
         // Dropdown to select attached, finite or detached integrator
-        if(ImGui::BeginCombo("Integrator", integrator_labels[current_integrator_index]))
-        {
-            for(int n = 0; n < IM_ARRAYSIZE(integrator_labels); n++)
-            {
-                const bool is_selected = (current_integrator_index == n);
-                if(ImGui::Selectable(integrator_labels[n], is_selected))
-                {
-                    current_integrator_index = n;
-                    // if(current_integrator_index == 0)
-                    // {
-                    //     integrator =
-                    //         atcg::make_ref<atcg::AttachedDiffPathtracingIntegrator>(*optx_context,
-                    //         atcg::Dictionary());
-                    // }
-                    // else if(current_integrator_index == 1)
-                    // {
-                    //     integrator = atcg::make_ref<atcg::DiffPathtracingIntegrator>(*optx_context,
-                    //     atcg::Dictionary());
-                    // }
-                    // else
-                    // {
-                    //     integrator =
-                    //         atcg::make_ref<atcg::FiniteDiffPathtracingIntegrator>(*optx_context, atcg::Dictionary());
-                    // }
+        auto registry                                   = atcg::IntegratorRegistry::getRegistry();
+        const std::vector<std::string> integrator_names = registry->getRegisteredTypes();
+        const char* combo_preview_value_integrator      = integrator_names[current_integrator_selection_index].c_str();
 
-                    initializePathtracer();
+        if(ImGui::BeginCombo("Integrator", combo_preview_value_integrator))
+        {
+            for(int n = 0; n < integrator_names.size(); n++)
+            {
+                const bool is_selected = (current_integrator_selection_index == n);
+                if(ImGui::Selectable(integrator_names[n].c_str(), is_selected))
+                {
+                    current_integrator_selection_index = n;
+                    initializePathtracer(integrator_names[n]);
                 }
 
                 // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
@@ -550,7 +530,8 @@ public:
         atcg::WindowResizeEvent resize_event(event->getWidth(), event->getHeight());
         camera_controller->onEvent(&resize_event);
         createOutputTexture(event->getWidth(), event->getHeight());
-        initializePathtracer();
+        auto integrator_names = atcg::IntegratorRegistry::getRegistry()->getRegisteredTypes();
+        initializePathtracer(integrator_names[current_integrator_selection_index]);
         frame_counter = 0;
         return false;
     }
@@ -642,9 +623,7 @@ private:
 #ifdef ATCG_CUDA_BACKEND
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
     atcg::ref_ptr<atcg::DifferentiableIntegrator> integrator;
-    const char* integrator_labels[6] =
-        {"Attached", "Detached", "Finite Difference", "VolDetached", "VolAttached", "RBP"};
-    uint32_t current_integrator_index = 5;
+    uint32_t current_integrator_selection_index = 0;
     torch::Tensor target;
     torch::Tensor accumulated_output;
     bool optimize          = false;

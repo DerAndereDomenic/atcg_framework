@@ -2,23 +2,24 @@
 
 #include <Integrator/Integrator.h>
 #include <Shape/IAS.h>
-#include "VolDiffPathtracingData.cuh"
+#include "VolAttachedDiffPathtracingData.cuh"
 #include <Emitter/EnvironmentEmitter.h>
 #include <Emitter/PointEmitter.h>
 #include <Scene/OptixScene.h>
 #include <Scene/SceneHierarchyPanel.h>
-#include "DifferentiableIntegrator.h"
+#include <Integrator/DifferentiableIntegrator.h>
 
 #include <torch/torch.h>
 
 namespace atcg
 {
-class VolDiffPathtracingIntegrator;
+class VolAttachedDiffPathtracingIntegrator;
 
-struct VolDiffPathNode : public torch::autograd::Node
+struct VolAttachedDiffPathNode : public torch::autograd::Node
 {
-    VolDiffPathtracingIntegrator* integrator;
+    VolAttachedDiffPathtracingIntegrator* integrator;
     torch::Tensor sample;
+    torch::Tensor JL;
     uint32_t rng_index;
     PerspectiveCamera* camera;
     torch::autograd::variable_list apply(torch::autograd::variable_list&& grads) override;
@@ -29,7 +30,7 @@ struct VolDiffPathNode : public torch::autograd::Node
 /**
  * @brief A simple path tracer
  */
-class VolDiffPathtracingIntegrator : public DifferentiableIntegrator
+class VolAttachedDiffPathtracingIntegrator : public DifferentiableIntegrator
 {
 public:
     /**
@@ -38,11 +39,12 @@ public:
      * @param context The raytracing context
      * @param dict Additional parameters
      */
-    VolDiffPathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context, const atcg::Dictionary& dict);
+    VolAttachedDiffPathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context, const atcg::Dictionary& dict);
+
     /**
      * @brief Destructor
      */
-    ~VolDiffPathtracingIntegrator();
+    ~VolAttachedDiffPathtracingIntegrator();
 
     /**
      * @brief A callback to display debug information in imgui
@@ -67,7 +69,8 @@ public:
     virtual void zeroGrad() override;
 
 private:
-    friend class VolDiffPathNode;
+    friend class VolAttachedDiffPathNode;
+
     /**
      * @brief Initialize a pipeline.
      * This function should be overwritten by each child class and it should add its functions to the pipeline and the
@@ -78,20 +81,25 @@ private:
      */
     void initializePipeline(const Dictionary& dict);
 
-
-    torch::Tensor _forwardTrace(Dictionary& in_out_dictionary);
+    std::tuple<torch::Tensor, torch::Tensor> _forwardTrace(Dictionary& in_out_dictionary);
     void _backwardTrace(Dictionary& in_out_dictionary);
 
 private:
     uint32_t _raygen_index_forward;
     uint32_t _surface_miss_index;
+    uint32_t _dual_miss_index;
     uint32_t _occlusion_miss_index;
 
     atcg::ref_ptr<OptixScene> _optix_scene;
-    atcg::dref_ptr<VolDiffPathtracingParams> _launch_params;
+    atcg::dref_ptr<VolAttachedDiffPathtracingParams> _launch_params;
 
     std::vector<Differentiable*> _differentiable_components;
 
     GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("DiffPath");
+
+    torch::Tensor _last_JL;
+    atcg::ref_ptr<Texture2D> _last_JL_texture;
+    int _derivative_channel = 0;
 };
+
 }    // namespace atcg

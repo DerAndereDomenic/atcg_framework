@@ -2,22 +2,24 @@
 
 #include <Integrator/Integrator.h>
 #include <Shape/IAS.h>
-#include "RBPData.cuh"
+#include "DiffPathtracingData.cuh"
 #include <Emitter/EnvironmentEmitter.h>
 #include <Emitter/PointEmitter.h>
 #include <Scene/OptixScene.h>
 #include <Scene/SceneHierarchyPanel.h>
-#include "DifferentiableIntegrator.h"
+#include <Integrator/DifferentiableIntegrator.h>
 
 #include <torch/torch.h>
 
 namespace atcg
 {
-class RBPIntegrator;
+class DiffPathtracingIntegrator;
 
-struct RBPNode : public torch::autograd::Node
+struct DiffPathNode : public torch::autograd::Node
 {
-    RBPIntegrator* integrator;
+    DiffPathtracingIntegrator* integrator;
+    torch::Tensor sample;
+    uint32_t rng_index;
     PerspectiveCamera* camera;
     torch::autograd::variable_list apply(torch::autograd::variable_list&& grads) override;
 
@@ -27,7 +29,7 @@ struct RBPNode : public torch::autograd::Node
 /**
  * @brief A simple path tracer
  */
-class RBPIntegrator : public DifferentiableIntegrator
+class DiffPathtracingIntegrator : public DifferentiableIntegrator
 {
 public:
     /**
@@ -36,12 +38,12 @@ public:
      * @param context The raytracing context
      * @param dict Additional parameters
      */
-    RBPIntegrator(const atcg::ref_ptr<RaytracingContext>& context, const atcg::Dictionary& dict);
+    DiffPathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context, const atcg::Dictionary& dict);
 
     /**
      * @brief Destructor
      */
-    ~RBPIntegrator();
+    ~DiffPathtracingIntegrator();
 
     /**
      * @brief A callback to display debug information in imgui
@@ -66,7 +68,7 @@ public:
     virtual void zeroGrad() override;
 
 private:
-    friend class RBPNode;
+    friend class DiffPathNode;
     /**
      * @brief Initialize a pipeline.
      * This function should be overwritten by each child class and it should add its functions to the pipeline and the
@@ -83,17 +85,14 @@ private:
 
 private:
     uint32_t _raygen_index_forward;
-    uint32_t _raygen_index_backward;
     uint32_t _surface_miss_index;
     uint32_t _occlusion_miss_index;
 
     atcg::ref_ptr<OptixScene> _optix_scene;
-    atcg::dref_ptr<RBPParams> _launch_params;
+    atcg::dref_ptr<DiffPathtracingParams> _launch_params;
 
     std::vector<Differentiable*> _differentiable_components;
 
     GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("DiffPath");
-
-    uint32_t _rng_index = 0;
 };
 }    // namespace atcg
