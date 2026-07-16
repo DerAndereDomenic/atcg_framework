@@ -7,6 +7,7 @@
 #include <BSDF/BSDFVPtrTable.cuh>
 #include <Math/mat6.h>
 #include <Integrator/DiffMode.h>
+#include <Sensor/SensorVPtrTable.cuh>
 
 namespace atcg
 {
@@ -29,11 +30,7 @@ struct VolAttachedDiffPathtracingParams
     TraceParameters occlusion_trace_params;
 
     // Cam data
-    float cam_eye[3];
-    float U[3];
-    float V[3];
-    float W[3];
-    float fov_y;
+    const SensorVPtrTable* sensor;
 
     uint32_t rng_index;
 

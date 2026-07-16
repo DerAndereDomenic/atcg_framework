@@ -20,7 +20,6 @@ struct VolDiffPathNode : public torch::autograd::Node
     VolDiffPathtracingIntegrator* integrator;
     torch::Tensor sample;
     uint32_t rng_index;
-    PerspectiveCamera* camera;
     torch::autograd::variable_list apply(torch::autograd::variable_list&& grads) override;
 
     virtual void release_variables() override;
@@ -93,5 +92,6 @@ private:
     std::vector<Differentiable*> _differentiable_components;
 
     GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("DiffPath");
+    uint32_t _frame_counter         = 0;
 };
 }    // namespace atcg

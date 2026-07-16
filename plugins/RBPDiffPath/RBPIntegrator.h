@@ -18,7 +18,6 @@ class RBPIntegrator;
 struct RBPNode : public torch::autograd::Node
 {
     RBPIntegrator* integrator;
-    PerspectiveCamera* camera;
     torch::autograd::variable_list apply(torch::autograd::variable_list&& grads) override;
 
     virtual void release_variables() override;
@@ -94,6 +93,6 @@ private:
 
     GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("DiffPath");
 
-    uint32_t _rng_index = 0;
+    uint32_t _frame_counter = 0;
 };
 }    // namespace atcg

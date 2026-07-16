@@ -21,7 +21,6 @@ torch::autograd::variable_list FiniteDiffPathNode::apply(torch::autograd::variab
 
     Dictionary dict;
     dict.setValue("rng_index", rng_index);
-    dict.setValue("camera", camera);
     dict.setValue("width", width);
     dict.setValue("height", height);
     for(int i = 0; i < parameters.size(); ++i)
@@ -42,10 +41,7 @@ torch::autograd::variable_list FiniteDiffPathNode::apply(torch::autograd::variab
     return parameter_gradients;
 }
 
-void FiniteDiffPathNode::release_variables()
-{
-    camera.reset();
-}
+void FiniteDiffPathNode::release_variables() {}
 
 FiniteDiffPathtracingIntegrator::FiniteDiffPathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context,
                                                                  const Dictionary& dict)
@@ -76,7 +72,6 @@ torch::Tensor FiniteDiffPathtracingIntegrator::sample(Dictionary& in_out_diction
         node->set_next_edges(std::move(next_edges));
         node->integrator = _integrator.get();
         node->rng_index  = in_out_dictionary.getValueOr<uint32_t>("rng_index", 0);
-        node->camera     = in_out_dictionary.getValue<atcg::ref_ptr<atcg::PerspectiveCamera>>("camera");
         node->width      = in_out_dictionary.getValue<uint32_t>("width");
         node->height     = in_out_dictionary.getValue<uint32_t>("height");
 

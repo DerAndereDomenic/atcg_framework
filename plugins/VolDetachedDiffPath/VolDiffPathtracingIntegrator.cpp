@@ -31,7 +31,6 @@ torch::autograd::variable_list VolDiffPathNode::apply(torch::autograd::variable_
     dict.setValue("adjoint_y", adjoint_y);
     dict.setValue("current_sample", sample);
     dict.setValue("rng_index", rng_index);
-    dict.setValue("camera", camera);
 
     integrator->zeroGrad();
     integrator->_backwardTrace(dict);
@@ -111,26 +110,22 @@ void VolDiffPathtracingIntegrator::onImGuiRender()
 
 void VolDiffPathtracingIntegrator::reset()
 {
-    //_frame_counter = 0;
+    _frame_counter = 0;
+    _optix_scene->getSensor()->markDirty();
+    _optix_scene->getSensor()->getFilm()->clear();
 }
 
 torch::Tensor VolDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dictionary)
 {
-    auto camera        = in_out_dictionary.getValue<atcg::ref_ptr<atcg::PerspectiveCamera>>("camera");
-    uint32_t width     = in_out_dictionary.getValue<uint32_t>("width");
-    uint32_t height    = in_out_dictionary.getValue<uint32_t>("height");
-    uint32_t rng_index = in_out_dictionary.getValue<uint32_t>("rng_index");
+    uint32_t width     = _optix_scene->getSensor()->getFilm()->getWidth();
+    uint32_t height    = _optix_scene->getSensor()->getFilm()->getHeight();
+    uint32_t rng_index = in_out_dictionary.getValueOr<uint32_t>("rng_index", _frame_counter++);
 
     torch::Tensor current_sample = torch::zeros({height, width, 3}, atcg::TensorOptions::floatDeviceOptions());
 
     VolDiffPathtracingParams params;
 
-    glm::mat4 inv_camera_view = glm::inverse(camera->getView());
-    memcpy(params.cam_eye, glm::value_ptr(inv_camera_view[3]), sizeof(glm::vec3));
-    memcpy(params.U, glm::value_ptr(glm::normalize(inv_camera_view[0])), sizeof(glm::vec3));
-    memcpy(params.V, glm::value_ptr(glm::normalize(inv_camera_view[1])), sizeof(glm::vec3));
-    memcpy(params.W, glm::value_ptr(-glm::normalize(inv_camera_view[2])), sizeof(glm::vec3));
-    params.fov_y = camera->getFOV();
+    params.sensor = _optix_scene->getSensor()->getVPtrTable();
 
     params.image_height = height;
     params.image_width  = width;
@@ -174,7 +169,6 @@ torch::Tensor VolDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dic
 
 void VolDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictionary)
 {
-    auto camera        = in_out_dictionary.getValue<atcg::PerspectiveCamera*>("camera");
     auto adjoint_y     = in_out_dictionary.getValue<torch::Tensor>("adjoint_y");
     auto sample        = in_out_dictionary.getValue<torch::Tensor>("current_sample");
     uint32_t width     = adjoint_y.size(1);
@@ -183,12 +177,7 @@ void VolDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictionary)
 
     VolDiffPathtracingParams params;
 
-    glm::mat4 inv_camera_view = glm::inverse(camera->getView());
-    memcpy(params.cam_eye, glm::value_ptr(inv_camera_view[3]), sizeof(glm::vec3));
-    memcpy(params.U, glm::value_ptr(glm::normalize(inv_camera_view[0])), sizeof(glm::vec3));
-    memcpy(params.V, glm::value_ptr(glm::normalize(inv_camera_view[1])), sizeof(glm::vec3));
-    memcpy(params.W, glm::value_ptr(-glm::normalize(inv_camera_view[2])), sizeof(glm::vec3));
-    params.fov_y = camera->getFOV();
+    params.sensor = _optix_scene->getSensor()->getVPtrTable();
 
     params.image_height = height;
     params.image_width  = width;
@@ -249,7 +238,6 @@ torch::Tensor VolDiffPathtracingIntegrator::sample(Dictionary& in_out_dictionary
         node->set_next_edges(std::move(next_edges));
         node->integrator = this;
         node->rng_index  = in_out_dictionary.getValueOr<uint32_t>("rng_index", 0);
-        node->camera     = in_out_dictionary.getValue<atcg::ref_ptr<atcg::PerspectiveCamera>>("camera").get();
         node->sample     = result;
 
         torch::autograd::set_history(result, node);

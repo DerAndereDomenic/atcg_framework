@@ -133,9 +133,6 @@ public:
                 for(int i = 0; i < num_samples; ++i)
                 {
                     atcg::Dictionary dict;
-                    dict.setValue("camera", camera_controller->getCamera());
-                    dict.setValue("width", output_texture->width());
-                    dict.setValue("height", output_texture->height());
                     dict.setValue("rng_index", iteration_count * num_samples + i);
                     dict.setValue("debug", debug);
 
@@ -207,11 +204,7 @@ public:
                 torch::NoGradGuard no_grad;
 
                 atcg::Dictionary dict;
-                dict.setValue("camera", camera_controller->getCamera());
-                dict.setValue("width", output_texture->width());
-                dict.setValue("height", output_texture->height());
                 dict.setValue("debug", debug);
-                dict.setValue("rng_index", frame_counter);
                 integrator->generateRays(dict);
                 auto output = dict.getValue<torch::Tensor>("output_img");
 

@@ -21,7 +21,6 @@ struct VolAttachedDiffPathNode : public torch::autograd::Node
     torch::Tensor sample;
     torch::Tensor JL;
     uint32_t rng_index;
-    PerspectiveCamera* camera;
     torch::autograd::variable_list apply(torch::autograd::variable_list&& grads) override;
 
     virtual void release_variables() override;
@@ -100,6 +99,7 @@ private:
     torch::Tensor _last_JL;
     atcg::ref_ptr<Texture2D> _last_JL_texture;
     int _derivative_channel = 0;
+    uint32_t _frame_counter = 0;
 };
 
 }    // namespace atcg

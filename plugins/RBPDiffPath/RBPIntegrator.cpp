@@ -29,7 +29,6 @@ torch::autograd::variable_list RBPNode::apply(torch::autograd::variable_list&& g
     auto adjoint_y = grads[0];
     Dictionary dict;
     dict.setValue("adjoint_y", adjoint_y);
-    dict.setValue("camera", camera);
 
     integrator->zeroGrad();
     integrator->_backwardTrace(dict);
@@ -92,15 +91,16 @@ void RBPIntegrator::onImGuiRender()
 
 void RBPIntegrator::reset()
 {
-    //_frame_counter = 0;
+    _frame_counter = 0;
+    _optix_scene->getSensor()->markDirty();
+    _optix_scene->getSensor()->getFilm()->clear();
 }
 
 torch::Tensor RBPIntegrator::_forwardTrace(Dictionary& in_out_dictionary)
 {
-    auto camera        = in_out_dictionary.getValue<atcg::ref_ptr<atcg::PerspectiveCamera>>("camera");
-    uint32_t width     = in_out_dictionary.getValue<uint32_t>("width");
-    uint32_t height    = in_out_dictionary.getValue<uint32_t>("height");
-    uint32_t rng_index = _rng_index++;
+    uint32_t width     = _optix_scene->getSensor()->getFilm()->getWidth();
+    uint32_t height    = _optix_scene->getSensor()->getFilm()->getHeight();
+    uint32_t rng_index = _frame_counter++;
 
     torch::Tensor current_sample = torch::zeros({height, width, 3}, atcg::TensorOptions::floatDeviceOptions());
 
@@ -148,11 +148,10 @@ torch::Tensor RBPIntegrator::_forwardTrace(Dictionary& in_out_dictionary)
 
 void RBPIntegrator::_backwardTrace(Dictionary& in_out_dictionary)
 {
-    auto camera        = in_out_dictionary.getValue<atcg::PerspectiveCamera*>("camera");
     auto adjoint_y     = in_out_dictionary.getValue<torch::Tensor>("adjoint_y");
     uint32_t width     = adjoint_y.size(1);
     uint32_t height    = adjoint_y.size(0);
-    uint32_t rng_index = _rng_index++;
+    uint32_t rng_index = _frame_counter++;
 
     RBPParams params;
 
@@ -213,7 +212,6 @@ torch::Tensor RBPIntegrator::sample(Dictionary& in_out_dictionary)
         auto next_edges = torch::autograd::collect_next_edges(parameters);
         node->set_next_edges(std::move(next_edges));
         node->integrator = this;
-        node->camera     = in_out_dictionary.getValue<atcg::ref_ptr<atcg::PerspectiveCamera>>("camera").get();
 
         torch::autograd::set_history(result, node);
     }

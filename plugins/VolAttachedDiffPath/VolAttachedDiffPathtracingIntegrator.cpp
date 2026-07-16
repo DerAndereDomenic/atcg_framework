@@ -32,7 +32,6 @@ torch::autograd::variable_list VolAttachedDiffPathNode::apply(torch::autograd::v
     dict.setValue("current_sample", sample);
     dict.setValue("JL_buffer", JL);
     dict.setValue("rng_index", rng_index);
-    dict.setValue("camera", camera);
 
     integrator->zeroGrad();
     integrator->_backwardTrace(dict);
@@ -175,29 +174,26 @@ void VolAttachedDiffPathtracingIntegrator::onImGuiRender()
 
 void VolAttachedDiffPathtracingIntegrator::reset()
 {
-    // _frame_counter = 0;
+    _frame_counter = 0;
     _last_JL.zero_();
+    _optix_scene->getSensor()->markDirty();
+    _optix_scene->getSensor()->getFilm()->clear();
 }
 
 std::tuple<torch::Tensor, torch::Tensor>
 VolAttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dictionary)
 {
-    auto camera        = in_out_dictionary.getValue<atcg::ref_ptr<atcg::PerspectiveCamera>>("camera");
-    uint32_t width     = in_out_dictionary.getValue<uint32_t>("width");
-    uint32_t height    = in_out_dictionary.getValue<uint32_t>("height");
-    uint32_t rng_index = in_out_dictionary.getValue<uint32_t>("rng_index");
+    uint32_t rng_index = in_out_dictionary.getValueOr<uint32_t>("rng_index", _frame_counter++);
+
+    uint32_t width  = _optix_scene->getSensor()->getFilm()->getWidth();
+    uint32_t height = _optix_scene->getSensor()->getFilm()->getHeight();
 
     torch::Tensor current_sample = torch::zeros({height, width, 3}, atcg::TensorOptions::floatDeviceOptions());
     torch::Tensor current_JL     = torch::zeros({height, width, 3 * 6}, atcg::TensorOptions::floatDeviceOptions());
 
     VolAttachedDiffPathtracingParams params;
 
-    glm::mat4 inv_camera_view = glm::inverse(camera->getView());
-    memcpy(params.cam_eye, glm::value_ptr(inv_camera_view[3]), sizeof(glm::vec3));
-    memcpy(params.U, glm::value_ptr(glm::normalize(inv_camera_view[0])), sizeof(glm::vec3));
-    memcpy(params.V, glm::value_ptr(glm::normalize(inv_camera_view[1])), sizeof(glm::vec3));
-    memcpy(params.W, glm::value_ptr(-glm::normalize(inv_camera_view[2])), sizeof(glm::vec3));
-    params.fov_y = camera->getFOV();
+    params.sensor = _optix_scene->getSensor()->getVPtrTable();
 
     params.image_height = height;
     params.image_width  = width;
@@ -236,22 +232,16 @@ VolAttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dictionar
 
 void VolAttachedDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictionary)
 {
-    auto camera        = in_out_dictionary.getValue<atcg::PerspectiveCamera*>("camera");
     auto adjoint_y     = in_out_dictionary.getValue<torch::Tensor>("adjoint_y");
     auto sample        = in_out_dictionary.getValue<torch::Tensor>("current_sample");
     auto JL            = in_out_dictionary.getValue<torch::Tensor>("JL_buffer");
     uint32_t width     = adjoint_y.size(1);
     uint32_t height    = adjoint_y.size(0);
-    uint32_t rng_index = in_out_dictionary.getValue<uint32_t>("rng_index");
+    uint32_t rng_index = in_out_dictionary.getValueOr<uint32_t>("rng_index", _frame_counter);
 
     VolAttachedDiffPathtracingParams params;
 
-    glm::mat4 inv_camera_view = glm::inverse(camera->getView());
-    memcpy(params.cam_eye, glm::value_ptr(inv_camera_view[3]), sizeof(glm::vec3));
-    memcpy(params.U, glm::value_ptr(glm::normalize(inv_camera_view[0])), sizeof(glm::vec3));
-    memcpy(params.V, glm::value_ptr(glm::normalize(inv_camera_view[1])), sizeof(glm::vec3));
-    memcpy(params.W, glm::value_ptr(-glm::normalize(inv_camera_view[2])), sizeof(glm::vec3));
-    params.fov_y = camera->getFOV();
+    params.sensor = _optix_scene->getSensor()->getVPtrTable();
 
     params.image_height = height;
     params.image_width  = width;
@@ -322,7 +312,6 @@ torch::Tensor VolAttachedDiffPathtracingIntegrator::sample(Dictionary& in_out_di
         // node->clear_input_metadata();
         node->integrator = this;
         node->rng_index  = in_out_dictionary.getValueOr<uint32_t>("rng_index", 0);
-        node->camera     = in_out_dictionary.getValue<atcg::ref_ptr<atcg::PerspectiveCamera>>("camera").get();
         node->sample     = result;
         node->JL         = JL;
 

@@ -11,7 +11,6 @@ struct FiniteDiffPathNode : public torch::autograd::Node
     DifferentiableIntegrator* integrator;
     uint32_t rng_index;
     uint32_t width, height;
-    atcg::ref_ptr<PerspectiveCamera> camera;
     torch::autograd::variable_list apply(torch::autograd::variable_list&& grads) override;
 
     virtual void release_variables() override;

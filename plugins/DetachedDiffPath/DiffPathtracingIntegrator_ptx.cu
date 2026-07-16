@@ -36,19 +36,12 @@ extern "C" __global__ void __raygen__forward()
 
     atcg::SampledWavelengths wavelengths = atcg::SampledWavelengths::sampleSpectrum(rng.next1d(), 380.0f, 780.0f);
 
-    glm::vec2 jitter = rng.next2d();
-    float u          = (((float)launch_idx.x + jitter.x) / (float)params.image_width - 0.5f) * 2.0f;
-    float v          = (((float)launch_idx.y + jitter.y) / (float)params.image_height - 0.5f) * 2.0f;
-
-    glm::vec3 cam_eye = glm::make_vec3(params.cam_eye);
-    glm::vec3 U       = glm::make_vec3(params.U) * (float)params.image_width / (float)params.image_height;
-    glm::vec3 V       = glm::make_vec3(params.V);
-    glm::vec3 W       = glm::make_vec3(params.W) / glm::tan(glm::radians(params.fov_y / 2.0f));
+    auto camera_ray = params.sensor->generateRay(glm::ivec2(launch_idx.x, launch_idx.y), rng);
 
     RayContext ray;
 
-    ray.direction = glm::normalize(u * U + v * V + W);
-    ray.origin    = cam_eye;
+    ray.direction = glm::normalize(camera_ray.ray.direction);
+    ray.origin    = camera_ray.ray.origin;
     ray.radiance =
         atcg::select(params.diff_mode == atcg::DiffMode::FORWARD, glm::vec3(0), params.current_sample[pixel_index]);
     ray.throughput = glm::vec3(1);
