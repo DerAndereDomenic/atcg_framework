@@ -19,7 +19,7 @@ public:
     /**
      * @brief Initializes the ray tracing API
      */
-    void initRaytracingAPI();
+    static void initRaytracingAPI();
 
     /**
      * @brief Get the context handle
