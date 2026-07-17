@@ -52,6 +52,7 @@ void Application::init(const WindowProps& props)
     SystemRegistry::instance()->registerSystem(_context_manager.get());
 
 #ifdef ATCG_CUDA_BACKEND
+    atcg::RaytracingContext::initRaytracingAPI();
     _rt_context_manager = atcg::make_ref<RaytracingContextManagerSystem>();
     SystemRegistry::instance()->registerSystem(_rt_context_manager.get());
 
