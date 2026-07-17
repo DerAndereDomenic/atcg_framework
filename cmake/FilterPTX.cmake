@@ -51,5 +51,6 @@ function(add_ptx_module target_prefix ptx_files)
                 $<TARGET_OBJECTS:${ptx_target}> ${ptx_output_dir}
             COMMAND_EXPAND_LISTS
         )
+        target_compile_options(${ptx_target} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
     endif()
 endfunction()
