@@ -11,8 +11,6 @@
 #include <Core/Common.h>
 #include <torch/optim.h>
 
-#include <Integrator/DifferentiableIntegrator.h>
-
 #ifndef ATCG_HEADLESS
     #include <implot.h>
 #endif
@@ -43,9 +41,14 @@ public:
         dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width() / 4);
         dict.setValue<uint32_t>("height", atcg::Renderer::getFramebuffer()->height() / 4);
 
-        auto base_integrator = atcg::IntegratorRegistry::createIntegrator(integrator_type, optx_context, dict);
-        integrator           = std::dynamic_pointer_cast<atcg::DifferentiableIntegrator>(base_integrator);
+        integrator = atcg::IntegratorRegistry::createIntegrator(integrator_type, optx_context, dict);
 #endif
+    }
+
+    torch::Tensor sample(atcg::Dictionary& dict)
+    {
+        integrator->generateRays(dict);
+        return dict.getValue<torch::Tensor>("output_img");
     }
 
     DiffRendLayer(const std::string& name) : atcg::Layer(name) {}
@@ -136,13 +139,13 @@ public:
                     dict.setValue("rng_index", iteration_count * num_samples + i);
                     dict.setValue("debug", debug);
 
-                    result = result + integrator->sample(dict) / (float)num_samples;
+                    result = result + sample(dict) / (float)num_samples;
 
                     {
                         torch::NoGradGuard no_grad;
                         dict.setValue<uint32_t>("rng_index", 1e6 + iteration_count * num_samples + i);
 
-                        fake_result = fake_result + integrator->sample(dict) / (float)num_samples;
+                        fake_result = fake_result + sample(dict) / (float)num_samples;
                     }
                 }
 
@@ -150,13 +153,6 @@ public:
 
                 auto difference = (result_injected - target) * (result_injected - target);
                 auto L          = torch::sum(torch::abs(difference));
-
-                {
-                    torch::NoGradGuard no_grad;
-
-                    torch::Tensor adjoint = 2.0f * (result_injected - target);
-                    integrator->setAdjoint(adjoint);
-                }
 
                 L.backward();
                 optimizer->step();
@@ -171,7 +167,13 @@ public:
                 {
                     torch::NoGradGuard no_grad;
 
-                    integrator->clampParameters();
+                    auto& dict                                  = integrator->getDictionary();
+                    atcg::ref_ptr<atcg::OptixScene> optix_scene = dict.getValue<atcg::ref_ptr<atcg::OptixScene>>("optix"
+                                                                                                                 "_"
+                                                                                                                 "scen"
+                                                                                                                 "e");
+
+                    optix_scene->clampParameters();
                     difference_texture->setData(torch::abs(difference));
                     result_texture->setData(result);
 
@@ -205,8 +207,7 @@ public:
 
                 atcg::Dictionary dict;
                 dict.setValue("debug", debug);
-                integrator->generateRays(dict);
-                auto output = dict.getValue<torch::Tensor>("output_img");
+                auto output = sample(dict);
 
                 if(frame_counter > 0)
                 {
@@ -434,10 +435,11 @@ public:
             optimize      = !optimize;
             if(optimize)
             {
-                // integrator->markOptimizable();
-                ATCG_DEBUG("Optimizing {} parameters", integrator->getParameters().size());
+                auto& dict                                  = integrator->getDictionary();
+                atcg::ref_ptr<atcg::OptixScene> optix_scene = dict.getValue<atcg::ref_ptr<atcg::OptixScene>>("optix_"
+                                                                                                             "scene");
                 optimizer =
-                    atcg::make_ref<torch::optim::Adam>(integrator->getParameters(), torch::optim::AdamOptions(0.01));
+                    atcg::make_ref<torch::optim::Adam>(optix_scene->getParameters(), torch::optim::AdamOptions(0.01));
                 iteration_count = 0;
                 time_collection.resetStatistics();
                 loss_collection.resetStatistics();
@@ -615,7 +617,7 @@ private:
 
 #ifdef ATCG_CUDA_BACKEND
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
-    atcg::ref_ptr<atcg::DifferentiableIntegrator> integrator;
+    atcg::ref_ptr<atcg::Integrator> integrator;
     uint32_t current_integrator_selection_index = 0;
     torch::Tensor target;
     torch::Tensor accumulated_output;
