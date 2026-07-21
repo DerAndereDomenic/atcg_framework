@@ -121,6 +121,7 @@
 
 //-------- Optix ------------
 #ifdef ATCG_CUDA_BACKEND
+    #include <Core/OptixComponent.h>
     #include <Core/RaytracingPipeline.h>
     #include <Core/ShaderBindingTable.h>
     #include <Integrator/PathtracingIntegrator.h>

@@ -11,7 +11,7 @@
 
 namespace atcg
 {
-class ATCG_API HomogeneousMedium : public Medium, public Differentiable
+class ATCG_API HomogeneousMedium : public Medium
 {
 public:
     /**

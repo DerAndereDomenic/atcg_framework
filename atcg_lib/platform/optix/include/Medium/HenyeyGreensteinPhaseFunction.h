@@ -10,7 +10,7 @@ namespace atcg
 /**
  * @brief Henyey Greenstein Phase function
  */
-class ATCG_API HenyeyGreensteinPhaseFunction : public PhaseFunction, public Differentiable
+class ATCG_API HenyeyGreensteinPhaseFunction : public PhaseFunction
 {
 public:
     /**

@@ -40,7 +40,7 @@ private:
     bool _initialized = false;
 };
 
-class Differentiable
+class ATCG_API Differentiable
 {
 public:
     virtual void markParametersAsOptimizable(const std::string& parameter_name) = 0;

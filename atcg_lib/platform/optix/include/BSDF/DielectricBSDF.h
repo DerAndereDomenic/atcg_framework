@@ -7,7 +7,7 @@
 
 namespace atcg
 {
-class ATCG_API DielectricBSDF : public BSDF, public Differentiable
+class ATCG_API DielectricBSDF : public BSDF
 {
 public:
     /**

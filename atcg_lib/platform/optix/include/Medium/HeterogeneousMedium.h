@@ -12,7 +12,7 @@
 
 namespace atcg
 {
-class ATCG_API HeterogeneousMedium : public Medium, public Differentiable
+class ATCG_API HeterogeneousMedium : public Medium
 {
 public:
     HeterogeneousMedium(const Dictionary& dict);
