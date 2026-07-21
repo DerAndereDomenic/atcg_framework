@@ -166,6 +166,21 @@ inline void defineBindings(py::module_& m)
                                                                                                           "egrator");
     auto m_integrator_registry = m.def_submodule("IntegratorRegistry");
     auto m_bsdf_registry       = m.def_submodule("BSDFRegistry");
+    auto m_optix_scene    = py::class_<atcg::OptixScene, atcg::Scene, atcg::ref_ptr<atcg::OptixScene>>(m, "OptixScene");
+    auto m_bsdf_component = py::class_<atcg::BSDFComponent>(m, "BSDFComponent");
+    auto m_medium_component         = py::class_<atcg::MediumComponent>(m, "MediumComponent");
+    auto m_phase_function_component = py::class_<atcg::PhaseFunctionComponent>(m, "PhaseFunctionComponent");
+
+    auto m_optix_component = py::class_<atcg::OptixComponent, atcg::ref_ptr<atcg::OptixComponent>>(m, "OptixComponent");
+    auto m_differentiable  = py::class_<atcg::Differentiable, atcg::ref_ptr<atcg::Differentiable>>(m, "Differentiable");
+    auto m_bsdf =
+        py::class_<atcg::BSDF, atcg::OptixComponent, atcg::Differentiable, atcg::ref_ptr<atcg::BSDF>>(m, "BSDF");
+    auto m_medium =
+        py::class_<atcg::Medium, atcg::OptixComponent, atcg::Differentiable, atcg::ref_ptr<atcg::Medium>>(m, "Medium");
+    auto m_phase_function =
+        py::class_<atcg::PhaseFunction, atcg::OptixComponent, atcg::Differentiable, atcg::ref_ptr<atcg::PhaseFunction>>(
+            m,
+            "PhaseFunction");
 #endif
 
 #ifndef ATCG_HEADLESS
@@ -1369,7 +1384,7 @@ inline void defineBindings(py::module_& m)
             "createEntity",
             [](const atcg::ref_ptr<atcg::Scene>& scene, const std::string& name) { return scene->createEntity(name); },
             "name"_a = "Entity")
-        .def("getEntityByName", &atcg::Scene::getEntitiesByName, "name"_a)
+        .def("getEntitiesByName", &atcg::Scene::getEntitiesByName, "name"_a)
         .def("getEntities",
              [](const atcg::ref_ptr<atcg::Scene>& scene)
              {
@@ -1756,6 +1771,36 @@ inline void defineBindings(py::module_& m)
         "createIntegrator",
         [](const std::string& type, const atcg::ref_ptr<atcg::RaytracingContext>& context, const atcg::Dictionary& dict)
         { return atcg::IntegratorRegistry::createIntegrator(type, context, dict); });
+
+    m_optix_scene.def("getParameters", &atcg::OptixScene::getParameters)
+        .def("getParameterGradients", &atcg::OptixScene::getParameterGradients)
+        .def("zeroGrad", &atcg::OptixScene::zeroGrad)
+        .def("clampParameters", &atcg::OptixScene::clampParameters);
+
+    m_bsdf_component.def_readonly("bsdf", &atcg::BSDFComponent::bsdf);
+    m_medium_component.def_readonly("medium", &atcg::MediumComponent::medium);
+    m_phase_function_component.def_readonly("phase_function", &atcg::PhaseFunctionComponent::phase_function);
+
+    m_differentiable
+        .def("markParametersAsOptimizable",
+             [](const atcg::ref_ptr<atcg::Differentiable>& self, const std::vector<std::string>& parameter_names)
+             { self->markParametersAsOptimizable(parameter_names); })
+        .def("markParametersAsOptimizable",
+             [](const atcg::ref_ptr<atcg::Differentiable>& self, const std::string& parameter_name)
+             { self->markParametersAsOptimizable(parameter_name); })
+        .def("getParameter", &atcg::Differentiable::getParameter)
+        .def("getGradient", &atcg::Differentiable::getGradient)
+        .def("setParameter", &atcg::Differentiable::setParameter)
+        .def("zeroGradientBuffers", &atcg::Differentiable::zeroGradientBuffers)
+        .def("getOptimizableParameterList", &atcg::Differentiable::getOptimizableParameterList)
+        .def("getOptimizableGradientList", &atcg::Differentiable::getOptimizableGradientList)
+        .def("hasParameter", &atcg::Differentiable::hasParameter)
+        .def("isParameterOptimizable", &atcg::Differentiable::isParameterOptimizable);
+
+    m_entity.def("getBSDFComponent", &atcg::Entity::getComponent<atcg::BSDFComponent>)
+        .def("getMediumComponent", &atcg::Entity::getComponent<atcg::MediumComponent>)
+        .def("getPhaseFunctionComponent", &atcg::Entity::getComponent<atcg::PhaseFunctionComponent>);
+
 #endif
     // IMGUI BINDINGS
 
