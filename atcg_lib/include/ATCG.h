@@ -126,7 +126,6 @@
     #include <Integrator/PathtracingIntegrator.h>
     #include <Integrator/VolPathtracingIntegrator.h>
     #include <Integrator/PhotonMapIntegrator.h>
-    #include <Integrator/DifferentiableIntegrator.h>
     #include <Core/RaytracingContextManager.h>
 #endif
 
