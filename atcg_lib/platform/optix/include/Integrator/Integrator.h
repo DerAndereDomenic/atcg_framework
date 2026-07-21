@@ -70,10 +70,20 @@ public:
      */
     ATCG_INLINE atcg::ref_ptr<ShaderBindingTable> getSBT() const { return _sbt; }
 
+    /**
+     * @brief Get a dictionary with additional parameters.
+     * This is not the dictionary used to construct the integrator. This is only used to get integrator specific
+     * parameters that are set during the execution of the integrator.
+     *
+     * @return The dictionary
+     */
+    ATCG_INLINE Dictionary& getDictionary() { return _dict; }
+
 protected:
     atcg::ref_ptr<RaytracingContext> _context;
 
     atcg::ref_ptr<RayTracingPipeline> _pipeline;
     atcg::ref_ptr<ShaderBindingTable> _sbt;
+    Dictionary _dict;
 };
 }    // namespace atcg
