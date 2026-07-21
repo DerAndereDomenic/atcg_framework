@@ -17,7 +17,5 @@ struct DielectricBSDFData
     bool optimize_diffuse   = false;
     bool optimize_roughness = false;
     bool optimize_ior       = false;
-
-    bool optimizable = false;
 };
 }    // namespace atcg

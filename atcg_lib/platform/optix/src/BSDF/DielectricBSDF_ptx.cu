@@ -388,7 +388,7 @@ extern "C" __device__ void __direct_callable__sample_backward_dielectricbsdf(con
 {
     atcg::DielectricBSDFData* sbt_data = *reinterpret_cast<atcg::DielectricBSDFData**>(optixGetSbtDataPointer());
 
-    if(!sbt_data->optimizable) return;
+    if(!sbt_data->optimize_diffuse || !sbt_data->optimize_roughness || !sbt_data->optimize_ior) return;
 
     if(isnan(dLdwo.x) || isnan(dLdwo.y)) return;
 
@@ -502,12 +502,15 @@ extern "C" __device__ void __direct_callable__sample_backward_dielectricbsdf(con
 
     if(isnan(glm::length2(dLdalbedo)) || isnan(dLdr) || isnan(dLdr)) return;
 
+    if(sbt_data->optimize_diffuse)
     {
         sbt_data->diffuse_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(dLdalbedo, si.uv);
     }
+    if(sbt_data->optimize_ior)
     {
         sbt_data->ior_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(dLdior, si.uv);
     }
+    if(sbt_data->optimize_roughness)
     {
         sbt_data->roughness_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(dLdr, si.uv);
     }

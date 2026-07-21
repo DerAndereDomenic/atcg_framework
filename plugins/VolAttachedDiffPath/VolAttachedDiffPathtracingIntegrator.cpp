@@ -33,10 +33,10 @@ torch::autograd::variable_list VolAttachedDiffPathNode::apply(torch::autograd::v
     dict.setValue("JL_buffer", JL);
     dict.setValue("rng_index", rng_index);
 
-    integrator->zeroGrad();
+    integrator->_optix_scene->zeroGrad();
     integrator->_backwardTrace(dict);
 
-    return integrator->getParameterGradients();
+    return integrator->_optix_scene->getParameterGradients();
 }
 
 void VolAttachedDiffPathNode::release_variables()
@@ -48,7 +48,7 @@ void VolAttachedDiffPathNode::release_variables()
 VolAttachedDiffPathtracingIntegrator::VolAttachedDiffPathtracingIntegrator(
     const atcg::ref_ptr<RaytracingContext>& context,
     const Dictionary& dict)
-    : DifferentiableIntegrator(context, dict)
+    : Integrator(context, dict)
 {
     _pipeline = atcg::make_ref<RayTracingPipeline>(context, 2);
     initializePipeline(dict);
@@ -83,6 +83,8 @@ void VolAttachedDiffPathtracingIntegrator::initializePipeline(const Dictionary& 
 
     _optix_scene = SceneAdapter(_context, _pipeline, _sbt).apply(scene, width, height);
 
+    _dict.setValue("optix_scene", _optix_scene);
+
     TextureSpecification spec;
     spec.width       = width;
     spec.height      = height;
@@ -91,34 +93,6 @@ void VolAttachedDiffPathtracingIntegrator::initializePipeline(const Dictionary& 
 
     _pipeline->createPipeline();
     _sbt->createSBT();
-
-    _differentiable_components.clear();
-    for(auto shape: _optix_scene->getShapes())
-    {
-        auto bsdf_diff = std::dynamic_pointer_cast<Differentiable>(shape->getBSDF());
-        if(bsdf_diff)
-        {
-            _differentiable_components.push_back(bsdf_diff.get());
-        }
-
-        if(shape->getInsideMedium())
-        {
-            auto medium_diff = std::dynamic_pointer_cast<Differentiable>(shape->getInsideMedium());
-            if(medium_diff)
-            {
-                _differentiable_components.push_back(medium_diff.get());
-            }
-
-            auto phase_function =
-                std::dynamic_pointer_cast<Differentiable>(shape->getInsideMedium()->getPhaseFunction());
-            if(phase_function)
-            {
-                _differentiable_components.push_back(phase_function.get());
-            }
-        }
-    }
-
-    ATCG_TRACE("Number differentiable objects: {}", _differentiable_components.size());
 }
 
 void VolAttachedDiffPathtracingIntegrator::onImGuiRender()
@@ -278,9 +252,9 @@ void VolAttachedDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dic
                       stream);
 }
 
-torch::Tensor VolAttachedDiffPathtracingIntegrator::sample(Dictionary& in_out_dictionary)
+void VolAttachedDiffPathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
 {
-    const auto& parameters = getParameters();
+    const auto& parameters = _optix_scene->getParameters();
 
     bool is_executable = parameters.size() > 0 && torch::autograd::GradMode::is_enabled() &&
                          torch::autograd::any_variable_requires_grad(parameters);
@@ -318,61 +292,6 @@ torch::Tensor VolAttachedDiffPathtracingIntegrator::sample(Dictionary& in_out_di
         torch::autograd::set_history(result, node);
     }
 
-
-    return result;
-}
-
-std::vector<torch::Tensor> VolAttachedDiffPathtracingIntegrator::getParameters() const
-{
-    std::vector<torch::Tensor> parameters;
-    for(auto obj: _differentiable_components)
-    {
-        if(!obj->isOptimizable()) continue;
-        auto obj_parameters = obj->getParameters();
-
-        parameters.insert(parameters.end(), obj_parameters.begin(), obj_parameters.end());
-    }
-
-    return parameters;
-}
-
-std::vector<torch::Tensor> VolAttachedDiffPathtracingIntegrator::getParameterGradients() const
-{
-    std::vector<torch::Tensor> gradients;
-    for(auto obj: _differentiable_components)
-    {
-        if(!obj->isOptimizable()) continue;
-        auto obj_gradients = obj->getParameterGradients();
-
-        gradients.insert(gradients.end(), obj_gradients.begin(), obj_gradients.end());
-    }
-
-    return gradients;
-}
-
-void VolAttachedDiffPathtracingIntegrator::zeroGrad()
-{
-    for(auto obj: _differentiable_components)
-    {
-        if(!obj->isOptimizable()) continue;
-        obj->zeroGrad();
-    }
-}
-
-void VolAttachedDiffPathtracingIntegrator::clampParameters()
-{
-    for(auto obj: _differentiable_components)
-    {
-        if(!obj->isOptimizable()) continue;
-        obj->clampParameters();
-    }
-}
-
-void VolAttachedDiffPathtracingIntegrator::markOptimizable()
-{
-    for(auto obj: _differentiable_components)
-    {
-        obj->markOptimizable();
-    }
+    in_out_dictionary.setValue("output_img", result);
 }
 }    // namespace atcg

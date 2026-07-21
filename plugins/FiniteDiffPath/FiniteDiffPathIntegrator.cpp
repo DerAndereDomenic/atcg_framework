@@ -6,6 +6,7 @@
 #include <torch/csrc/autograd/VariableTypeUtils.h>
 #include <torch/csrc/autograd/functions/utils.h>
 #include <Utils/Utils.h>
+#include <Scene/OptixScene.h>
 
 namespace atcg
 {
@@ -13,7 +14,8 @@ torch::autograd::variable_list FiniteDiffPathNode::apply(torch::autograd::variab
 {
     torch::NoGradGuard no_grad;
     // Apply backward pass for each gradient
-    auto parameters = integrator->getParameters();
+    auto optix_scene = integrator->getDictionary().getValue<atcg::ref_ptr<OptixScene>>("optix_scene");
+    auto parameters  = optix_scene->getParameters();
 
     std::vector<torch::Tensor> parameter_gradients;
 
@@ -29,9 +31,12 @@ torch::autograd::variable_list FiniteDiffPathNode::apply(torch::autograd::variab
         auto copy      = parameter.clone();
         // Perturb the parameter positively
         parameter.copy_(copy + h);
-        auto output_pos = integrator->sample(dict);
+        Dictionary dict;
+        integrator->generateRays(dict);
+        torch::Tensor output_pos = dict.getValue<torch::Tensor>("output_img");
         parameter.copy_(copy - h);    // Perturb the parameter negatively
-        auto output_neg = integrator->sample(dict);
+        integrator->generateRays(dict);
+        torch::Tensor output_neg = dict.getValue<torch::Tensor>("output_img");
         parameter.copy_(copy);    // Restore original value
         // Compute finite difference gradient
         auto grad = (output_pos - output_neg) / (2 * h);
@@ -45,16 +50,17 @@ void FiniteDiffPathNode::release_variables() {}
 
 FiniteDiffPathtracingIntegrator::FiniteDiffPathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context,
                                                                  const Dictionary& dict)
-    : DifferentiableIntegrator(context, dict)
+    : Integrator(context, dict)
 {
-    _integrator = dict.getValue<atcg::ref_ptr<DifferentiableIntegrator>>("integrator");
+    _integrator = dict.getValue<atcg::ref_ptr<Integrator>>("integrator");
 }
 
 FiniteDiffPathtracingIntegrator::~FiniteDiffPathtracingIntegrator() {}
 
-torch::Tensor FiniteDiffPathtracingIntegrator::sample(Dictionary& in_out_dictionary)
+void FiniteDiffPathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
 {
-    const auto& parameters = getParameters();
+    auto optix_scene       = _integrator->getDictionary().getValue<atcg::ref_ptr<OptixScene>>("optix_scene");
+    const auto& parameters = optix_scene->getParameters();
 
     bool is_executable = parameters.size() > 0 && torch::autograd::GradMode::is_enabled() &&
                          torch::autograd::any_variable_requires_grad(parameters);
@@ -62,7 +68,7 @@ torch::Tensor FiniteDiffPathtracingIntegrator::sample(Dictionary& in_out_diction
     torch::Tensor result;
     {
         torch::NoGradGuard no_grad;
-        result = _integrator->sample(in_out_dictionary);
+        _integrator->generateRays(in_out_dictionary);
     }
 
     if(is_executable)
@@ -78,7 +84,7 @@ torch::Tensor FiniteDiffPathtracingIntegrator::sample(Dictionary& in_out_diction
         torch::autograd::set_history(result, node);
     }
 
-    return result;
+    in_out_dictionary.setValue("output_img", result);
 }
 
 void FiniteDiffPathtracingIntegrator::onImGuiRender()
@@ -89,31 +95,6 @@ void FiniteDiffPathtracingIntegrator::onImGuiRender()
 void FiniteDiffPathtracingIntegrator::reset()
 {
     _integrator->reset();
-}
-
-std::vector<torch::Tensor> FiniteDiffPathtracingIntegrator::getParameters() const
-{
-    return _integrator->getParameters();
-}
-
-std::vector<torch::Tensor> FiniteDiffPathtracingIntegrator::getParameterGradients() const
-{
-    return _integrator->getParameterGradients();
-}
-
-void FiniteDiffPathtracingIntegrator::clampParameters()
-{
-    _integrator->clampParameters();
-}
-
-void FiniteDiffPathtracingIntegrator::markOptimizable()
-{
-    _integrator->markOptimizable();
-}
-
-void FiniteDiffPathtracingIntegrator::zeroGrad()
-{
-    _integrator->zeroGrad();
 }
 
 }    // namespace atcg

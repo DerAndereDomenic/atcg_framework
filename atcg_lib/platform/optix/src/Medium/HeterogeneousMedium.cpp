@@ -19,18 +19,18 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium(dict)
 
     auto density_grid     = dict.getValue<GridComponent>("density_grid");
     auto density_texture  = AssetManager::getAsset<Texture3D>(density_grid.handle);
-    _density_tensor       = density_texture ? density_texture->getData(atcg::GPU) : torch::Tensor();
+    auto density_tensor   = density_texture ? density_texture->getData(atcg::GPU) : torch::Tensor();
     auto emission_grid    = dict.getValue<GridComponent>("emission_grid");
     auto emission_texture = AssetManager::getAsset<Texture3D>(emission_grid.handle);
     _emission_tensor      = emission_texture ? emission_texture->getData(atcg::GPU) : torch::Tensor();
     auto albedo_grid      = dict.getValue<GridComponent>("albedo_grid");
     auto albedo_texture   = AssetManager::getAsset<Texture3D>(albedo_grid.handle);
-    _albedo_tensor        = albedo_texture ? albedo_texture->getData(atcg::GPU) : torch::Tensor();
+    auto albedo_tensor    = albedo_texture ? albedo_texture->getData(atcg::GPU) : torch::Tensor();
 
-    auto density_majorant = _density_tensor.max().item<float>();
+    auto density_majorant = density_tensor.max().item<float>();
 
     data.density_grid.storage.sampler =
-        TextureSampler<float>((std::byte*)_density_tensor.data_ptr(), density_texture->getSpecification());
+        TextureSampler<float>((std::byte*)density_tensor.data_ptr(), density_texture->getSpecification());
     data.density_grid.scale = density_grid.scale;
     data.density_majorant   = density_majorant * data.density_grid.scale;
     {
@@ -57,7 +57,7 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium(dict)
         data.emission_grid.to_uvw = to_uvw;
     }
 
-    data.albedo_grid.storage.sampler = albedo_texture ? TextureSampler<glm::vec3>((std::byte*)_albedo_tensor.data_ptr(),
+    data.albedo_grid.storage.sampler = albedo_texture ? TextureSampler<glm::vec3>((std::byte*)albedo_tensor.data_ptr(),
                                                                                   albedo_texture->getSpecification())
                                                       : TextureSampler<glm::vec3>();
     data.albedo_grid.scale           = albedo_grid.scale;
@@ -69,6 +69,9 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium(dict)
         to_uvw                  = to_uvw * world_to_local;
         data.albedo_grid.to_uvw = to_uvw;
     }
+
+    setParameter("density", density_tensor);
+    setParameter("albedo", albedo_tensor);
 
     _data_buffer.upload(&data);
 }
@@ -114,65 +117,12 @@ void HeterogeneousMedium::onImGuiRender()
 {
     if(ImGui::Button("Optimize Density"))
     {
-        atcg::TextureSpecification spec;
-        spec.width             = 256;
-        spec.height            = 256;
-        spec.depth             = 256;
-        spec.format            = TextureFormat::RFLOAT;
-        spec.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
-
-        _optimize_density = true;
-        _optimizable      = true;
-
-        _density_tensor = torch::ones({256, 256, 256}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
-        _density_grad_tensor = torch::zeros({256, 256, 256}, atcg::TensorOptions::floatDeviceOptions());
-
-        HeterogeneousMediumData data;
-        _data_buffer.download(&data);
-
-        data.optimize_density             = true;
-        data.density_majorant             = 1.0f;
-        data.density_grid.storage.sampler = TextureSampler<float>((std::byte*)_density_tensor.data_ptr(), spec);
-        data.density_grid.storage.writer  = TextureWriter<float>((std::byte*)_density_grad_tensor.data_ptr(), spec);
-
-        _data_buffer.upload(&data);
-
-        spec.depth            = 0;
-        spec.format           = TextureFormat::RGFLOAT;
-        _density_texture      = atcg::Texture2D::create(spec);
-        _density_grad_texture = atcg::Texture2D::create(spec);
+        markParametersAsOptimizable("density");
     }
 
     if(ImGui::Button("Optimize Albedo"))
     {
-        atcg::TextureSpecification spec;
-        spec.width             = 256;
-        spec.height            = 256;
-        spec.depth             = 256;
-        spec.format            = TextureFormat::RGBFLOAT;
-        spec.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
-
-        _optimize_albedo = true;
-        _optimizable     = true;
-
-        _albedo_tensor =
-            torch::ones({256, 256, 256, 3}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
-        _albedo_grad_tensor = torch::zeros({256, 256, 256, 3}, atcg::TensorOptions::floatDeviceOptions());
-
-        HeterogeneousMediumData data;
-        _data_buffer.download(&data);
-
-        data.optimize_albedo             = true;
-        data.albedo_grid.storage.sampler = TextureSampler<glm::vec3>((std::byte*)_albedo_tensor.data_ptr(), spec);
-        data.albedo_grid.storage.writer  = TextureWriter<glm::vec3>((std::byte*)_albedo_grad_tensor.data_ptr(), spec);
-        data.albedo_grid.scale           = 1.0f;
-
-        _data_buffer.upload(&data);
-
-        spec.depth           = 0;
-        spec.format          = TextureFormat::RGBFLOAT;
-        _albedo_texture      = atcg::Texture2D::create(spec);
-        _albedo_grad_texture = atcg::Texture2D::create(spec);
+        markParametersAsOptimizable("albedo");
     }
 
     auto normalize = [](torch::Tensor inp) -> torch::Tensor
@@ -195,23 +145,24 @@ void HeterogeneousMedium::onImGuiRender()
         return normalize(y);
     };
 
-    if(_optimize_density)
+    if(isParameterOptimizable("density"))
     {
         ImGui::SliderInt("Layer##density", &_layer_density, 0, 255);
 
-        if(_density_tensor.defined())
+        auto density_tensor = getParameter("density");
+        if(density_tensor.defined())
         {
             auto density_slice =
-                _density_tensor.index({torch::indexing::Slice(), torch::indexing::Slice(), _layer_density})
+                density_tensor.index({torch::indexing::Slice(), torch::indexing::Slice(), _layer_density})
                     .unsqueeze(-1)
                     .contiguous();
             _density_texture->setData(pos_neg(density_slice));
             ImGui::Image((ImTextureID)_density_texture->getID(), ImVec2(256, 256), ImVec2 {0, 1}, ImVec2 {1, 0});
         }
 
-        if(_density_tensor.grad().defined())
+        if(density_tensor.grad().defined())
         {
-            auto density_grad_slice = _density_tensor.grad()
+            auto density_grad_slice = density_tensor.grad()
                                           .index({torch::indexing::Slice(), torch::indexing::Slice(), _layer_density})
                                           .unsqueeze(-1)
                                           .contiguous();
@@ -222,14 +173,15 @@ void HeterogeneousMedium::onImGuiRender()
         }
     }
 
-    if(_optimize_albedo)
+    if(isParameterOptimizable("albedo"))
     {
         ImGui::SliderInt("Layer##albedo", &_layer_albedo, 0, 255);
 
-        if(_albedo_tensor.defined())
+        auto albedo_tensor = getParameter("albedo");
+        if(albedo_tensor.defined())
         {
             auto albedo_slice =
-                _albedo_tensor
+                albedo_tensor
                     .index(
                         {torch::indexing::Slice(), torch::indexing::Slice(), _layer_albedo, torch::indexing::Slice()})
                     .contiguous();
@@ -237,10 +189,10 @@ void HeterogeneousMedium::onImGuiRender()
             ImGui::Image((ImTextureID)_albedo_texture->getID(), ImVec2(256, 256), ImVec2 {0, 1}, ImVec2 {1, 0});
         }
 
-        if(_albedo_tensor.grad().defined())
+        if(albedo_tensor.grad().defined())
         {
             auto albedo_grad_slice =
-                _albedo_tensor.grad()
+                albedo_tensor.grad()
                     .index(
                         {torch::indexing::Slice(), torch::indexing::Slice(), _layer_albedo, torch::indexing::Slice()})
                     .contiguous();
@@ -252,34 +204,24 @@ void HeterogeneousMedium::onImGuiRender()
     }
 }
 
-std::vector<torch::Tensor> HeterogeneousMedium::getParameters() const
+void HeterogeneousMedium::clampParameters()
 {
-    std::vector<torch::Tensor> params;
-
-    if(_optimize_albedo) params.push_back(_albedo_tensor);
-    if(_optimize_density) params.push_back(_density_tensor);
-
-    return params;
+    if(isParameterOptimizable("density"))
+    {
+        auto density_tensor = getParameter("density");
+        // Clamp density to be non-negative.
+        density_tensor.clamp_(0.0f);
+    }
+    else if(isParameterOptimizable("albedo"))
+    {
+        auto albedo_tensor = getParameter("albedo");
+        albedo_tensor.clamp_(0.0f, 1.0f);
+    }
 }
 
-std::vector<torch::Tensor> HeterogeneousMedium::getParameterGradients() const
+void HeterogeneousMedium::markParametersAsOptimizable(const std::string& parameter_name)
 {
-    std::vector<torch::Tensor> gradients;
-
-    if(_optimize_albedo) gradients.push_back(_albedo_grad_tensor);
-    if(_optimize_density) gradients.push_back(_density_grad_tensor);
-
-    return gradients;
-}
-
-void HeterogeneousMedium::zeroGrad()
-{
-    if(_optimize_albedo) _albedo_grad_tensor.zero_();
-    if(_optimize_density) _density_grad_tensor.zero_();
-}
-
-void HeterogeneousMedium::HeterogeneousMedium::markOptimizable()
-{
+    if(parameter_name == "density")
     {
         atcg::TextureSpecification spec;
         spec.width             = 256;
@@ -288,20 +230,18 @@ void HeterogeneousMedium::HeterogeneousMedium::markOptimizable()
         spec.format            = TextureFormat::RFLOAT;
         spec.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
 
-        _optimize_density = true;
-        _optimizable      = true;
-
-        _density_tensor = torch::ones({256, 256, 256}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
-        _density_grad_tensor = torch::zeros({256, 256, 256}, atcg::TensorOptions::floatDeviceOptions());
+        auto density_tensor =
+            torch::ones({256, 256, 256}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
+        setParameter("density", density_tensor);
+        auto density_grad_tensor = getGradient("density");
 
         HeterogeneousMediumData data;
         _data_buffer.download(&data);
 
         data.optimize_density             = true;
         data.density_majorant             = 1.0f;
-        data.density_grid.storage.sampler = TextureSampler<float>((std::byte*)_density_tensor.data_ptr(), spec);
-        data.density_grid.storage.writer  = TextureWriter<float>((std::byte*)_density_grad_tensor.data_ptr(), spec);
-        data.density_grid.scale           = 1.0f;
+        data.density_grid.storage.sampler = TextureSampler<float>((std::byte*)density_tensor.data_ptr(), spec);
+        data.density_grid.storage.writer  = TextureWriter<float>((std::byte*)density_grad_tensor.data_ptr(), spec);
 
         _data_buffer.upload(&data);
 
@@ -310,7 +250,7 @@ void HeterogeneousMedium::HeterogeneousMedium::markOptimizable()
         _density_texture      = atcg::Texture2D::create(spec);
         _density_grad_texture = atcg::Texture2D::create(spec);
     }
-
+    else if(parameter_name == "albedo")
     {
         atcg::TextureSpecification spec;
         spec.width             = 256;
@@ -319,19 +259,17 @@ void HeterogeneousMedium::HeterogeneousMedium::markOptimizable()
         spec.format            = TextureFormat::RGBFLOAT;
         spec.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
 
-        _optimize_albedo = true;
-        _optimizable     = true;
-
-        _albedo_tensor =
+        auto albedo_tensor =
             torch::ones({256, 256, 256, 3}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
-        _albedo_grad_tensor = torch::zeros({256, 256, 256, 3}, atcg::TensorOptions::floatDeviceOptions());
+        setParameter("albedo", albedo_tensor);
+        auto albedo_grad_tensor = getGradient("albedo");
 
         HeterogeneousMediumData data;
         _data_buffer.download(&data);
 
         data.optimize_albedo             = true;
-        data.albedo_grid.storage.sampler = TextureSampler<glm::vec3>((std::byte*)_albedo_tensor.data_ptr(), spec);
-        data.albedo_grid.storage.writer  = TextureWriter<glm::vec3>((std::byte*)_albedo_grad_tensor.data_ptr(), spec);
+        data.albedo_grid.storage.sampler = TextureSampler<glm::vec3>((std::byte*)albedo_tensor.data_ptr(), spec);
+        data.albedo_grid.storage.writer  = TextureWriter<glm::vec3>((std::byte*)albedo_grad_tensor.data_ptr(), spec);
         data.albedo_grid.scale           = 1.0f;
 
         _data_buffer.upload(&data);
@@ -341,26 +279,6 @@ void HeterogeneousMedium::HeterogeneousMedium::markOptimizable()
         _albedo_texture      = atcg::Texture2D::create(spec);
         _albedo_grad_texture = atcg::Texture2D::create(spec);
     }
-
-    auto phase = std::dynamic_pointer_cast<Differentiable>(_phase_function);
-    if(phase)
-    {
-        phase->markOptimizable();
-    }
 }
 
-void HeterogeneousMedium::clampParameters()
-{
-    if(_optimize_density)
-    {
-        // Clamp density to be non-negative.
-        _density_tensor.clamp_(0.0f);
-        _albedo_tensor.clamp_(0.0f, 1.0f);
-
-        HeterogeneousMediumData data;
-        _data_buffer.download(&data);
-        data.density_majorant = _density_tensor.max().item<float>();
-        _data_buffer.upload(&data);
-    }
-}
 }    // namespace atcg

@@ -11,10 +11,12 @@ HenyeyGreensteinPhaseFunction::HenyeyGreensteinPhaseFunction(const atcg::Diction
 {
     float g = dict.getValueOr<float>("g", 0.0f);
 
-    _g_tensor = atcg::createHostTensorFromPointer(&g, {1}).cuda();
+    auto g_tensor = atcg::createHostTensorFromPointer(&g, {1}).cuda();
+
+    setParameter("g", g_tensor);
 
     HenyeyGreensteinPhaseFunctionData data;
-    data.g = (float*)_g_tensor.data_ptr();
+    data.g = (float*)g_tensor.data_ptr();
 
     _data_buffer.upload(&data);
 }
@@ -61,27 +63,14 @@ void HenyeyGreensteinPhaseFunction::onImGuiRender()
 {
     if(ImGui::Button("Optimize g"))
     {
-        _g_tensor = torch::zeros({1}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
-
-        _g_grad_tensor = torch::zeros({1}, atcg::TensorOptions::floatDeviceOptions());
-
-        HenyeyGreensteinPhaseFunctionData data;
-        _data_buffer.download(&data);
-
-        data.g          = (float*)_g_tensor.data_ptr();
-        data.g_grad     = (float*)_g_grad_tensor.data_ptr();
-        data.optimize_g = true;
-
-        _data_buffer.upload(&data);
-
-        _optimize_g  = true;
-        _optimizable = true;
+        markParametersAsOptimizable("g");
     }
 
-    if(_optimize_g)
+    if(isParameterOptimizable("g"))
     {
-        float density      = _g_tensor.item<float>();
-        float density_grad = _g_tensor.grad().defined() ? _g_tensor.grad().item<float>() : 0.0f;
+        auto g_tensor      = getParameter("g");
+        float density      = g_tensor.item<float>();
+        float density_grad = g_tensor.grad().defined() ? g_tensor.grad().item<float>() : 0.0f;
 
         static int iteration_count = 0;
 
@@ -118,54 +107,32 @@ void HenyeyGreensteinPhaseFunction::onImGuiRender()
     }
 }
 
-std::vector<torch::Tensor> HenyeyGreensteinPhaseFunction::getParameters() const
-{
-    std::vector<torch::Tensor> params;
-
-    if(_optimize_g) params.push_back(_g_tensor);
-
-    return params;
-}
-
-std::vector<torch::Tensor> HenyeyGreensteinPhaseFunction::getParameterGradients() const
-{
-    std::vector<torch::Tensor> gradients;
-
-    if(_optimize_g) gradients.push_back(_g_grad_tensor);
-
-    return gradients;
-}
-
-void HenyeyGreensteinPhaseFunction::zeroGrad()
-{
-    if(_optimize_g) _g_grad_tensor.zero_();
-}
-
-void HenyeyGreensteinPhaseFunction::markOptimizable()
-{
-    _g_tensor = torch::zeros({1}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
-
-    _g_grad_tensor = torch::zeros({1}, atcg::TensorOptions::floatDeviceOptions());
-
-    HenyeyGreensteinPhaseFunctionData data;
-    _data_buffer.download(&data);
-
-    data.g          = (float*)_g_tensor.data_ptr();
-    data.g_grad     = (float*)_g_grad_tensor.data_ptr();
-    data.optimize_g = true;
-
-    _data_buffer.upload(&data);
-
-    _optimize_g  = true;
-    _optimizable = true;
-}
-
 void HenyeyGreensteinPhaseFunction::clampParameters()
 {
-    if(_optimize_g)
+    if(isParameterOptimizable("g"))
     {
         // Clamp g to [-0.99, 0.99] for stability
-        _g_tensor.data().clamp_(-0.99f, 0.99f);
+        getParameter("g").clamp_(-0.99f, 0.99f);
     }
 }
+
+void HenyeyGreensteinPhaseFunction::markParametersAsOptimizable(const const std::string& parameter_name)
+{
+    if(parameter_name == "g")
+    {
+        auto g_tensor = torch::zeros({1}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
+        setParameter("g", g_tensor);
+        auto g_grad_tensor = getGradient("g");
+
+        HenyeyGreensteinPhaseFunctionData data;
+        _data_buffer.download(&data);
+
+        data.g          = (float*)g_tensor.data_ptr();
+        data.g_grad     = (float*)g_grad_tensor.data_ptr();
+        data.optimize_g = true;
+
+        _data_buffer.upload(&data);
+    }
+}
+
 }    // namespace atcg

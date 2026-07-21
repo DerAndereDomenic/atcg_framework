@@ -14,18 +14,18 @@ HomogeneousMedium::HomogeneousMedium(const atcg::Dictionary& dict) : Medium(dict
     glm::vec3 albedo = dict.getValueOr<glm::vec3>("albedo", glm::vec3(0));
     float density    = dict.getValueOr<float>("density", 0.0f);
 
-    _albedo_tensor  = atcg::createHostTensorFromPointer(glm::value_ptr(albedo), {3}).cuda();
-    _density_tensor = atcg::createHostTensorFromPointer(&density, {1}).cuda();
+    auto albedo_tensor  = atcg::createHostTensorFromPointer(glm::value_ptr(albedo), {3}).cuda();
+    auto density_tensor = atcg::createHostTensorFromPointer(&density, {1}).cuda();
+
+    setParameter("albedo", albedo_tensor);
+    setParameter("density", density_tensor);
 
     HomogeneousMediumData data;
-    data.albedo  = (glm::vec3*)_albedo_tensor.data_ptr();
-    data.density = (float*)_density_tensor.data_ptr();
+    data.albedo  = (glm::vec3*)albedo_tensor.data_ptr();
+    data.density = (float*)density_tensor.data_ptr();
     data.Le      = glm::vec3(dict.getValueOr<glm::vec3>("Le", glm::vec3(0)));
 
     _data_buffer.upload(&data);
-
-    _density_file      = std::ofstream("density.txt");
-    _density_grad_file = std::ofstream("density_grad.txt");
 }
 
 HomogeneousMedium::~HomogeneousMedium() {}
@@ -84,48 +84,19 @@ void HomogeneousMedium::onImGuiRender()
 {
     if(ImGui::Button("Optimize Albedo"))
     {
-        _albedo_tensor = torch::ones({3}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
-
-
-        _albedo_grad_tensor = torch::zeros({3}, atcg::TensorOptions::floatDeviceOptions());
-
-        HomogeneousMediumData data;
-        _data_buffer.download(&data);
-
-        data.albedo = (glm::vec3*)_albedo_tensor.data_ptr();
-
-        data.albedo_grad = (float*)_albedo_grad_tensor.data_ptr();
-
-        data.optimize_albedo = true;
-
-        _data_buffer.upload(&data);
-
-        _optimizable     = true;
-        _optimize_albedo = true;
+        markParametersAsOptimizable("albedo");
     }
 
     if(ImGui::Button("Optimize Density"))
     {
-        _density_tensor      = torch::full({1}, 0.5f, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
-        _density_grad_tensor = torch::zeros({1}, atcg::TensorOptions::floatDeviceOptions());
-
-        HomogeneousMediumData data;
-        _data_buffer.download(&data);
-
-        data.density          = (float*)_density_tensor.data_ptr();
-        data.density_grad     = (float*)_density_grad_tensor.data_ptr();
-        data.optimize_density = true;
-
-        _data_buffer.upload(&data);
-
-        _optimizable      = true;
-        _optimize_density = true;
+        markParametersAsOptimizable("density");
     }
 
-    if(_optimize_density)
+    if(isParameterOptimizable("density"))
     {
-        float density      = _density_tensor.item<float>();
-        float density_grad = _density_tensor.grad().defined() ? _density_tensor.grad().item<float>() : 0.0f;
+        auto density_tensor = getParameter("density");
+        float density       = density_tensor.item<float>();
+        float density_grad  = density_tensor.grad().defined() ? density_tensor.grad().item<float>() : 0.0f;
 
         static int iteration_count = 0;
 
@@ -162,71 +133,55 @@ void HomogeneousMedium::onImGuiRender()
     }
 }
 
-std::vector<torch::Tensor> HomogeneousMedium::getParameters() const
-{
-    std::vector<torch::Tensor> params;
-    if(_optimize_albedo) params.push_back(_albedo_tensor);
-    if(_optimize_density) params.push_back(_density_tensor);
-    return params;
-}
-
-std::vector<torch::Tensor> HomogeneousMedium::getParameterGradients() const
-{
-    std::vector<torch::Tensor> grads;
-    if(_optimize_albedo) grads.push_back(_albedo_grad_tensor);
-    if(_optimize_density) grads.push_back(_density_grad_tensor);
-    return grads;
-}
-
-void HomogeneousMedium::zeroGrad()
-{
-    if(_optimize_albedo) _albedo_grad_tensor.zero_();
-    if(_optimize_density) _density_grad_tensor.zero_();
-}
-
-void HomogeneousMedium::markOptimizable()
-{
-    _albedo_tensor  = torch::ones({3}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
-    _density_tensor = torch::ones({1}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
-
-    _albedo_grad_tensor  = torch::zeros({3}, atcg::TensorOptions::floatDeviceOptions());
-    _density_grad_tensor = torch::zeros({1}, atcg::TensorOptions::floatDeviceOptions());
-
-    HomogeneousMediumData data;
-    _data_buffer.download(&data);
-
-    data.albedo  = (glm::vec3*)_albedo_tensor.data_ptr();
-    data.density = (float*)_density_tensor.data_ptr();
-
-    data.albedo_grad  = (float*)_albedo_grad_tensor.data_ptr();
-    data.density_grad = (float*)_density_grad_tensor.data_ptr();
-
-    data.optimize_albedo  = true;
-    data.optimize_density = true;
-
-    _data_buffer.upload(&data);
-
-    _optimizable      = true;
-    _optimize_albedo  = true;
-    _optimize_density = true;
-}
-
 void HomogeneousMedium::clampParameters()
 {
-    float density_value      = _density_tensor.cpu().item<float>();
-    float density_grad_value = _density_tensor.grad().defined() ? _density_tensor.grad().cpu().item<float>() : 0.0f;
-
-    _density_file << density_value << std::endl;
-    _density_grad_file << density_grad_value << std::endl;
-
-    if(_optimize_albedo)
+    if(isParameterOptimizable("albedo"))
     {
-        _albedo_tensor.clamp_(0.0f, 1.0f);
+        auto albedo_tensor = getParameter("albedo");
+        albedo_tensor.clamp_(0.0f, 1.0f);
     }
 
-    if(_optimize_density)
+    if(isParameterOptimizable("density"))
     {
-        _density_tensor.clamp_(0.0f, std::numeric_limits<float>::max());    // TODO
+        auto density_tensor = getParameter("density");
+        density_tensor.clamp_(0.0f, std::numeric_limits<float>::max());    // TODO
     }
 }
+
+void HomogeneousMedium::markParametersAsOptimizable(const std::string& parameter_name)
+{
+    if(parameter_name == "albedo")
+    {
+        auto albedo_tensor = torch::ones({3}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
+        setParameter("albedo", albedo_tensor);
+        auto albedo_grad_tensor = getGradient("albedo");
+
+        HomogeneousMediumData data;
+        _data_buffer.download(&data);
+
+        data.albedo = (glm::vec3*)albedo_tensor.data_ptr();
+
+        data.albedo_grad = (float*)albedo_grad_tensor.data_ptr();
+
+        data.optimize_albedo = true;
+
+        _data_buffer.upload(&data);
+    }
+    else if(parameter_name == "density")
+    {
+        auto density_tensor = torch::full({1}, 0.5f, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
+        setParameter("density", density_tensor);
+        auto density_grad_tensor = getGradient("density");
+
+        HomogeneousMediumData data;
+        _data_buffer.download(&data);
+
+        data.density          = (float*)density_tensor.data_ptr();
+        data.density_grad     = (float*)density_grad_tensor.data_ptr();
+        data.optimize_density = true;
+
+        _data_buffer.upload(&data);
+    }
+}
+
 }    // namespace atcg

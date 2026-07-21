@@ -32,10 +32,10 @@ torch::autograd::variable_list DiffPathNode::apply(torch::autograd::variable_lis
     dict.setValue("current_sample", sample);
     dict.setValue("rng_index", rng_index);
 
-    integrator->zeroGrad();
+    integrator->_optix_scene->zeroGrad();
     integrator->_backwardTrace(dict);
 
-    return integrator->getParameterGradients();
+    return integrator->_optix_scene->getParameterGradients();
 }
 
 void DiffPathNode::release_variables()
@@ -45,7 +45,7 @@ void DiffPathNode::release_variables()
 
 DiffPathtracingIntegrator::DiffPathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context,
                                                      const Dictionary& dict)
-    : DifferentiableIntegrator(context, dict)
+    : Integrator(context, dict)
 {
     initializePipeline(dict);
 }
@@ -71,20 +71,10 @@ void DiffPathtracingIntegrator::initializePipeline(const Dictionary& dict)
     _optix_scene = SceneAdapter(_context, _pipeline, _sbt)
                        .apply(scene, dict.getValue<uint32_t>("width"), dict.getValue<uint32_t>("height"));
 
+    _dict.setValue("optix_scene", _optix_scene);
+
     _pipeline->createPipeline();
     _sbt->createSBT();
-
-    _differentiable_components.clear();
-    for(auto shape: _optix_scene->getShapes())
-    {
-        auto diff = std::dynamic_pointer_cast<Differentiable>(shape->getBSDF());
-        if(diff)
-        {
-            _differentiable_components.push_back(diff.get());
-        }
-    }
-
-    ATCG_TRACE("Number differentiable objects: {}", _differentiable_components.size());
 }
 
 void DiffPathtracingIntegrator::onImGuiRender()
@@ -202,9 +192,9 @@ void DiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictionary)
                       stream);
 }
 
-torch::Tensor DiffPathtracingIntegrator::sample(Dictionary& in_out_dictionary)
+void DiffPathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
 {
-    const auto& parameters = getParameters();
+    const auto& parameters = _optix_scene->getParameters();
 
     bool is_executable = parameters.size() > 0 && torch::autograd::GradMode::is_enabled() &&
                          torch::autograd::any_variable_requires_grad(parameters);
@@ -227,68 +217,6 @@ torch::Tensor DiffPathtracingIntegrator::sample(Dictionary& in_out_dictionary)
         torch::autograd::set_history(result, node);
     }
 
-
-    return result;
-
-    // Perform tonemapping here for output display:
-    // torch::Tensor tonemapped = torch::pow(1.0f - torch::exp(-_accumulation_buffer), 1.0 / 2.4f);
-
-    // tonemapped.clamp_(0.0f, 1.0f);
-    // output_img.fill_(255);
-    // output_img.index_put_({torch::indexing::Slice(), torch::indexing::Slice(), torch::indexing::Slice(0, 3)},
-    //                       (tonemapped * 255.0f).to(torch::kUInt8));
-}
-
-std::vector<torch::Tensor> DiffPathtracingIntegrator::getParameters() const
-{
-    std::vector<torch::Tensor> parameters;
-    for(auto obj: _differentiable_components)
-    {
-        if(!obj->isOptimizable()) continue;
-        auto obj_parameters = obj->getParameters();
-
-        parameters.insert(parameters.end(), obj_parameters.begin(), obj_parameters.end());
-    }
-
-    return parameters;
-}
-
-std::vector<torch::Tensor> DiffPathtracingIntegrator::getParameterGradients() const
-{
-    std::vector<torch::Tensor> gradients;
-    for(auto obj: _differentiable_components)
-    {
-        if(!obj->isOptimizable()) continue;
-        auto obj_gradients = obj->getParameterGradients();
-
-        gradients.insert(gradients.end(), obj_gradients.begin(), obj_gradients.end());
-    }
-
-    return gradients;
-}
-
-void DiffPathtracingIntegrator::zeroGrad()
-{
-    for(auto obj: _differentiable_components)
-    {
-        if(!obj->isOptimizable()) continue;
-        obj->zeroGrad();
-    }
-}
-
-void DiffPathtracingIntegrator::clampParameters()
-{
-    for(auto obj: _differentiable_components)
-    {
-        obj->clampParameters();
-    }
-}
-
-void DiffPathtracingIntegrator::markOptimizable()
-{
-    for(auto obj: _differentiable_components)
-    {
-        obj->markOptimizable();
-    }
+    in_out_dictionary.setValue("output_img", result);
 }
 }    // namespace atcg

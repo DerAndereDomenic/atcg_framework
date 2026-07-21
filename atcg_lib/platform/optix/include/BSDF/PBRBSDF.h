@@ -4,8 +4,6 @@
 #include <BSDF/PBRBSDFData.cuh>
 #include <Renderer/Material.h>
 #include <DataStructure/Statistics.h>
-
-#include <fstream>
 #include <BSDF/BSDFRegistry.h>
 
 namespace atcg
@@ -30,19 +28,13 @@ public:
      */
     virtual ~PBRBSDF();
 
-    virtual std::vector<torch::Tensor> getParameters() const override;
+    virtual void markParametersAsOptimizable(const const std::string& parameter_name) override;
 
-    virtual std::vector<torch::Tensor> getParameterGradients() const override;
-
-    virtual void zeroGrad() override;
-
-    virtual void markOptimizable() override;
+    virtual void clampParameters() override;
     /**
      * @brief A callback to display debug information in imgui
      */
     virtual void onImGuiRender() override;
-
-    virtual void clampParameters() override;
 
     /**
      * @brief Initialize the pipeline
@@ -56,15 +48,6 @@ public:
     static void registerBSDF(BSDFRegistry::Registry* registry);
 
 private:
-    torch::Tensor _diffuse_texture;
-    torch::Tensor _metallic_texture;
-    torch::Tensor _roughness_texture;
-    torch::Tensor _fixed_roughness_texture;
-
-    torch::Tensor _diffuse_texture_grad;
-    torch::Tensor _metallic_texture_grad;
-    torch::Tensor _roughness_texture_grad;
-
     atcg::dref_ptr<PBRBSDFData> _bsdf_data_buffer;
 
     atcg::ref_ptr<Texture2D> _diffuse_optimized, _metallic_optimized, _roughness_optimized;
@@ -78,7 +61,5 @@ private:
         atcg::CyclicCollection<float>("Roughness Collection", 35 * 60 / 5);
     atcg::CyclicCollection<float> roughness_grad_collection =
         atcg::CyclicCollection<float>("Roughness grad Collection", 35 * 60 / 5);
-
-    std::ofstream _roughness_file, _roughness_grad_file;
 };
 }    // namespace atcg

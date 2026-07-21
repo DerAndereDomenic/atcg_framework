@@ -24,13 +24,7 @@ public:
      */
     virtual ~DielectricBSDF();
 
-    virtual std::vector<torch::Tensor> getParameters() const override;
-
-    virtual std::vector<torch::Tensor> getParameterGradients() const override;
-
-    virtual void zeroGrad() override;
-
-    virtual void markOptimizable() override;
+    virtual void markParametersAsOptimizable(const const std::string& parameter_name) override;
 
     virtual void clampParameters() override;
 
@@ -51,18 +45,6 @@ public:
     static void registerBSDF(BSDFRegistry::Registry* registry);
 
 private:
-    torch::Tensor _diffuse_texture;
-    torch::Tensor _roughness_texture;
-    torch::Tensor _ior_texture;
-
-    torch::Tensor _diffuse_texture_grad;
-    torch::Tensor _roughness_texture_grad;
-    torch::Tensor _ior_texture_grad;
-
-    bool _optimize_diffuse   = false;
-    bool _optimize_roughness = false;
-    bool _optimize_ior       = false;
-
     atcg::dref_ptr<DielectricBSDFData> _bsdf_data_buffer;
 
     atcg::ref_ptr<Texture2D> _diffuse_optimized, _roughness_optimized, _ior_optimized;

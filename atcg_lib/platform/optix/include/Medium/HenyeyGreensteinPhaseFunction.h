@@ -41,13 +41,7 @@ public:
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
-    virtual std::vector<torch::Tensor> getParameters() const override;
-
-    virtual std::vector<torch::Tensor> getParameterGradients() const override;
-
-    virtual void zeroGrad() override;
-
-    virtual void markOptimizable() override;
+    virtual void markParametersAsOptimizable(const const std::string& parameter_name) override;
 
     virtual void clampParameters() override;
 
@@ -55,11 +49,6 @@ public:
 
 private:
     atcg::dref_ptr<HenyeyGreensteinPhaseFunctionData> _data_buffer;
-
-    torch::Tensor _g_tensor;
-    torch::Tensor _g_grad_tensor;
-
-    bool _optimize_g = false;
 
     atcg::CyclicCollection<float> time_collection   = atcg::CyclicCollection<float>("Time Collection", 35 * 60 / 5);
     atcg::CyclicCollection<float> g_collection      = atcg::CyclicCollection<float>("g Collection", 35 * 60 / 5);

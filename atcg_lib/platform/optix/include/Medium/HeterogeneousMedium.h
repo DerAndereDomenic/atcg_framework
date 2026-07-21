@@ -32,23 +32,12 @@ public:
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt);
 
-    virtual std::vector<torch::Tensor> getParameters() const override;
-
-    virtual std::vector<torch::Tensor> getParameterGradients() const override;
-
-    virtual void zeroGrad() override;
-
-    virtual void markOptimizable() override;
+    virtual void markParametersAsOptimizable(const std::string& parameter_name) override;
 
     virtual void clampParameters() override;
 
 private:
-    torch::Tensor _albedo_tensor;
-    torch::Tensor _density_tensor;
     torch::Tensor _emission_tensor;
-
-    torch::Tensor _albedo_grad_tensor;
-    torch::Tensor _density_grad_tensor;
 
     atcg::ref_ptr<Texture2D> _density_texture;
     atcg::ref_ptr<Texture2D> _density_grad_texture;
@@ -56,9 +45,6 @@ private:
     atcg::ref_ptr<Texture2D> _albedo_grad_texture;
     int _layer_density = 0;
     int _layer_albedo  = 0;
-
-    bool _optimize_albedo  = false;
-    bool _optimize_density = false;
 
     atcg::dref_ptr<HeterogeneousMediumData> _data_buffer;
 };

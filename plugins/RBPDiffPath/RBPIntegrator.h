@@ -7,7 +7,6 @@
 #include <Emitter/PointEmitter.h>
 #include <Scene/OptixScene.h>
 #include <Scene/SceneHierarchyPanel.h>
-#include <Integrator/DifferentiableIntegrator.h>
 
 #include <torch/torch.h>
 
@@ -26,7 +25,7 @@ struct RBPNode : public torch::autograd::Node
 /**
  * @brief A simple path tracer
  */
-class RBPIntegrator : public DifferentiableIntegrator
+class RBPIntegrator : public Integrator
 {
 public:
     /**
@@ -47,22 +46,12 @@ public:
      */
     virtual void onImGuiRender() override;
 
-    virtual torch::Tensor sample(Dictionary& in_out_dictionary) override;
+    virtual void generateRays(Dictionary& in_out_dictionary) override;
 
     /**
      * @brief Reset the internal structure of the integrator
      */
     virtual void reset() override;
-
-    virtual std::vector<torch::Tensor> getParameters() const override;
-
-    virtual std::vector<torch::Tensor> getParameterGradients() const override;
-
-    virtual void clampParameters() override;
-
-    virtual void markOptimizable() override;
-
-    virtual void zeroGrad() override;
 
 private:
     friend class RBPNode;
@@ -88,8 +77,6 @@ private:
 
     atcg::ref_ptr<OptixScene> _optix_scene;
     atcg::dref_ptr<RBPParams> _launch_params;
-
-    std::vector<Differentiable*> _differentiable_components;
 
     GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("DiffPath");
 
