@@ -555,6 +555,27 @@ SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene, const uint32_t width, con
         result->_sensor = nullptr;
     }
 
+    for(auto& shape: result->_shapes)
+    {
+        auto bsdf = std::dynamic_pointer_cast<Differentiable>(shape->getBSDF());
+        if(bsdf)
+        {
+            result->_differentiable_components.push_back(bsdf.get());
+        }
+
+        auto medium = std::dynamic_pointer_cast<Differentiable>(shape->getInsideMedium());
+        if(medium)
+        {
+            result->_differentiable_components.push_back(medium.get());
+
+            auto phase = std::dynamic_pointer_cast<Differentiable>(shape->getInsideMedium()->getPhaseFunction());
+            if(phase)
+            {
+                result->_differentiable_components.push_back(phase.get());
+            }
+        }
+    }
+
     return result;
 }
 }    // namespace atcg

@@ -78,6 +78,44 @@ public:
      */
     ATCG_INLINE void setSensor(const atcg::ref_ptr<Sensor>& sensor) { _sensor = sensor; }
 
+    ATCG_INLINE std::vector<torch::Tensor> getParameters() const
+    {
+        std::vector<torch::Tensor> parameters;
+        for(const auto& component: _differentiable_components)
+        {
+            auto component_parameters = component->getOptimizableParameterList();
+            parameters.insert(parameters.end(), component_parameters.begin(), component_parameters.end());
+        }
+        return parameters;
+    }
+
+    ATCG_INLINE std::vector<torch::Tensor> getParameterGradients() const
+    {
+        std::vector<torch::Tensor> gradients;
+        for(const auto& component: _differentiable_components)
+        {
+            auto component_gradients = component->getOptimizableGradientList();
+            gradients.insert(gradients.end(), component_gradients.begin(), component_gradients.end());
+        }
+        return gradients;
+    }
+
+    ATCG_INLINE void zeroGrad()
+    {
+        for(const auto& component: _differentiable_components)
+        {
+            component->zeroGradientBuffers();
+        }
+    }
+
+    ATCG_INLINE void clampParameters()
+    {
+        for(const auto& component: _differentiable_components)
+        {
+            component->clampParameters();
+        }
+    }
+
 private:
     friend class SceneAdapter;
 
@@ -89,5 +127,7 @@ private:
     atcg::ref_ptr<Sensor> _sensor;
 
     atcg::ref_ptr<InstanceAccelerationStructure> _ias;
+
+    std::vector<Differentiable*> _differentiable_components;
 };
 }    // namespace atcg
