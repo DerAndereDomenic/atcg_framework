@@ -43,17 +43,7 @@ private:
 class ATCG_API Differentiable
 {
 public:
-    virtual void markParameterAsOptimizable(const std::string& parameter_name) = 0;
-
     virtual void clampParameters() = 0;
-
-    ATCG_INLINE void markParametersAsOptimizable(const std::vector<std::string>& parameter_names)
-    {
-        for(const auto& name: parameter_names)
-        {
-            markParameterAsOptimizable(name);
-        }
-    }
 
     ATCG_INLINE torch::Tensor& getParameter(const std::string& name)
     {
@@ -90,6 +80,7 @@ public:
             _parameters[it->second] = value;
             _gradients[it->second]  = torch::zeros_like(value);
         }
+        uploadParameterToDevice(name);
     }
 
     ATCG_INLINE void zeroGradientBuffers()
@@ -140,6 +131,9 @@ public:
         }
         return _parameters[it->second].requires_grad();
     }
+
+protected:
+    virtual void uploadParameterToDevice(const std::string& parameter_name) = 0;
 
 private:
     std::vector<torch::Tensor> _parameters;

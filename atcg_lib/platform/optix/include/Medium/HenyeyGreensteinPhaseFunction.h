@@ -41,11 +41,13 @@ public:
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
-    virtual void markParameterAsOptimizable(const const std::string& parameter_name) override;
-
     virtual void clampParameters() override;
 
+
     ATCG_INLINE atcg::dref_ptr<HenyeyGreensteinPhaseFunctionData> getDataBuffer() const { return _data_buffer; }
+
+protected:
+    virtual void uploadParameterToDevice(const std::string& parameter_name) override;
 
 private:
     atcg::dref_ptr<HenyeyGreensteinPhaseFunctionData> _data_buffer;

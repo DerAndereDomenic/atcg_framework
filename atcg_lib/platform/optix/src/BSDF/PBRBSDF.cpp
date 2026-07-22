@@ -21,9 +21,6 @@ PBRBSDF::PBRBSDF(const Dictionary& dict)
     torch::Tensor metallic_texture  = material->getMetallicTexture()->getData(atcg::GPU);
     torch::Tensor roughness_texture = material->getRoughnessTexture()->getData(atcg::GPU);
 
-    setParameter("diffuse_texture", diffuse_texture);
-    setParameter("metallic_texture", metallic_texture);
-    setParameter("roughness_texture", roughness_texture);
 
     PBRBSDFData data;
 
@@ -39,6 +36,10 @@ PBRBSDF::PBRBSDF(const Dictionary& dict)
     _flags = BSDFComponentType::GlossyReflection | BSDFComponentType::DiffuseReflection;
 
     _bsdf_data_buffer.upload(&data);
+
+    setParameter("diffuse_texture", diffuse_texture);
+    setParameter("metallic_texture", metallic_texture);
+    setParameter("roughness_texture", roughness_texture);
 }
 
 PBRBSDF::~PBRBSDF() {}
@@ -86,17 +87,24 @@ void PBRBSDF::onImGuiRender()
 
     if(ImGui::Button("Optimize color"))
     {
-        markParameterAsOptimizable("diffuse_texture");
+        auto diffuse_texture = torch::zeros({_optimization_height, _optimization_width, 3},
+                                            TensorOptions::floatDeviceOptions().requires_grad(true));
+        setParameter("diffuse_texture", diffuse_texture);
     }
 
     if(ImGui::Button("Optimize roughness"))
     {
-        markParameterAsOptimizable("roughness_texture");
+        auto roughness_texture = torch::full({_optimization_height, _optimization_width, 1},
+                                             0.8f,
+                                             TensorOptions::floatDeviceOptions().requires_grad(true));
+        setParameter("roughness_texture", roughness_texture);
     }
 
     if(ImGui::Button("Optimize metallic"))
     {
-        markParameterAsOptimizable("metallic_texture");
+        auto metallic_texture = torch::zeros({_optimization_height, _optimization_width, 1},
+                                             TensorOptions::floatDeviceOptions().requires_grad(true));
+        setParameter("metallic_texture", metallic_texture);
     }
 
     auto normalize = [](torch::Tensor inp) -> torch::Tensor
@@ -224,19 +232,14 @@ void PBRBSDF::clampParameters()
     // _fixed_roughness_texture.copy_(_roughness_texture);
 }
 
-void PBRBSDF::markParameterAsOptimizable(const const std::string& parameter_name)
+void PBRBSDF::uploadParameterToDevice(const std::string& parameter_name)
 {
     if(parameter_name == "diffuse_texture")
     {
-        atcg::TextureSpecification spec_diffuse;
-        spec_diffuse.width  = _optimization_width;
-        spec_diffuse.height = _optimization_height;
-        spec_diffuse.format = TextureFormat::RGBFLOAT;
-
-        auto diffuse_texture = torch::zeros({_optimization_height, _optimization_width, 3},
-                                            TensorOptions::floatDeviceOptions().requires_grad(true));
-        setParameter("diffuse_texture", diffuse_texture);
+        auto diffuse_texture      = getParameter("diffuse_texture");
         auto diffuse_texture_grad = getGradient("diffuse_texture");
+
+        atcg::TextureSpecification spec_diffuse = atcg::getTextureSpecFromTensor(diffuse_texture);
 
         PBRBSDFData data;
         _bsdf_data_buffer.download(&data);
@@ -247,22 +250,16 @@ void PBRBSDF::markParameterAsOptimizable(const const std::string& parameter_name
         _diffuse_optimized = atcg::Texture2D::create(spec_diffuse);
         _diffuse_grad      = atcg::Texture2D::create(spec_diffuse);
 
-        data.optimize_diffuse = true;
+        data.optimize_diffuse = diffuse_texture.requires_grad();
         _bsdf_data_buffer.upload(&data);
     }
 
     if(parameter_name == "roughness_texture")
     {
-        atcg::TextureSpecification spec_float;
-        spec_float.width  = _optimization_width;
-        spec_float.height = _optimization_height;
-        spec_float.format = TextureFormat::RFLOAT;
-
-        auto roughness_texture = torch::full({_optimization_height, _optimization_width, 1},
-                                             0.8f,
-                                             TensorOptions::floatDeviceOptions().requires_grad(true));
-        setParameter("roughness_texture", roughness_texture);
+        auto roughness_texture      = getParameter("roughness_texture");
         auto roughness_texture_grad = getGradient("roughness_texture");
+
+        atcg::TextureSpecification spec_float = atcg::getTextureSpecFromTensor(roughness_texture);
 
         PBRBSDFData data;
         _bsdf_data_buffer.download(&data);
@@ -277,21 +274,16 @@ void PBRBSDF::markParameterAsOptimizable(const const std::string& parameter_name
         spec_float.format = TextureFormat::RGFLOAT;    // For pos/neg visualization
         _roughness_grad   = atcg::Texture2D::create(spec_float);
 
-        data.optimize_roughness = true;
+        data.optimize_roughness = roughness_texture.requires_grad();
         _bsdf_data_buffer.upload(&data);
     }
 
     if(parameter_name == "metallic_texture")
     {
-        atcg::TextureSpecification spec_float;
-        spec_float.width  = _optimization_width;
-        spec_float.height = _optimization_height;
-        spec_float.format = TextureFormat::RFLOAT;
-
-        auto metallic_texture = torch::zeros({_optimization_height, _optimization_width, 1},
-                                             TensorOptions::floatDeviceOptions().requires_grad(true));
-        setParameter("metallic_texture", metallic_texture);
+        auto metallic_texture      = getParameter("metallic_texture");
         auto metallic_texture_grad = getGradient("metallic_texture");
+
+        atcg::TextureSpecification spec_float = atcg::getTextureSpecFromTensor(metallic_texture);
 
         PBRBSDFData data;
         _bsdf_data_buffer.download(&data);
@@ -304,11 +296,10 @@ void PBRBSDF::markParameterAsOptimizable(const const std::string& parameter_name
         spec_float.format = TextureFormat::RGFLOAT;    // For pos/neg visualization
         _metallic_grad    = atcg::Texture2D::create(spec_float);
 
-        data.optimize_metallic = true;
+        data.optimize_metallic = metallic_texture.requires_grad();
         _bsdf_data_buffer.upload(&data);
     }
 }
-
 
 void PBRBSDF::registerBSDF(BSDFRegistry::Registry* registry)
 {

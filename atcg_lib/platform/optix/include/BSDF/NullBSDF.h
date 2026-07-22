@@ -40,9 +40,10 @@ public:
 
     static void registerBSDF(BSDFRegistry::Registry* registry);
 
-    virtual void markParameterAsOptimizable(const std::string& parameter_name) override {}
-
     virtual void clampParameters() override {}
+
+protected:
+    virtual void uploadParameterToDevice(const std::string& parameter_name) override {}
 
 private:
 };

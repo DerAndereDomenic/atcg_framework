@@ -24,9 +24,8 @@ public:
      */
     virtual ~DielectricBSDF();
 
-    virtual void markParameterAsOptimizable(const const std::string& parameter_name) override;
-
     virtual void clampParameters() override;
+
 
     /**
      * @brief A callback to display debug information in imgui
@@ -43,6 +42,9 @@ public:
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
     static void registerBSDF(BSDFRegistry::Registry* registry);
+
+protected:
+    virtual void uploadParameterToDevice(const std::string& parameter_name) override;
 
 private:
     atcg::dref_ptr<DielectricBSDFData> _bsdf_data_buffer;

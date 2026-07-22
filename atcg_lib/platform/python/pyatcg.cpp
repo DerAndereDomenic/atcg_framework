@@ -1813,14 +1813,7 @@ inline void defineBindings(py::module_& m)
     m_medium_component.def_readonly("medium", &atcg::MediumComponent::medium);
     m_phase_function_component.def_readonly("phase_function", &atcg::PhaseFunctionComponent::phase_function);
 
-    m_differentiable
-        .def("markParametersAsOptimizable",
-             [](const atcg::ref_ptr<atcg::Differentiable>& self, const std::vector<std::string>& parameter_names)
-             { self->markParametersAsOptimizable(parameter_names); })
-        .def("markParameterAsOptimizable",
-             [](const atcg::ref_ptr<atcg::Differentiable>& self, const std::string& parameter_name)
-             { self->markParameterAsOptimizable(parameter_name); })
-        .def("getParameter", &atcg::Differentiable::getParameter)
+    m_differentiable.def("getParameter", &atcg::Differentiable::getParameter)
         .def("getGradient", &atcg::Differentiable::getGradient)
         .def("setParameter", &atcg::Differentiable::setParameter)
         .def("zeroGradientBuffers", &atcg::Differentiable::zeroGradientBuffers)

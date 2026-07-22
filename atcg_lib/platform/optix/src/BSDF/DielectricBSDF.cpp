@@ -17,10 +17,6 @@ DielectricBSDF::DielectricBSDF(const Dictionary& dict)
     auto roughness_texture = material->getRoughnessTexture()->getData(atcg::GPU);
     auto ior_texture       = material->getIorTexture()->getData(atcg::GPU);
 
-    setParameter("diffuse_texture", diffuse_texture);
-    setParameter("roughness_texture", roughness_texture);
-    setParameter("ior_texture", ior_texture);
-
     DielectricBSDFData data;
 
     data.diffuse_texture   = TextureSampler<glm::vec3>((std::byte*)diffuse_texture.data_ptr(),
@@ -33,6 +29,10 @@ DielectricBSDF::DielectricBSDF(const Dictionary& dict)
     _flags = BSDFComponentType::IdealReflection | BSDFComponentType::IdealReflection;
 
     _bsdf_data_buffer.upload(&data);
+
+    setParameter("diffuse_texture", diffuse_texture);
+    setParameter("roughness_texture", roughness_texture);
+    setParameter("ior_texture", ior_texture);
 }
 
 DielectricBSDF::~DielectricBSDF() {}
@@ -77,17 +77,20 @@ void DielectricBSDF::onImGuiRender()
 {
     if(ImGui::Button("Optimize Diffuse"))
     {
-        markParameterAsOptimizable("diffuse_texture");
+        auto diffuse_texture = torch::zeros({512, 512, 3}, TensorOptions::floatDeviceOptions().requires_grad(true));
+        setParameter("diffuse_texture", diffuse_texture);
     }
 
     if(ImGui::Button("Optimize Roughness"))
     {
-        markParameterAsOptimizable("roughness_texture");
+        auto roughness_texture = torch::ones({512, 512, 1}, TensorOptions::floatDeviceOptions().requires_grad(true));
+        setParameter("roughness_texture", roughness_texture);
     }
 
     if(ImGui::Button("Optimize IoR"))
     {
-        markParameterAsOptimizable("ior_texture");
+        auto ior_texture = torch::full({512, 512, 1}, 1.5f, TensorOptions::floatDeviceOptions().requires_grad(true));
+        setParameter("ior_texture", ior_texture);
     }
 
 
@@ -181,17 +184,14 @@ void DielectricBSDF::clampParameters()
     }
 }
 
-void DielectricBSDF::markParameterAsOptimizable(const const std::string& parameter_name)
+void DielectricBSDF::uploadParameterToDevice(const const std::string& parameter_name)
 {
     if(parameter_name == "diffuse_texture")
     {
-        atcg::TextureSpecification spec_diffuse;
-        spec_diffuse.width   = 512;
-        spec_diffuse.height  = 512;
-        spec_diffuse.format  = TextureFormat::RGBFLOAT;
-        auto diffuse_texture = torch::zeros({512, 512, 3}, TensorOptions::floatDeviceOptions().requires_grad(true));
-        setParameter("diffuse_texture", diffuse_texture);
+        auto diffuse_texture      = getParameter("diffuse_texture");
         auto diffuse_texture_grad = getGradient("diffuse_texture");
+
+        atcg::TextureSpecification spec_diffuse = atcg::getTextureSpecFromTensor(diffuse_texture);
 
         DielectricBSDFData data;
         _bsdf_data_buffer.download(&data);
@@ -202,19 +202,19 @@ void DielectricBSDF::markParameterAsOptimizable(const const std::string& paramet
         _diffuse_optimized = atcg::Texture2D::create(spec_diffuse);
         _diffuse_grad      = atcg::Texture2D::create(spec_diffuse);
 
-        data.optimize_diffuse = true;
+        data.optimize_diffuse = diffuse_texture.requires_grad();
 
         _bsdf_data_buffer.upload(&data);
     }
     else if(parameter_name == "roughness_texture")
     {
-        atcg::TextureSpecification spec_float;
-        spec_float.width       = 512;
-        spec_float.height      = 512;
-        spec_float.format      = TextureFormat::RFLOAT;
-        auto roughness_texture = torch::ones({512, 512, 1}, TensorOptions::floatDeviceOptions().requires_grad(true));
-        setParameter("roughness_texture", roughness_texture);
+        auto roughness_texture      = getParameter("roughness_texture");
         auto roughness_texture_grad = getGradient("roughness_texture");
+
+        atcg::TextureSpecification spec_float;
+        spec_float.width  = roughness_texture.size(1);
+        spec_float.height = roughness_texture.size(0);
+        spec_float.format = TextureFormat::RFLOAT;
 
         DielectricBSDFData data;
         _bsdf_data_buffer.download(&data);
@@ -225,20 +225,16 @@ void DielectricBSDF::markParameterAsOptimizable(const const std::string& paramet
         _roughness_optimized = atcg::Texture2D::create(spec_float);
         _roughness_grad      = atcg::Texture2D::create(spec_float);
 
-        data.optimize_roughness = true;
+        data.optimize_roughness = roughness_texture.requires_grad();
 
         _bsdf_data_buffer.upload(&data);
     }
     else if(parameter_name == "ior_texture")
     {
-        atcg::TextureSpecification spec_float;
-        spec_float.width  = 512;
-        spec_float.height = 512;
-        spec_float.format = TextureFormat::RFLOAT;
-
-        auto ior_texture = torch::full({512, 512, 1}, 1.5f, TensorOptions::floatDeviceOptions().requires_grad(true));
-        setParameter("ior_texture", ior_texture);
+        auto ior_texture      = getParameter("ior_texture");
         auto ior_texture_grad = getGradient("ior_texture");
+
+        atcg::TextureSpecification spec_float = atcg::getTextureSpecFromTensor(ior_texture);
 
         DielectricBSDFData data;
         _bsdf_data_buffer.download(&data);
@@ -249,7 +245,7 @@ void DielectricBSDF::markParameterAsOptimizable(const const std::string& paramet
         _ior_optimized = atcg::Texture2D::create(spec_float);
         _ior_grad      = atcg::Texture2D::create(spec_float);
 
-        data.optimize_ior = true;
+        data.optimize_ior = ior_texture.requires_grad();
 
         _bsdf_data_buffer.upload(&data);
     }

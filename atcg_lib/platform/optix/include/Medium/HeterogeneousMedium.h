@@ -32,9 +32,10 @@ public:
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt);
 
-    virtual void markParameterAsOptimizable(const std::string& parameter_name) override;
-
     virtual void clampParameters() override;
+
+protected:
+    virtual void uploadParameterToDevice(const std::string& parameter_name) override;
 
 private:
     torch::Tensor _emission_tensor;

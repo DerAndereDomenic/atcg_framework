@@ -17,15 +17,15 @@ HomogeneousMedium::HomogeneousMedium(const atcg::Dictionary& dict) : Medium(dict
     auto albedo_tensor  = atcg::createHostTensorFromPointer(glm::value_ptr(albedo), {3}).cuda();
     auto density_tensor = atcg::createHostTensorFromPointer(&density, {1}).cuda();
 
-    setParameter("albedo", albedo_tensor);
-    setParameter("density", density_tensor);
-
     HomogeneousMediumData data;
     data.albedo  = (glm::vec3*)albedo_tensor.data_ptr();
     data.density = (float*)density_tensor.data_ptr();
     data.Le      = glm::vec3(dict.getValueOr<glm::vec3>("Le", glm::vec3(0)));
 
     _data_buffer.upload(&data);
+
+    setParameter("albedo", albedo_tensor);
+    setParameter("density", density_tensor);
 }
 
 HomogeneousMedium::~HomogeneousMedium() {}
@@ -84,12 +84,14 @@ void HomogeneousMedium::onImGuiRender()
 {
     if(ImGui::Button("Optimize Albedo"))
     {
-        markParameterAsOptimizable("albedo");
+        auto albedo_tensor = torch::ones({3}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
+        setParameter("albedo", albedo_tensor);
     }
 
     if(ImGui::Button("Optimize Density"))
     {
-        markParameterAsOptimizable("density");
+        auto density_tensor = torch::full({1}, 0.5f, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
+        setParameter("density", density_tensor);
     }
 
     if(isParameterOptimizable("density"))
@@ -148,12 +150,11 @@ void HomogeneousMedium::clampParameters()
     }
 }
 
-void HomogeneousMedium::markParameterAsOptimizable(const std::string& parameter_name)
+void HomogeneousMedium::uploadParameterToDevice(const std::string& parameter_name)
 {
     if(parameter_name == "albedo")
     {
-        auto albedo_tensor = torch::ones({3}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
-        setParameter("albedo", albedo_tensor);
+        auto albedo_tensor      = getParameter("albedo");
         auto albedo_grad_tensor = getGradient("albedo");
 
         HomogeneousMediumData data;
@@ -163,14 +164,13 @@ void HomogeneousMedium::markParameterAsOptimizable(const std::string& parameter_
 
         data.albedo_grad = (float*)albedo_grad_tensor.data_ptr();
 
-        data.optimize_albedo = true;
+        data.optimize_albedo = albedo_tensor.requires_grad();
 
         _data_buffer.upload(&data);
     }
     else if(parameter_name == "density")
     {
-        auto density_tensor = torch::full({1}, 0.5f, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
-        setParameter("density", density_tensor);
+        auto density_tensor      = getParameter("density");
         auto density_grad_tensor = getGradient("density");
 
         HomogeneousMediumData data;
@@ -178,7 +178,7 @@ void HomogeneousMedium::markParameterAsOptimizable(const std::string& parameter_
 
         data.density          = (float*)density_tensor.data_ptr();
         data.density_grad     = (float*)density_grad_tensor.data_ptr();
-        data.optimize_density = true;
+        data.optimize_density = density_tensor.requires_grad();
 
         _data_buffer.upload(&data);
     }

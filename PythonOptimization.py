@@ -52,7 +52,10 @@ def run_method(method_name, context, scene, width, height, parameter_name):
         medium = objects[0].getMediumComponent()
         material = medium.medium
 
-    material.markParameterAsOptimizable(parameter)
+    parameter_tensor = torch.tensor(
+        [[0.8]], dtype=torch.float32, device="cuda", requires_grad=True
+    )
+    material.setParameter(parameter, parameter_tensor)
 
     with torch.no_grad():
         initial, rng_index = render_scene(integrator, rng_index, 128)
@@ -225,8 +228,8 @@ def main():
 
     context = atcg.RaytracingContextManager.createContext(0)
 
-    # run_test_scene(context, width, height)
-    # run_suzanne_scene(context, width, height)
+    run_test_scene(context, width, height)
+    run_suzanne_scene(context, width, height)
     run_hom_volume_scene(context, width, height)
 
 

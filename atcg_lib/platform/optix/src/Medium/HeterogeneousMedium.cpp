@@ -4,6 +4,7 @@
 
 #include <Scene/ComponentRegistry.h>
 #include <Scene/Components/HeterogeneousMediumComponent.h>
+#include <Core/Assert.h>
 
 namespace atcg
 {
@@ -70,10 +71,10 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium(dict)
         data.albedo_grid.to_uvw = to_uvw;
     }
 
-    setParameter("density", density_tensor);
-    setParameter("albedo", albedo_tensor);
-
     _data_buffer.upload(&data);
+
+    setParameter("density", density_tensor);
+    if(albedo_texture) setParameter("albedo", albedo_tensor);
 }
 
 HeterogeneousMedium::~HeterogeneousMedium() {}
@@ -117,12 +118,16 @@ void HeterogeneousMedium::onImGuiRender()
 {
     if(ImGui::Button("Optimize Density"))
     {
-        markParameterAsOptimizable("density");
+        auto density_tensor =
+            torch::ones({256, 256, 256}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
+        setParameter("density", density_tensor);
     }
 
     if(ImGui::Button("Optimize Albedo"))
     {
-        markParameterAsOptimizable("albedo");
+        auto albedo_tensor =
+            torch::ones({256, 256, 256, 3}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
+        setParameter("albedo", albedo_tensor);
     }
 
     auto normalize = [](torch::Tensor inp) -> torch::Tensor
@@ -219,26 +224,20 @@ void HeterogeneousMedium::clampParameters()
     }
 }
 
-void HeterogeneousMedium::markParameterAsOptimizable(const std::string& parameter_name)
+void HeterogeneousMedium::uploadParameterToDevice(const std::string& parameter_name)
 {
     if(parameter_name == "density")
     {
-        atcg::TextureSpecification spec;
-        spec.width             = 256;
-        spec.height            = 256;
-        spec.depth             = 256;
-        spec.format            = TextureFormat::RFLOAT;
-        spec.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
-
-        auto density_tensor =
-            torch::ones({256, 256, 256}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
-        setParameter("density", density_tensor);
+        auto density_tensor      = getParameter("density");
         auto density_grad_tensor = getGradient("density");
+
+        atcg::TextureSpecification spec = atcg::getTextureSpecFromTensor3D(density_tensor);
+        spec.sampler.wrap_mode          = TextureWrapMode::CLAMP_TO_EDGE;
 
         HeterogeneousMediumData data;
         _data_buffer.download(&data);
 
-        data.optimize_density             = true;
+        data.optimize_density             = density_tensor.requires_grad();
         data.density_majorant             = 1.0f;
         data.density_grid.storage.sampler = TextureSampler<float>((std::byte*)density_tensor.data_ptr(), spec);
         data.density_grid.storage.writer  = TextureWriter<float>((std::byte*)density_grad_tensor.data_ptr(), spec);
@@ -252,22 +251,16 @@ void HeterogeneousMedium::markParameterAsOptimizable(const std::string& paramete
     }
     else if(parameter_name == "albedo")
     {
-        atcg::TextureSpecification spec;
-        spec.width             = 256;
-        spec.height            = 256;
-        spec.depth             = 256;
-        spec.format            = TextureFormat::RGBFLOAT;
-        spec.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
-
-        auto albedo_tensor =
-            torch::ones({256, 256, 256, 3}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
-        setParameter("albedo", albedo_tensor);
+        auto albedo_tensor      = getParameter("albedo");
         auto albedo_grad_tensor = getGradient("albedo");
+
+        atcg::TextureSpecification spec = atcg::getTextureSpecFromTensor3D(albedo_tensor);
+        spec.sampler.wrap_mode          = TextureWrapMode::CLAMP_TO_EDGE;
 
         HeterogeneousMediumData data;
         _data_buffer.download(&data);
 
-        data.optimize_albedo             = true;
+        data.optimize_albedo             = albedo_tensor.requires_grad();
         data.albedo_grid.storage.sampler = TextureSampler<glm::vec3>((std::byte*)albedo_tensor.data_ptr(), spec);
         data.albedo_grid.storage.writer  = TextureWriter<glm::vec3>((std::byte*)albedo_grad_tensor.data_ptr(), spec);
         data.albedo_grid.scale           = 1.0f;
