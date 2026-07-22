@@ -113,7 +113,7 @@ void VolPathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
     CUDA_SAFE_CALL(cudaStreamSynchronize(nullptr));
 
     torch::Tensor output_tensor = _optix_scene->getSensor()->getFilm()->develop();
-    in_out_dictionary.setValue("output", output_tensor);
+    in_out_dictionary.setValue("output_img", output_tensor);
     in_out_dictionary.setValue("entity_ids", output_entities);
 }
 

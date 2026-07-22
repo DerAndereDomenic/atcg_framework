@@ -228,7 +228,7 @@ public:
 #ifdef ATCG_CUDA_BACKEND
                 atcg::Dictionary dict;
                 integrator->generateRays(dict);
-                torch::Tensor output_tensor   = dict.getValue<torch::Tensor>("output");
+                torch::Tensor output_tensor   = dict.getValue<torch::Tensor>("output_img");
                 torch::Tensor output_entities = dict.getValue<torch::Tensor>("entity_ids");
                 output_texture->setData(output_tensor);
                 output_entity_texture->setData(output_entities);
