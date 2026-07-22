@@ -24,7 +24,7 @@ public:
      */
     virtual ~DielectricBSDF();
 
-    virtual void markParametersAsOptimizable(const const std::string& parameter_name) override;
+    virtual void markParameterAsOptimizable(const const std::string& parameter_name) override;
 
     virtual void clampParameters() override;
 

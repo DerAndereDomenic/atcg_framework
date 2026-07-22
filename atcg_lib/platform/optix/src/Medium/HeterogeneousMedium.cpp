@@ -117,12 +117,12 @@ void HeterogeneousMedium::onImGuiRender()
 {
     if(ImGui::Button("Optimize Density"))
     {
-        markParametersAsOptimizable("density");
+        markParameterAsOptimizable("density");
     }
 
     if(ImGui::Button("Optimize Albedo"))
     {
-        markParametersAsOptimizable("albedo");
+        markParameterAsOptimizable("albedo");
     }
 
     auto normalize = [](torch::Tensor inp) -> torch::Tensor
@@ -219,7 +219,7 @@ void HeterogeneousMedium::clampParameters()
     }
 }
 
-void HeterogeneousMedium::markParametersAsOptimizable(const std::string& parameter_name)
+void HeterogeneousMedium::markParameterAsOptimizable(const std::string& parameter_name)
 {
     if(parameter_name == "density")
     {

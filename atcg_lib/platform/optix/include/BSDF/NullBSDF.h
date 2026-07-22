@@ -40,7 +40,7 @@ public:
 
     static void registerBSDF(BSDFRegistry::Registry* registry);
 
-    virtual void markParametersAsOptimizable(const std::string& parameter_name) override {}
+    virtual void markParameterAsOptimizable(const std::string& parameter_name) override {}
 
     virtual void clampParameters() override {}
 

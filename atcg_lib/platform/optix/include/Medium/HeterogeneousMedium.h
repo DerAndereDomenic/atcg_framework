@@ -32,7 +32,7 @@ public:
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt);
 
-    virtual void markParametersAsOptimizable(const std::string& parameter_name) override;
+    virtual void markParameterAsOptimizable(const std::string& parameter_name) override;
 
     virtual void clampParameters() override;
 

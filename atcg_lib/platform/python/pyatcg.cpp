@@ -1817,9 +1817,9 @@ inline void defineBindings(py::module_& m)
         .def("markParametersAsOptimizable",
              [](const atcg::ref_ptr<atcg::Differentiable>& self, const std::vector<std::string>& parameter_names)
              { self->markParametersAsOptimizable(parameter_names); })
-        .def("markParametersAsOptimizable",
+        .def("markParameterAsOptimizable",
              [](const atcg::ref_ptr<atcg::Differentiable>& self, const std::string& parameter_name)
-             { self->markParametersAsOptimizable(parameter_name); })
+             { self->markParameterAsOptimizable(parameter_name); })
         .def("getParameter", &atcg::Differentiable::getParameter)
         .def("getGradient", &atcg::Differentiable::getGradient)
         .def("setParameter", &atcg::Differentiable::setParameter)

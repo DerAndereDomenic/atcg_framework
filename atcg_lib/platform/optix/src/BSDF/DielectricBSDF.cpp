@@ -77,17 +77,17 @@ void DielectricBSDF::onImGuiRender()
 {
     if(ImGui::Button("Optimize Diffuse"))
     {
-        markParametersAsOptimizable("diffuse_texture");
+        markParameterAsOptimizable("diffuse_texture");
     }
 
     if(ImGui::Button("Optimize Roughness"))
     {
-        markParametersAsOptimizable("roughness_texture");
+        markParameterAsOptimizable("roughness_texture");
     }
 
     if(ImGui::Button("Optimize IoR"))
     {
-        markParametersAsOptimizable("ior_texture");
+        markParameterAsOptimizable("ior_texture");
     }
 
 
@@ -181,7 +181,7 @@ void DielectricBSDF::clampParameters()
     }
 }
 
-void DielectricBSDF::markParametersAsOptimizable(const const std::string& parameter_name)
+void DielectricBSDF::markParameterAsOptimizable(const const std::string& parameter_name)
 {
     if(parameter_name == "diffuse_texture")
     {

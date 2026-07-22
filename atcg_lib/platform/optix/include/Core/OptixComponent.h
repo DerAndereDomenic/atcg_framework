@@ -43,7 +43,7 @@ private:
 class ATCG_API Differentiable
 {
 public:
-    virtual void markParametersAsOptimizable(const std::string& parameter_name) = 0;
+    virtual void markParameterAsOptimizable(const std::string& parameter_name) = 0;
 
     virtual void clampParameters() = 0;
 
@@ -51,7 +51,7 @@ public:
     {
         for(const auto& name: parameter_names)
         {
-            markParametersAsOptimizable(name);
+            markParameterAsOptimizable(name);
         }
     }
 

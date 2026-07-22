@@ -63,7 +63,7 @@ void HenyeyGreensteinPhaseFunction::onImGuiRender()
 {
     if(ImGui::Button("Optimize g"))
     {
-        markParametersAsOptimizable("g");
+        markParameterAsOptimizable("g");
     }
 
     if(isParameterOptimizable("g"))
@@ -116,7 +116,7 @@ void HenyeyGreensteinPhaseFunction::clampParameters()
     }
 }
 
-void HenyeyGreensteinPhaseFunction::markParametersAsOptimizable(const const std::string& parameter_name)
+void HenyeyGreensteinPhaseFunction::markParameterAsOptimizable(const const std::string& parameter_name)
 {
     if(parameter_name == "g")
     {

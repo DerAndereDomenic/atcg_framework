@@ -52,7 +52,7 @@ def run_method(method_name, context, scene, width, height, parameter_name):
         medium = objects[0].getMediumComponent()
         material = medium.medium
 
-    material.markParametersAsOptimizable(parameter)
+    material.markParameterAsOptimizable(parameter)
 
     with torch.no_grad():
         initial, rng_index = render_scene(integrator, rng_index, 128)

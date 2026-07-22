@@ -86,17 +86,17 @@ void PBRBSDF::onImGuiRender()
 
     if(ImGui::Button("Optimize color"))
     {
-        markParametersAsOptimizable("diffuse_texture");
+        markParameterAsOptimizable("diffuse_texture");
     }
 
     if(ImGui::Button("Optimize roughness"))
     {
-        markParametersAsOptimizable("roughness_texture");
+        markParameterAsOptimizable("roughness_texture");
     }
 
     if(ImGui::Button("Optimize metallic"))
     {
-        markParametersAsOptimizable("metallic_texture");
+        markParameterAsOptimizable("metallic_texture");
     }
 
     auto normalize = [](torch::Tensor inp) -> torch::Tensor
@@ -224,7 +224,7 @@ void PBRBSDF::clampParameters()
     // _fixed_roughness_texture.copy_(_roughness_texture);
 }
 
-void PBRBSDF::markParametersAsOptimizable(const const std::string& parameter_name)
+void PBRBSDF::markParameterAsOptimizable(const const std::string& parameter_name)
 {
     if(parameter_name == "diffuse_texture")
     {

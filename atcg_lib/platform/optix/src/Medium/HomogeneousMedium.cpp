@@ -84,12 +84,12 @@ void HomogeneousMedium::onImGuiRender()
 {
     if(ImGui::Button("Optimize Albedo"))
     {
-        markParametersAsOptimizable("albedo");
+        markParameterAsOptimizable("albedo");
     }
 
     if(ImGui::Button("Optimize Density"))
     {
-        markParametersAsOptimizable("density");
+        markParameterAsOptimizable("density");
     }
 
     if(isParameterOptimizable("density"))
@@ -148,7 +148,7 @@ void HomogeneousMedium::clampParameters()
     }
 }
 
-void HomogeneousMedium::markParametersAsOptimizable(const std::string& parameter_name)
+void HomogeneousMedium::markParameterAsOptimizable(const std::string& parameter_name)
 {
     if(parameter_name == "albedo")
     {
