@@ -4,6 +4,7 @@
 #include <torch/types.h>
 #include <Renderer/Buffer.h>
 #include <Core/CUDA.h>
+#include <Renderer/TextureSpecification.h>
 
 namespace atcg
 {
@@ -621,4 +622,92 @@ ATCG_INLINE torch::Tensor getUVsAsDeviceTensor(const atcg::ref_ptr<atcg::VertexB
         {atcg::VertexSpecification::VERTEX_SIZE, 1});
 }
 
+ATCG_INLINE atcg::TextureSpecification getTextureSpecFromTensor(const torch::Tensor& img)
+{
+    TextureSpecification spec;
+    spec.width  = std::max<uint32_t>(1, img.size(1));
+    spec.height = std::max<uint32_t>(1, img.size(0));
+
+    if(img.ndimension() < 3)
+    {
+        spec.format = (img.dtype() == torch::kFloat32
+                           ? TextureFormat::RFLOAT
+                           : (img.dtype() == torch::kInt32 ? TextureFormat::RINT : TextureFormat::RINT8));
+
+        return spec;
+    }
+
+    switch(img.size(2))
+    {
+        case 1:
+        {
+            spec.format = (img.dtype() == torch::kFloat32
+                               ? TextureFormat::RFLOAT
+                               : (img.dtype() == torch::kInt32 ? TextureFormat::RINT : TextureFormat::RINT8));
+        }
+        break;
+        case 2:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGFLOAT : TextureFormat::RG);
+        }
+        break;
+        case 3:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGBFLOAT : TextureFormat::RGB);
+        }
+        break;
+        case 4:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
+        }
+        break;
+    }
+
+    return spec;
+}
+
+ATCG_INLINE atcg::TextureSpecification getTextureSpecFromTensor3D(const torch::Tensor& img)
+{
+    TextureSpecification spec;
+    spec.width  = std::max<uint32_t>(1, img.size(2));
+    spec.height = std::max<uint32_t>(1, img.size(1));
+    spec.depth  = std::max<uint32_t>(1, img.size(0));
+
+    if(img.ndimension() < 4)
+    {
+        spec.format = (img.dtype() == torch::kFloat32
+                           ? TextureFormat::RFLOAT
+                           : (img.dtype() == torch::kInt32 ? TextureFormat::RINT : TextureFormat::RINT8));
+
+        return spec;
+    }
+
+    switch(img.size(3))
+    {
+        case 1:
+        {
+            spec.format = (img.dtype() == torch::kFloat32
+                               ? TextureFormat::RFLOAT
+                               : (img.dtype() == torch::kInt32 ? TextureFormat::RINT : TextureFormat::RINT8));
+        }
+        break;
+        case 2:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGFLOAT : TextureFormat::RG);
+        }
+        break;
+        case 3:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGBFLOAT : TextureFormat::RGB);
+        }
+        break;
+        case 4:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
+        }
+        break;
+    }
+
+    return spec;
+}
 }    // namespace atcg
