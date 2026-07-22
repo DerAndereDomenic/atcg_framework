@@ -111,6 +111,7 @@ inline void defineBindings(py::module_& m)
     auto m_edge_renderer          = py::class_<atcg::EdgeRenderComponent>(m, "EdgeRenderComponent");
     auto m_edge_cylinder_renderer = py::class_<atcg::EdgeCylinderRenderComponent>(m, "EdgeCylinderRenderComponent");
     auto m_instance_renderer      = py::class_<atcg::InstanceRenderComponent>(m, "InstanceRenderComponent");
+    auto m_camera_component       = py::class_<atcg::CameraComponent>(m, "CameraComponent");
     auto m_vertex_buffer         = py::class_<atcg::VertexBuffer, atcg::ref_ptr<atcg::VertexBuffer>>(m, "VertexBuffer");
     auto m_buffer_layout         = py::class_<atcg::BufferLayout>(m, "BufferLayout");
     auto m_buffer_element        = py::class_<atcg::BufferElement>(m, "BufferElement");
@@ -1217,6 +1218,22 @@ inline void defineBindings(py::module_& m)
         .def_readwrite("instances", &atcg::InstanceRenderComponent::instance_vbos)
         .def_readwrite("material_handle", &atcg::InstanceRenderComponent::material_handle);
 
+    m_camera_component.def(py::init<>())
+        .def(py::init<>(
+                 [](const atcg::ref_ptr<atcg::PerspectiveCamera>& camera, const uint32_t width, const uint32_t height)
+                 { return atcg::CameraComponent(camera, width, height); }),
+             "camera"_a,
+             "width"_a,
+             "height"_a)
+        .def("camera",
+             [](const atcg::CameraComponent& self)
+             { return std::dynamic_pointer_cast<atcg::PerspectiveCamera>(self.camera); })
+        .def_readwrite("color", &atcg::CameraComponent::color)
+        .def_readwrite("width", &atcg::CameraComponent::width)
+        .def_readwrite("height", &atcg::CameraComponent::height)
+        .def_readwrite("preview", &atcg::CameraComponent::preview)
+        .def("image", &atcg::CameraComponent::image);
+
     m_name.def(py::init<>()).def(py::init<std::string>(), "name"_a).def("name", &atcg::NameComponent::name);
 
     m_point_light.def(py::init<float, glm::vec3>(), "intensity"_a, "color"_a)
@@ -1330,6 +1347,20 @@ inline void defineBindings(py::module_& m)
             [](atcg::Entity& entity, atcg::PointLightComponent& component)
             { return entity.replaceComponent<atcg::PointLightComponent>(component); },
             "component"_a)
+        .def(
+            "addCameraComponent",
+            [](atcg::Entity& entity,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
+               const uint32_t width,
+               const uint32_t height) { return entity.addComponent<atcg::CameraComponent>(camera, width, height); },
+            "camera"_a,
+            "width"_a,
+            "height"_a)
+        .def(
+            "replaceCameraComponent",
+            [](atcg::Entity& entity, atcg::CameraComponent& component)
+            { return entity.replaceComponent<atcg::CameraComponent>(component); },
+            "component"_a)
         .def("addNameComponent",
              [](atcg::Entity& entity, const std::string& name)
              { return entity.addComponent<atcg::NameComponent>(name); })
@@ -1363,6 +1394,7 @@ inline void defineBindings(py::module_& m)
         .def("getEdgeCylinderRenderComponent", &atcg::Entity::getComponent<atcg::EdgeCylinderRenderComponent>)
         .def("getInstanceRenderComponent", &atcg::Entity::getComponent<atcg::InstanceRenderComponent>)
         .def("getScriptComponent", &atcg::Entity::getComponent<atcg::ScriptComponent>)
+        .def("getCameraComponent", &atcg::Entity::getComponent<atcg::CameraComponent>)
         .def("getNameComponent", &atcg::Entity::getComponent<atcg::NameComponent>)
         .def("handle", &atcg::Entity::entity_handle);
 
