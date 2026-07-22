@@ -31,6 +31,13 @@ def render_scene(integrator, rng_index, n_samples):
     return prediction, rng_index
 
 
+def tonemap(hdr_image):
+    ldr = 1.0 - torch.exp(-hdr_image)
+    ldr = torch.pow(ldr, 1.0 / 2.4)
+    ldr = torch.clamp(ldr, 0.0, 1.0)
+    return (ldr * 255.0).to(torch.uint8)
+
+
 def run_method(method_name, context, scene, width, height, parameter_name):
 
     integrator = atcg.IntegratorRegistry.createIntegrator(
@@ -58,7 +65,7 @@ def run_method(method_name, context, scene, width, height, parameter_name):
     material.setParameter(parameter, parameter_tensor)
 
     with torch.no_grad():
-        initial, rng_index = render_scene(integrator, rng_index, 128)
+        initial, rng_index = render_scene(integrator, rng_index, 1024)
 
     n_epochs = 256
 
@@ -95,21 +102,26 @@ def run_method(method_name, context, scene, width, height, parameter_name):
         roughness_grad_values.append(dr.detach().cpu().numpy().item())
         loss_values.append(L.detach().cpu().numpy().item())
 
-    fig, axes = plt.subplots(
+    _, axes = plt.subplots(
         3, 2, figsize=(12, 10), gridspec_kw={"width_ratios": [1, 1.5]}
     )
 
+    prediction, _ = render_scene(integrator, rng_index, 1024)
+
     # Left column: Images
-    axes[0, 0].imshow(target.detach().cpu().flip(0))
+    target_ldr = tonemap(target.detach()).cpu().flip(0).numpy()
+    axes[0, 0].imshow(target_ldr)
     axes[0, 0].set_title("Target")
     axes[0, 0].axis("off")
 
-    axes[1, 0].imshow(initial.detach().cpu().flip(0))
+    initial_ldr = tonemap(initial.detach()).cpu().flip(0).numpy()
+    axes[1, 0].imshow(initial_ldr)
     axes[1, 0].set_title("Initial Prediction")
     axes[1, 0].axis("off")
 
     # Empty bottom-left
-    axes[2, 0].imshow(prediction.detach().cpu().flip(0))
+    prediction_ldr = tonemap(prediction.detach()).cpu().flip(0).numpy()
+    axes[2, 0].imshow(prediction_ldr)
     axes[2, 0].set_title("Prediction")
     axes[2, 0].axis("off")
 
