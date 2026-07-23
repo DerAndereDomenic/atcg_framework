@@ -116,15 +116,16 @@ struct BSDFVPtrTable
             out_grad);
     }
 
-    __device__ void
-    sampleBSDFBackward(const SurfaceInteraction& si, PCG32& rng, const glm::vec3& dLdbsdf, const glm::vec3& dLdwo) const
+    __device__ BSDFBackwardEvalResult sampleBSDFBackward(const SurfaceInteraction& si,
+                                                         PCG32& rng,
+                                                         const glm::vec3& dLdbsdf,
+                                                         const glm::vec3& dLdwo) const
     {
-        optixDirectCall<void, const SurfaceInteraction&, PCG32&, const glm::vec3&, const glm::vec3&>(
-            sampleBackwardCallIndex,
-            si,
-            rng,
-            dLdbsdf,
-            dLdwo);
+        return optixDirectCall<BSDFBackwardEvalResult,
+                               const SurfaceInteraction&,
+                               PCG32&,
+                               const glm::vec3&,
+                               const glm::vec3&>(sampleBackwardCallIndex, si, rng, dLdbsdf, dLdwo);
     }
 
 #endif

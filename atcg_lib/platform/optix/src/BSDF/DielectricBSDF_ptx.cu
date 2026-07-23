@@ -383,16 +383,19 @@ __direct_callable__eval_backward_dielectricbsdf(const atcg::SurfaceInteraction& 
     return atcg::BSDFBackwardEvalResult();
 }
 
-extern "C" __device__ void __direct_callable__sample_backward_dielectricbsdf(const atcg::SurfaceInteraction& si,
-                                                                             atcg::PCG32& rng,
-                                                                             const glm::vec3& dLdbsdf,
-                                                                             const glm::vec2& dLdwo)
+extern "C" __device__ atcg::BSDFBackwardEvalResult
+__direct_callable__sample_backward_dielectricbsdf(const atcg::SurfaceInteraction& si,
+                                                  atcg::PCG32& rng,
+                                                  const glm::vec3& dLdbsdf,
+                                                  const glm::vec2& dLdwo)
 {
     atcg::DielectricBSDFData* sbt_data = *reinterpret_cast<atcg::DielectricBSDFData**>(optixGetSbtDataPointer());
+    atcg::BSDFBackwardEvalResult result;
+    memset(&result, 0, sizeof(result));
 
-    if(!sbt_data->optimize_diffuse || !sbt_data->optimize_roughness || !sbt_data->optimize_ior) return;
+    if(!sbt_data->optimize_diffuse || !sbt_data->optimize_roughness || !sbt_data->optimize_ior) return result;
 
-    if(isnan(dLdwo.x) || isnan(dLdwo.y)) return;
+    if(isnan(dLdwo.x) || isnan(dLdwo.y)) return result;
 
     glm::vec3 reflectance_color_ = sbt_data->diffuse_texture.read(si.uv);
     float roughness_             = sbt_data->roughness_texture.read(si.uv);
@@ -502,18 +505,30 @@ extern "C" __device__ void __direct_callable__sample_backward_dielectricbsdf(con
     float dLdr          = glm::dot(dLdbsdf, dbsdf_weightdr) + glm::dot(dLdwo, dwodr);
     float dLdior        = glm::dot(dLdbsdf, dbsdf_weightdior) + glm::dot(dLdwo, dwodior);
 
-    if(isnan(glm::length2(dLdalbedo)) || isnan(dLdr) || isnan(dLdr)) return;
+    if(isnan(glm::length2(dLdalbedo)) || isnan(dLdr) || isnan(dLdr)) return result;
 
+    int payload_index = 0;
     if(sbt_data->optimize_diffuse)
     {
         sbt_data->diffuse_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(dLdalbedo, si.uv);
+
+        result.payload[payload_index++] = dLdalbedo.x;
+        result.payload[payload_index++] = dLdalbedo.y;
+        result.payload[payload_index++] = dLdalbedo.z;
+        result.num_payloads             = payload_index;
     }
     if(sbt_data->optimize_ior)
     {
         sbt_data->ior_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(dLdior, si.uv);
+        result.payload[payload_index++] = dLdior;
+        result.num_payloads             = payload_index;
     }
     if(sbt_data->optimize_roughness)
     {
         sbt_data->roughness_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(dLdr, si.uv);
+        result.payload[payload_index++] = dLdr;
+        result.num_payloads             = payload_index;
     }
+
+    return result;
 }

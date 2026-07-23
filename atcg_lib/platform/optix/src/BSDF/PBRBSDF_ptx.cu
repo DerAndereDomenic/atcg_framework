@@ -519,17 +519,21 @@ __direct_callable__eval_backward_pbrbsdf(const atcg::SurfaceInteraction& si,
             }
         }
     }
+    return result;
 }
 
-extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg::SurfaceInteraction& si,
-                                                                      atcg::PCG32& rng,
-                                                                      const glm::vec3& dLdbsdf,
-                                                                      const glm::vec3& dLdwo_)
+extern "C" __device__ atcg::BSDFBackwardEvalResult
+__direct_callable__sample_backward_pbrbsdf(const atcg::SurfaceInteraction& si,
+                                           atcg::PCG32& rng,
+                                           const glm::vec3& dLdbsdf,
+                                           const glm::vec3& dLdwo_)
 {
+    atcg::BSDFBackwardEvalResult result;
+    memset(&result, 0, sizeof(result));
     {
         atcg::PBRBSDFData* sbt_data = *reinterpret_cast<atcg::PBRBSDFData**>(optixGetSbtDataPointer());
 
-        if(!sbt_data->optimize_diffuse && !sbt_data->optimize_roughness && !sbt_data->optimize_metallic) return;
+        if(!sbt_data->optimize_diffuse && !sbt_data->optimize_roughness && !sbt_data->optimize_metallic) return result;
 
         glm::vec3 dLdwo = dLdwo_;
         if(!isfinite(dLdwo.x) || !isfinite(dLdwo.y) || !isfinite(dLdwo.z))
@@ -558,7 +562,7 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
         float NdotV = glm::dot(normal, view_dir);
         if(NdotV <= 0)
         {
-            return;
+            return result;
         }
 
         // The matrix local_frame transforms a vector from the coordinate system where geom.N corresponds to the z-axis
@@ -606,7 +610,7 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
         auto NdotL = CuDiff::dot(normal, light_dir);
         if(NdotL <= 0)
         {
-            return;
+            return result;
         }
 
         auto diffuse_bsdf = diffuse_color / glm::pi<float>();
@@ -642,6 +646,7 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
         auto bsdf_value         = (specular_bsdf + kD * diffuse_bsdf) * NdotL;
         auto bsdf_weight        = bsdf_value / (sample_probability + 1e-5f);
 
+        int payload_index = 0;
         if(sbt_data->optimize_diffuse)
         {
             glm::mat3 dbsdf_weightdalbedo =
@@ -652,6 +657,11 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
             if(isfinite(gradient.x) && isfinite(gradient.y) && isfinite(gradient.z))
             {
                 sbt_data->diffuse_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(gradient, si.uv);
+
+                result.payload[payload_index++] = gradient.x;
+                result.payload[payload_index++] = gradient.y;
+                result.payload[payload_index++] = gradient.z;
+                result.num_payloads             = payload_index;
             }
         }
 
@@ -664,6 +674,9 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
             if(isfinite(gradient))
             {
                 sbt_data->roughness_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(gradient, si.uv);
+
+                result.payload[payload_index++] = gradient;
+                result.num_payloads             = payload_index;
             }
         }
 
@@ -676,7 +689,11 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
             if(isfinite(gradient))
             {
                 sbt_data->metallic_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(gradient, si.uv);
+
+                result.payload[payload_index++] = gradient;
+                result.num_payloads             = payload_index;
             }
         }
     }
+    return result;
 }
