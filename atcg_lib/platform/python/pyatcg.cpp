@@ -144,6 +144,7 @@ inline void defineBindings(py::module_& m)
     auto m_asset_manager = m.def_submodule("AssetManager");
     auto m_asset_panel   = py::class_<atcg::GUI::AssetPanel, atcg::ref_ptr<atcg::GUI::AssetPanel>>(m, "AssetPanel");
     auto m_project       = py::class_<atcg::Project, atcg::ref_ptr<atcg::Project>>(m, "Project");
+    auto m_dictionary    = py::class_<atcg::Dictionary>(m, "Dictionary");
 
 #ifdef ATCG_CUDA_BACKEND
     auto m_raytracing_context_manager = m.def_submodule("RaytracingContextManager");
@@ -699,6 +700,32 @@ inline void defineBindings(py::module_& m)
             },
             "show_window"_a)
         .def("registerFrameTime", &atcg::GUI::PerformancePanel::registerFrameTime);
+
+    m_dictionary.def(py::init<>())
+        .def("setInt8", &atcg::Dictionary::setInt8, "key"_a, "value"_a)
+        .def("getInt8", &atcg::Dictionary::getInt8, "key"_a)
+        .def("setInt16", &atcg::Dictionary::setInt16, "key"_a, "value"_a)
+        .def("getInt16", &atcg::Dictionary::getInt16, "key"_a)
+        .def("setInt32", &atcg::Dictionary::setInt32, "key"_a, "value"_a)
+        .def("getInt32", &atcg::Dictionary::getInt32, "key"_a)
+        .def("setInt64", &atcg::Dictionary::setInt64, "key"_a, "value"_a)
+        .def("getInt64", &atcg::Dictionary::getInt64, "key"_a)
+        .def("setUInt8", &atcg::Dictionary::setUInt8, "key"_a, "value"_a)
+        .def("getUInt8", &atcg::Dictionary::getUInt8, "key"_a)
+        .def("setUInt16", &atcg::Dictionary::setUInt16, "key"_a, "value"_a)
+        .def("getUInt16", &atcg::Dictionary::getUInt16, "key"_a)
+        .def("setUInt32", &atcg::Dictionary::setUInt32, "key"_a, "value"_a)
+        .def("getUInt32", &atcg::Dictionary::getUInt32, "key"_a)
+        .def("setUInt64", &atcg::Dictionary::setUInt64, "key"_a, "value"_a)
+        .def("getUInt64", &atcg::Dictionary::getUInt64, "key"_a)
+        .def("setFloat", &atcg::Dictionary::setFloat, "key"_a, "value"_a)
+        .def("getFloat", &atcg::Dictionary::getFloat, "key"_a)
+        .def("setDouble", &atcg::Dictionary::setDouble, "key"_a, "value"_a)
+        .def("getDouble", &atcg::Dictionary::getDouble, "key"_a)
+        .def("setString", &atcg::Dictionary::setString, "key"_a, "value"_a)
+        .def("getString", &atcg::Dictionary::getString, "key"_a)
+        .def("setTensor", &atcg::Dictionary::setTensor, "key"_a, "value"_a)
+        .def("getTensor", &atcg::Dictionary::getTensor, "key"_a);
 
     // ------------------- RENDERER ---------------------------------
 
