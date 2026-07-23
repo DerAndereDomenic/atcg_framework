@@ -20,15 +20,17 @@ extern "C" __declspec(dllexport) void registerPythonBindings(pybind11::module& m
             [](const atcg::ref_ptr<atcg::RaytracingContext>& context,
                const atcg::ref_ptr<atcg::Scene>& scene,
                const uint32_t width,
-               const uint32_t height)
+               const uint32_t height,
+               const atcg::ref_ptr<atcg::Integrator>& integrator)
             {
                 atcg::Dictionary dict;
                 dict.setValue("scene", scene);
                 dict.setValue("width", width);
                 dict.setValue("height", height);
-                atcg::ref_ptr<atcg::FiniteDiffPathtracingIntegrator> integrator =
+                dict.setValue("integrator", integrator);
+                atcg::ref_ptr<atcg::FiniteDiffPathtracingIntegrator> finite_integrator =
                     atcg::make_ref<atcg::FiniteDiffPathtracingIntegrator>(context, dict);
-                return integrator;
+                return finite_integrator;
             }))
         .def("generateRays",
              [](const atcg::ref_ptr<atcg::FiniteDiffPathtracingIntegrator>& self)
@@ -50,7 +52,9 @@ extern "C" __declspec(dllexport) void registerPythonBindings(pybind11::module& m
         .def("getOptixScene",
              [](const atcg::ref_ptr<atcg::FiniteDiffPathtracingIntegrator>& self)
              {
-                 auto optix_scene = self->getDictionary().getValue<atcg::ref_ptr<atcg::OptixScene>>("optix_scene");
+                 auto base_integrator = self->getIntegrator();
+                 auto optix_scene = base_integrator->getDictionary().getValue<atcg::ref_ptr<atcg::OptixScene>>("optix_"
+                                                                                                               "scene");
                  return optix_scene;
              });
 }

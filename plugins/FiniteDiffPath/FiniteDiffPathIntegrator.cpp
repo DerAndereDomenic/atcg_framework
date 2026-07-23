@@ -19,12 +19,10 @@ torch::autograd::variable_list FiniteDiffPathNode::apply(torch::autograd::variab
 
     std::vector<torch::Tensor> parameter_gradients;
 
-    float h = 0.00001f;
+    float h = 0.001f;
 
     Dictionary dict;
     dict.setValue("rng_index", rng_index);
-    dict.setValue("width", width);
-    dict.setValue("height", height);
     for(int i = 0; i < parameters.size(); ++i)
     {
         auto parameter = parameters[i];
@@ -69,6 +67,7 @@ void FiniteDiffPathtracingIntegrator::generateRays(Dictionary& in_out_dictionary
     {
         torch::NoGradGuard no_grad;
         _integrator->generateRays(in_out_dictionary);
+        result = in_out_dictionary.getValue<torch::Tensor>("output_img");
     }
 
     if(is_executable)
@@ -78,13 +77,9 @@ void FiniteDiffPathtracingIntegrator::generateRays(Dictionary& in_out_dictionary
         node->set_next_edges(std::move(next_edges));
         node->integrator = _integrator.get();
         node->rng_index  = in_out_dictionary.getValueOr<uint32_t>("rng_index", 0);
-        node->width      = in_out_dictionary.getValue<uint32_t>("width");
-        node->height     = in_out_dictionary.getValue<uint32_t>("height");
 
         torch::autograd::set_history(result, node);
     }
-
-    in_out_dictionary.setValue("output_img", result);
 }
 
 void FiniteDiffPathtracingIntegrator::onImGuiRender()

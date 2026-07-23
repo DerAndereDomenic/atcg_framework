@@ -9,7 +9,6 @@ struct FiniteDiffPathNode : public torch::autograd::Node
 {
     Integrator* integrator;
     uint32_t rng_index;
-    uint32_t width, height;
     torch::autograd::variable_list apply(torch::autograd::variable_list&& grads) override;
 
     virtual void release_variables() override;
@@ -27,6 +26,8 @@ public:
     virtual void generateRays(Dictionary& in_out_dictionary) override;
 
     virtual void reset() override;
+
+    const atcg::ref_ptr<Integrator>& getIntegrator() const { return _integrator; }
 
 private:
     friend class FiniteDiffPathNode;
