@@ -431,14 +431,17 @@ __direct_callable__eval_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si,
     return result;
 }
 
-extern "C" __device__ void __direct_callable__eval_backward_pbrbsdf(const atcg::SurfaceInteraction& si,
-                                                                    const glm::vec3& outgoing_dir,
-                                                                    const glm::vec3& dLdbsdf)
+extern "C" __device__ atcg::BSDFBackwardEvalResult
+__direct_callable__eval_backward_pbrbsdf(const atcg::SurfaceInteraction& si,
+                                         const glm::vec3& outgoing_dir,
+                                         const glm::vec3& dLdbsdf)
 {
+    atcg::BSDFBackwardEvalResult result;
+    memset(&result, 0, sizeof(result));
     {
         atcg::PBRBSDFData* sbt_data = *reinterpret_cast<atcg::PBRBSDFData**>(optixGetSbtDataPointer());
 
-        if(!sbt_data->optimize_diffuse && !sbt_data->optimize_metallic && !sbt_data->optimize_roughness) return;
+        if(!sbt_data->optimize_diffuse && !sbt_data->optimize_metallic && !sbt_data->optimize_roughness) return result;
 
         glm::vec3 alpha_ = sbt_data->diffuse_texture.read(si.uv);
         float m_         = sbt_data->metallic_texture.read(si.uv);
@@ -462,7 +465,7 @@ extern "C" __device__ void __direct_callable__eval_backward_pbrbsdf(const atcg::
         float NdotL = glm::max(glm::dot(si.normal, light_dir), 0.0f);
         float VdotH = glm::max(glm::dot(H, view_dir), 0.0f);
 
-        if(NdotL <= 0.0f || NdotV <= 0.0f) return;
+        if(NdotL <= 0.0f || NdotV <= 0.0f) return result;
 
         auto NDF = atcg::D_GGX(NdotH, roughness);
         auto V   = atcg::V_SmithGGX(NdotL, NdotV, roughness);
@@ -474,6 +477,7 @@ extern "C" __device__ void __direct_callable__eval_backward_pbrbsdf(const atcg::
 
         auto bsdf_value = (specular + kD * diffuse_color / glm::pi<float>()) * NdotL;
 
+        int payload_index = 0;
         if(sbt_data->optimize_diffuse)
         {
             glm::mat3 dbsdfdalpha =
@@ -483,6 +487,10 @@ extern "C" __device__ void __direct_callable__eval_backward_pbrbsdf(const atcg::
             if(isfinite(dLdalbedo.x) || isfinite(dLdalbedo.y) || isfinite(dLdalbedo.z))
             {
                 sbt_data->diffuse_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(dLdalbedo, si.uv);
+                result.payload[payload_index++] = dLdalbedo.x;
+                result.payload[payload_index++] = dLdalbedo.y;
+                result.payload[payload_index++] = dLdalbedo.z;
+                result.num_payloads             = payload_index;
             }
         }
 
@@ -494,6 +502,8 @@ extern "C" __device__ void __direct_callable__eval_backward_pbrbsdf(const atcg::
             if(isfinite(dLdr))
             {
                 sbt_data->roughness_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(dLdr, si.uv);
+                result.payload[payload_index++] = dLdr;
+                result.num_payloads             = payload_index;
             }
         }
 
@@ -504,6 +514,8 @@ extern "C" __device__ void __direct_callable__eval_backward_pbrbsdf(const atcg::
             if(isfinite(dLdm))
             {
                 sbt_data->metallic_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(dLdm, si.uv);
+                result.payload[payload_index++] = dLdm;
+                result.num_payloads             = payload_index;
             }
         }
     }

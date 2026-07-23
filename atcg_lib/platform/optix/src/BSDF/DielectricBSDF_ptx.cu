@@ -375,10 +375,12 @@ __direct_callable__eval_forward_dielectricbsdf(const atcg::SurfaceInteraction& s
     return atcg::BSDFDualEvalResult();
 }
 
-extern "C" __device__ void __direct_callable__eval_backward_dielectricbsdf(const atcg::SurfaceInteraction& si,
-                                                                           const glm::vec3& outgoing_dir,
-                                                                           const glm::vec3& dLdbsdf)
+extern "C" __device__ atcg::BSDFBackwardEvalResult
+__direct_callable__eval_backward_dielectricbsdf(const atcg::SurfaceInteraction& si,
+                                                const glm::vec3& outgoing_dir,
+                                                const glm::vec3& dLdbsdf)
 {
+    return atcg::BSDFBackwardEvalResult();
 }
 
 extern "C" __device__ void __direct_callable__sample_backward_dielectricbsdf(const atcg::SurfaceInteraction& si,

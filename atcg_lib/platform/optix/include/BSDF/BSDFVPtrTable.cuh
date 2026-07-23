@@ -44,6 +44,12 @@ struct BSDFDualEvalResult
     BSDFComponentType flags = BSDFComponentType::Any;
 };
 
+struct BSDFBackwardEvalResult
+{
+    float payload[16];
+    uint32_t num_payloads;
+};
+
 struct BSDFVPtrTable
 {
     uint32_t sampleCallIndex;
@@ -99,13 +105,15 @@ struct BSDFVPtrTable
                                const atcg::SampledWavelengths&>(evalForwardCallIndex, si, outgoing_dir, wavelengths);
     }
 
-    __device__ void
-    evalBSDFBackward(const SurfaceInteraction& si, const glm::vec3& outgoing_dir, const glm::vec3& out_grad) const
+    __device__ BSDFBackwardEvalResult evalBSDFBackward(const SurfaceInteraction& si,
+                                                       const glm::vec3& outgoing_dir,
+                                                       const glm::vec3& out_grad) const
     {
-        optixDirectCall<void, const SurfaceInteraction&, const glm::vec3&, const glm::vec3&>(evalBackwardCallIndex,
-                                                                                             si,
-                                                                                             outgoing_dir,
-                                                                                             out_grad);
+        return optixDirectCall<BSDFBackwardEvalResult, const SurfaceInteraction&, const glm::vec3&, const glm::vec3&>(
+            evalBackwardCallIndex,
+            si,
+            outgoing_dir,
+            out_grad);
     }
 
     __device__ void

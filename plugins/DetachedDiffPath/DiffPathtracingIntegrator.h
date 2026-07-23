@@ -82,5 +82,8 @@ private:
     GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("DiffPath");
 
     uint32_t _frame_counter = 0;
+
+    std::vector<torch::Tensor> _aov_buffers;
+    atcg::DeviceBuffer<float*> _aov_buffer_pointers;
 };
 }    // namespace atcg
