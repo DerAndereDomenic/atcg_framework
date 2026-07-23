@@ -3,6 +3,8 @@
 #include <Core/Memory.h>
 #include <Core/Platform.h>
 
+#include <torch/types.h>
+
 #include <unordered_map>
 #include <any>
 
@@ -35,7 +37,7 @@ public:
     }
 
     /**
-     * @brief Retrieve a value of a given type for a key as amy object
+     * @brief Retrieve a value of a given type for a key as any object
      *
      * @param key The key to look up.
      * @return The value associated with the key.
@@ -86,6 +88,43 @@ public:
             return *val;
         }
         return out;
+    }
+
+    // Convenience functions for common types
+    ATCG_INLINE void setInt8(std::string_view key, int8_t value) { setValue(key, value); }
+    ATCG_INLINE void setInt16(std::string_view key, int16_t value) { setValue(key, value); }
+    ATCG_INLINE void setInt32(std::string_view key, int32_t value) { setValue(key, value); }
+    ATCG_INLINE void setInt64(std::string_view key, int64_t value) { setValue(key, value); }
+    ATCG_INLINE void setUInt8(std::string_view key, uint8_t value) { setValue(key, value); }
+    ATCG_INLINE void setUInt16(std::string_view key, uint16_t value) { setValue(key, value); }
+    ATCG_INLINE void setUInt32(std::string_view key, uint32_t value) { setValue(key, value); }
+    ATCG_INLINE void setUInt64(std::string_view key, uint64_t value) { setValue(key, value); }
+    ATCG_INLINE void setFloat(std::string_view key, float value) { setValue(key, value); }
+    ATCG_INLINE void setDouble(std::string_view key, double value) { setValue(key, value); }
+    ATCG_INLINE void setString(std::string_view key, const std::string& value) { setValue(key, value); }
+    ATCG_INLINE void setTensor(std::string_view key, torch::Tensor value) { setValue(key, value); }
+    template<typename T>
+    ATCG_INLINE void setPointer(std::string_view key, const atcg::ref_ptr<T>& value)
+    {
+        setValue(key, value);
+    }
+
+    ATCG_INLINE int8_t getInt8(std::string_view key) const { return getValue<int8_t>(key); }
+    ATCG_INLINE int16_t getInt16(std::string_view key) const { return getValue<int16_t>(key); }
+    ATCG_INLINE int32_t getInt32(std::string_view key) const { return getValue<int32_t>(key); }
+    ATCG_INLINE int64_t getInt64(std::string_view key) const { return getValue<int64_t>(key); }
+    ATCG_INLINE uint8_t getUInt8(std::string_view key) const { return getValue<uint8_t>(key); }
+    ATCG_INLINE uint16_t getUInt16(std::string_view key) const { return getValue<uint16_t>(key); }
+    ATCG_INLINE uint32_t getUInt32(std::string_view key) const { return getValue<uint32_t>(key); }
+    ATCG_INLINE uint64_t getUInt64(std::string_view key) const { return getValue<uint64_t>(key); }
+    ATCG_INLINE float getFloat(std::string_view key) const { return getValue<float>(key); }
+    ATCG_INLINE double getDouble(std::string_view key) const { return getValue<double>(key); }
+    ATCG_INLINE std::string getString(std::string_view key) const { return getValue<std::string>(key); }
+    ATCG_INLINE torch::Tensor getTensor(std::string_view key) const { return getValue<torch::Tensor>(key); }
+    template<typename T>
+    ATCG_INLINE atcg::ref_ptr<T> getPointer(std::string_view key) const
+    {
+        return getValue<atcg::ref_ptr<T>>(key);
     }
 
     /**
