@@ -60,15 +60,15 @@ extern "C" __global__ void __raygen__forward()
         if(!ray.valid) break;
         ray.valid = false;
 
-        float rr_prob = glm::max(glm::max(ray.throughput.r, ray.throughput.g), ray.throughput.b);
-        if(rng.nextFloat() < rr_prob)
-        {
-            ray.throughput /= rr_prob;
-        }
-        else
-        {
-            break;
-        }
+        // float rr_prob = glm::max(glm::max(ray.throughput.r, ray.throughput.g), ray.throughput.b);
+        // if(rng.nextFloat() < rr_prob)
+        // {
+        //     ray.throughput /= rr_prob;
+        // }
+        // else
+        // {
+        //     break;
+        // }
 
         atcg::SurfaceInteraction si;
         atcg::traceWithDataPointer<atcg::SurfaceInteraction>(params.handle,

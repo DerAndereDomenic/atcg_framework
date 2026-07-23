@@ -234,7 +234,7 @@ extern "C" __global__ void __raygen__forward()
                     }
                     else
                     {
-                        ray.JL -= (atcg::diag(radiance_nee / bsdf_result.bsdf_value) * Jbsdf_nee +
+                        ray.JL -= (atcg::diag((radiance_nee + 1e-4f) / (bsdf_result.bsdf_value + 1e-4f)) * Jbsdf_nee +
                                    mis_weight * atcg::diag(ray.throughput * bsdf_result.bsdf_value) * JLe_nee);
 
                         glm::vec3 grad_out =
@@ -293,8 +293,8 @@ extern "C" __global__ void __raygen__forward()
                     }
                     else
                     {
-                        ray.JL -=
-                            (atcg::diag(ray.radiance / result.bsdf_weight) * Jbsdf + atcg::diag(ray.throughput) * JLe);
+                        ray.JL -= (atcg::diag((ray.radiance + 1e-4f) / (result.bsdf_weight + 1e-4f)) * Jbsdf +
+                                   atcg::diag(ray.throughput) * JLe);
 
 
                         atcg::mat4x6 frame_ray_n = atcg::mat4x6(frame1, glm::mat2x3(0.0f), glm::mat2x3(0.0f), frame2);
