@@ -1816,9 +1816,9 @@ inline void defineBindings(py::module_& m)
                                  const atcg::ref_ptr<atcg::RaytracingContext>& context,
                                  const atcg::ref_ptr<atcg::Scene>& scene,
                                  const uint32_t width,
-                                 const uint32_t height)
+                                 const uint32_t height,
+                                 atcg::Dictionary& dict)
                               {
-                                  atcg::Dictionary dict;
                                   dict.setValue("scene", scene);
                                   dict.setValue("width", width);
                                   dict.setValue("height", height);

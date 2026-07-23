@@ -40,8 +40,9 @@ def tonemap(hdr_image):
 
 def run_method(method_name, context, scene, width, height, parameter_name):
 
+    dictionary = atcg.Dictionary()
     integrator = atcg.IntegratorRegistry.createIntegrator(
-        method_name, context, scene, width, height
+        method_name, context, scene, width, height, dictionary
     )
 
     object_name, component, parameter = parameter_name.split(".")
