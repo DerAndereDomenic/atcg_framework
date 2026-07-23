@@ -34,5 +34,8 @@ struct DiffPathtracingParams
     const EmitterVPtrTable* environment_emitter;
 
     DiffMode diff_mode;
+
+    float** aov_buffers;
+    uint32_t num_aovs;
 };
 }    // namespace atcg

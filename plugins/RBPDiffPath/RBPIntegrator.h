@@ -53,6 +53,18 @@ public:
      */
     virtual void reset() override;
 
+    torch::Tensor forwardTrace(Dictionary& in_out_dictionary);
+    void backwardTrace(Dictionary& in_out_dictionary);
+
+    ATCG_INLINE torch::Tensor getAOVBuffer(uint32_t index) const
+    {
+        if(index >= _aov_buffers.size())
+        {
+            throw std::out_of_range("AOV buffer index out of range");
+        }
+        return _aov_buffers[index];
+    }
+
 private:
     friend class RBPNode;
     /**
@@ -66,9 +78,6 @@ private:
     void initializePipeline(const Dictionary& dict);
 
 
-    torch::Tensor _forwardTrace(Dictionary& in_out_dictionary);
-    void _backwardTrace(Dictionary& in_out_dictionary);
-
 private:
     uint32_t _raygen_index_forward;
     uint32_t _raygen_index_backward;
@@ -81,5 +90,8 @@ private:
     GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("DiffPath");
 
     uint32_t _frame_counter = 0;
+
+    std::vector<torch::Tensor> _aov_buffers;
+    atcg::DeviceBuffer<float*> _aov_buffer_pointers;
 };
 }    // namespace atcg

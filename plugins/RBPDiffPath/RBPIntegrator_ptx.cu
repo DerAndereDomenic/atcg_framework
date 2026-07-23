@@ -186,6 +186,10 @@ ATCG_INLINE ATCG_DEVICE void dLi(const glm::vec3& grad_out,
 {
     RayContext ray;
 
+    uint3 launch_idx = optixGetLaunchIndex();
+
+    uint32_t pixel_index = launch_idx.x + params.image_width * launch_idx.y;
+
     ray.direction  = ray_.direction;
     ray.origin     = ray_.origin;
     ray.throughput = grad_out;
@@ -269,8 +273,14 @@ ATCG_INLINE ATCG_DEVICE void dLi(const glm::vec3& grad_out,
                     glm::vec3 radiance_nee = mis_weight * ray.throughput *
                                              emitter_sampling.radiance_weight_at_receiver * bsdf_result.bsdf_value;
 
-                    glm::vec3 g = mis_weight * ray.throughput * emitter_sampling.radiance_weight_at_receiver;
-                    si.bsdf->evalBSDFBackward(si, emitter_sampling.direction_to_light, g);
+                    glm::vec3 g    = mis_weight * ray.throughput * emitter_sampling.radiance_weight_at_receiver;
+                    auto gradients = si.bsdf->evalBSDFBackward(si, emitter_sampling.direction_to_light, g);
+
+                    for(int i = 0; i < gradients.num_payloads; ++i)
+                    {
+                        if(i >= params.num_aovs) break;
+                        params.aov_buffers[i][pixel_index] += gradients.payload[i];
+                    }
 
                 } while(false);
 
@@ -286,7 +296,13 @@ ATCG_INLINE ATCG_DEVICE void dLi(const glm::vec3& grad_out,
 
                     glm::vec3 g = ray.throughput / result.sample_probability * Li_;
 
-                    si.bsdf->evalBSDFBackward(si, result.out_dir, g);
+                    auto gradients = si.bsdf->evalBSDFBackward(si, result.out_dir, g);
+
+                    for(int i = 0; i < gradients.num_payloads; ++i)
+                    {
+                        if(i >= params.num_aovs) break;
+                        params.aov_buffers[i][pixel_index] += gradients.payload[i];
+                    }
 
                     next_origin = si.position;
                     next_dir    = result.out_dir;

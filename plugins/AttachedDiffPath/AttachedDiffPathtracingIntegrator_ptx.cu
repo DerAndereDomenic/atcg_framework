@@ -239,7 +239,14 @@ extern "C" __global__ void __raygen__forward()
 
                         glm::vec3 grad_out =
                             (ray.delta_y * (radiance_nee + 1e-4f)) / (glm::vec3(bsdf_result.bsdf_value) + 1e-4f);
-                        si1.bsdf->evalBSDFBackward(si1, emitter_sampling.direction_to_light.val(), grad_out);
+                        auto gradients =
+                            si1.bsdf->evalBSDFBackward(si1, emitter_sampling.direction_to_light.val(), grad_out);
+
+                        for(int i = 0; i < gradients.num_payloads; ++i)
+                        {
+                            if(i >= params.num_aovs) break;
+                            params.aov_buffers[i][pixel_index] += gradients.payload[i];
+                        }
                     }
 
 
@@ -308,7 +315,12 @@ extern "C" __global__ void __raygen__forward()
                         glm::vec3 dLdbsdf = (ray.delta_y * (ray.radiance + 1e-4f)) / (result.bsdf_weight + 1e-4f);
                         glm::vec3 dLdwo   = ray.delta_y * (JL_ * du1v1u2v2dw);
 
-                        si1.bsdf->sampleBSDFBackward(si1, rng_copy, dLdbsdf, dLdwo);
+                        auto gradients = si1.bsdf->sampleBSDFBackward(si1, rng_copy, dLdbsdf, dLdwo);
+                        for(int i = 0; i < gradients.num_payloads; ++i)
+                        {
+                            if(i >= params.num_aovs) break;
+                            params.aov_buffers[i][pixel_index] += gradients.payload[i];
+                        }
                     }
 
                     si1.pdf = result.sample_probability;

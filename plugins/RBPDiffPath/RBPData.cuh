@@ -31,5 +31,8 @@ struct RBPParams
     const EmitterVPtrTable** emitters;
 
     const EmitterVPtrTable* environment_emitter;
+
+    float** aov_buffers;
+    uint32_t num_aovs;
 };
 }    // namespace atcg

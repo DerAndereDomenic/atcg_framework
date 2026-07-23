@@ -34,7 +34,7 @@ torch::autograd::variable_list AttachedDiffPathNode::apply(torch::autograd::vari
     dict.setValue("rng_index", rng_index);
 
     integrator->_optix_scene->zeroGrad();
-    integrator->_backwardTrace(dict);
+    integrator->backwardTrace(dict);
 
     return integrator->_optix_scene->getParameterGradients();
 }
@@ -77,10 +77,26 @@ void AttachedDiffPathtracingIntegrator::initializePipeline(const Dictionary& dic
     _dual_miss_index      = _sbt->addMissEntry(dual_miss_prog_group);
     _occlusion_miss_index = _sbt->addMissEntry(occl_prog_group);
 
-    _optix_scene = SceneAdapter(_context, _pipeline, _sbt)
-                       .apply(scene, dict.getValue<uint32_t>("width"), dict.getValue<uint32_t>("height"));
+    uint32_t width  = dict.getValue<uint32_t>("width");
+    uint32_t height = dict.getValue<uint32_t>("height");
+    _optix_scene    = SceneAdapter(_context, _pipeline, _sbt).apply(scene, width, height);
 
     _dict.setValue("optix_scene", _optix_scene);
+
+    uint32_t num_aovs = dict.getValueOr<uint32_t>("num_aovs", 0);
+
+    if(num_aovs > 0)
+    {
+        _aov_buffers.resize(num_aovs);
+        _aov_buffer_pointers = atcg::DeviceBuffer<float*>(num_aovs);
+        std::vector<float*> aov_buffer_pointers(num_aovs);
+        for(uint32_t i = 0; i < num_aovs; ++i)
+        {
+            _aov_buffers[i]        = torch::zeros({height, width}, atcg::TensorOptions::floatDeviceOptions());
+            aov_buffer_pointers[i] = reinterpret_cast<float*>(_aov_buffers[i].data_ptr());
+        }
+        _aov_buffer_pointers.upload(aov_buffer_pointers.data());
+    }
 
     _pipeline->createPipeline();
     _sbt->createSBT();
@@ -98,7 +114,7 @@ void AttachedDiffPathtracingIntegrator::reset()
     _optix_scene->getSensor()->getFilm()->clear();
 }
 
-std::tuple<torch::Tensor, torch::Tensor> AttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dictionary)
+std::tuple<torch::Tensor, torch::Tensor> AttachedDiffPathtracingIntegrator::forwardTrace(Dictionary& in_out_dictionary)
 {
     uint32_t width     = _optix_scene->getSensor()->getFilm()->getWidth();
     uint32_t height    = _optix_scene->getSensor()->getFilm()->getHeight();
@@ -146,8 +162,13 @@ std::tuple<torch::Tensor, torch::Tensor> AttachedDiffPathtracingIntegrator::_for
     return {current_sample, current_JL};
 }
 
-void AttachedDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictionary)
+void AttachedDiffPathtracingIntegrator::backwardTrace(Dictionary& in_out_dictionary)
 {
+    for(int i = 0; i < _aov_buffers.size(); ++i)
+    {
+        _aov_buffers[i].zero_();
+    }
+
     auto adjoint_y     = in_out_dictionary.getValue<torch::Tensor>("adjoint_y");
     auto sample        = in_out_dictionary.getValue<torch::Tensor>("current_sample");
     auto JL            = in_out_dictionary.getValue<torch::Tensor>("JL_buffer");
@@ -167,6 +188,9 @@ void AttachedDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictio
     params.current_sample = (glm::vec3*)sample.data_ptr();       // Input sample from forward pass
     params.adjoint_y      = (glm::vec3*)adjoint_y.data_ptr();    // Input 𝛿L
     params.JL_buffer      = (atcg::mat6x3*)JL.data_ptr();        // Input JL from forward pass
+
+    params.aov_buffers = _aov_buffer_pointers.get();
+    params.num_aovs    = _aov_buffers.size();
 
     params.rng_index = rng_index;
 
@@ -205,7 +229,7 @@ void AttachedDiffPathtracingIntegrator::generateRays(Dictionary& in_out_dictiona
     torch::Tensor result, JL;
     {
         torch::NoGradGuard no_grad;
-        std::tie(result, JL) = _forwardTrace(in_out_dictionary);
+        std::tie(result, JL) = forwardTrace(in_out_dictionary);
     }
 
     if(is_executable)

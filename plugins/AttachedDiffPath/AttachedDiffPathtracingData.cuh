@@ -39,5 +39,8 @@ struct AttachedDiffPathtracingParams
     const EmitterVPtrTable* environment_emitter;
 
     bool debug;
+
+    float** aov_buffers;
+    uint32_t num_aovs;
 };
 }    // namespace atcg

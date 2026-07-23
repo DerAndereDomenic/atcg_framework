@@ -51,5 +51,8 @@ extern "C" __declspec(dllexport) void registerPythonBindings(pybind11::module& m
              {
                  auto optix_scene = self->getDictionary().getValue<atcg::ref_ptr<atcg::OptixScene>>("optix_scene");
                  return optix_scene;
-             });
+             })
+        .def("forwardTrace", &atcg::AttachedDiffPathtracingIntegrator::forwardTrace)
+        .def("backwardTrace", &atcg::AttachedDiffPathtracingIntegrator::backwardTrace)
+        .def("getAOVBuffer", &atcg::AttachedDiffPathtracingIntegrator::getAOVBuffer);
 }
