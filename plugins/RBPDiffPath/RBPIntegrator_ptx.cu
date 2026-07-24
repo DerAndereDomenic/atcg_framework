@@ -288,8 +288,9 @@ ATCG_INLINE ATCG_DEVICE void dLi(const glm::vec3& grad_out,
 
                 if(result.sample_probability > 0.0f)
                 {
+                    si.pdf        = result.sample_probability;
                     glm::vec3 Li_ = Li(atcg::Ray(si.position, result.out_dir),
-                                       last_si,
+                                       si,
                                        wavelengths,
                                        NUM_BOUNCES - n - 1,
                                        rng);    // O(n^2)
