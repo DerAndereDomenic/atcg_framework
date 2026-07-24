@@ -34,6 +34,11 @@ option(ATCG_SPECTRAL_RENDERING "Use spectral renderer" OFF)
 # OpenMesh and OpenVR use Cmake < 3.10
 set(CMAKE_POLICY_VERSION_MINIMUM 3.10)
 
+if(MSVC)
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} \
+        -Xcompiler=/Zc:preprocessor")
+endif()
+
 if(ATCG_HEADLESS)
     if(NOT UNIX)
         message(FATAL_ERROR "Headless mode only supported on linux.")
