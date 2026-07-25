@@ -74,4 +74,10 @@ void DepthPass::execute(const RenderContext& ctx, const ResourceTable& resources
     GraphicsCommand::endRenderPass();
 }
 
+void DepthPass::registerRenderPass(RenderPassRegistry::Registry* registry)
+{
+    ATCG_REGISTER_RENDER_PASS(registry, "DepthPass", DepthPass);
+}
+
+
 }    // namespace atcg

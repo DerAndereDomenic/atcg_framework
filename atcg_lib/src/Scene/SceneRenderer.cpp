@@ -1,11 +1,6 @@
 #include <Scene/SceneRenderer.h>
 
-#include <Renderer/RenderPasses/BlitPass.h>
-#include <Renderer/RenderPasses/ForwardPass.h>
-#include <Renderer/RenderPasses/ShadowPass.h>
-#include <Renderer/RenderPasses/TonemapPass.h>
-#include <Renderer/RenderPasses/DepthPass.h>
-#include <Renderer/RenderPasses/OutlinePass.h>
+#include <Renderer/RenderPassRegistry.h>
 
 namespace atcg
 {
@@ -34,17 +29,22 @@ atcg::ref_ptr<RenderGraph> SceneRendererSystem::Impl::createRenderGraph()
     auto graph = atcg::make_ref<RenderGraph>();
 
     Dictionary forward_pass_properties;
-    atcg::ref_ptr<ForwardPass> forward_pass = atcg::make_ref<ForwardPass>(forward_pass_properties);
+    atcg::ref_ptr<RenderPass> forward_pass =
+        atcg::RenderPassRegistry::createRenderPass("ForwardPass", forward_pass_properties);
     Dictionary tonemap_pass_properties;
-    atcg::ref_ptr<TonemapPass> tonemap_pass = atcg::make_ref<TonemapPass>(tonemap_pass_properties);
+    atcg::ref_ptr<RenderPass> tonemap_pass =
+        atcg::RenderPassRegistry::createRenderPass("TonemapPass", tonemap_pass_properties);
     Dictionary depth_pass_properties;
     depth_pass_properties.setValue("cull_mode", CullMode::ATCG_FRONT_FACE_CULLING);
-    atcg::ref_ptr<DepthPass> depth_pass = atcg::make_ref<DepthPass>(depth_pass_properties);
+    atcg::ref_ptr<RenderPass> depth_pass =
+        atcg::RenderPassRegistry::createRenderPass("DepthPass", depth_pass_properties);
     Dictionary shadow_pass_properties;
     shadow_pass_properties.setValue("resolution", shadow_pass_resolution);
-    atcg::ref_ptr<ShadowPass> shadow_pass = atcg::make_ref<ShadowPass>(shadow_pass_properties);
+    atcg::ref_ptr<RenderPass> shadow_pass =
+        atcg::RenderPassRegistry::createRenderPass("ShadowPass", shadow_pass_properties);
     Dictionary outline_pass_properties;
-    atcg::ref_ptr<OutlinePass> outline_pass = atcg::make_ref<OutlinePass>(outline_pass_properties);
+    atcg::ref_ptr<RenderPass> outline_pass =
+        atcg::RenderPassRegistry::createRenderPass("OutlinePass", outline_pass_properties);
 
     auto forward_handle = graph->addRenderPass(forward_pass);
     auto tonemap_handle = graph->addRenderPass(tonemap_pass);
@@ -62,7 +62,8 @@ atcg::ref_ptr<RenderGraph> SceneRendererSystem::Impl::createRenderGraph()
     if(ctx.num_samples > 1)
     {
         Dictionary blit_pass_properties;
-        atcg::ref_ptr<BlitPass> blit_pass = atcg::make_ref<BlitPass>(blit_pass_properties);
+        atcg::ref_ptr<RenderPass> blit_pass =
+            atcg::RenderPassRegistry::createRenderPass("BlitPass", blit_pass_properties);
 
         auto blit_handle = graph->addRenderPass(blit_pass);
 

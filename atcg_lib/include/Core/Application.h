@@ -15,6 +15,7 @@
 #include <Renderer/Renderer.h>
 #include <Renderer/ShaderManager.h>
 #include <Renderer/VRSystem.h>
+#include <Renderer/RenderPassRegistry.h>
 #include <Scene/ComponentRegistry.h>
 #include <Scene/RevisionStack.h>
 #include <Scene/SceneRenderer.h>
@@ -182,6 +183,7 @@ private:
     atcg::ref_ptr<AssetManagerSystem> _asset_manager;
     atcg::ref_ptr<ShaderManagerSystem> _shader_manager;
     atcg::ref_ptr<MaterialRegistry::Registry> _material_registry;
+    atcg::ref_ptr<RenderPassRegistry::Registry> _render_pass_registry;
     atcg::ref_ptr<SceneRendererSystem> _scene_renderer;
     atcg::ref_ptr<RendererSystem> _renderer;
     atcg::ref_ptr<VRSystem> _vr_system;

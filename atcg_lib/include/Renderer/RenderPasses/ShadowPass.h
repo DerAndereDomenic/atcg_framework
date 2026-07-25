@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Renderer/RenderPass.h>
+#include <Renderer/RenderPassRegistry.h>
 
 namespace atcg
 {
@@ -34,6 +35,8 @@ public:
      * @param resources The resource table holding the resources for this render pass
      */
     virtual void execute(const RenderContext& ctx, const ResourceTable& resources) override;
+
+    static void registerRenderPass(RenderPassRegistry::Registry* registry);
 
 private:
     uint32_t _resolution = 1024;

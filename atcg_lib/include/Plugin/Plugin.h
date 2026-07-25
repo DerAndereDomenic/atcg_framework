@@ -8,6 +8,7 @@
 #include <Renderer/GraphicsAPI.h>
 #include <Plugin/PluginHandle.h>
 #include <Renderer/Material.h>
+#include <Renderer/RenderPassRegistry.h>
 #ifdef ATCG_CUDA_BACKEND
     #include <BSDF/BSDFRegistry.h>
     #include <Integrator/IntegratorRegistry.h>
@@ -58,6 +59,13 @@ public:
     {
         MaterialRegistry::Registry* registry = MaterialRegistry::getRegistry();
         ATCG_REGISTER_MATERIAL_PLUGIN(registry, _handle, type, MaterialT);
+    }
+
+    template<typename RenderPassT>
+    void registerRenderPass(std::string_view type)
+    {
+        RenderPassRegistry::Registry* registry = RenderPassRegistry::getRegistry();
+        ATCG_REGISTER_RENDER_PASS_PLUGIN(registry, _handle, type, RenderPassT);
     }
 
 #ifdef ATCG_CUDA_BACKEND

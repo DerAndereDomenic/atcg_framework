@@ -80,4 +80,11 @@ void OutlinePass::execute(const RenderContext& ctx, const ResourceTable& resourc
 
     GraphicsCommand::endRenderPass();
 }
+
+void OutlinePass::registerRenderPass(RenderPassRegistry::Registry* registry)
+{
+    ATCG_REGISTER_RENDER_PASS(registry, "OutlinePass", OutlinePass);
+}
+
+
 }    // namespace atcg

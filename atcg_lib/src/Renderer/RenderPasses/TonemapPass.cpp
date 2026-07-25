@@ -80,4 +80,10 @@ void TonemapPass::execute(const RenderContext& ctx, const ResourceTable& resourc
     GraphicsCommand::endRenderPass();
 }
 
+void TonemapPass::registerRenderPass(RenderPassRegistry::Registry* registry)
+{
+    ATCG_REGISTER_RENDER_PASS(registry, "TonemapPass", TonemapPass);
+}
+
+
 }    // namespace atcg

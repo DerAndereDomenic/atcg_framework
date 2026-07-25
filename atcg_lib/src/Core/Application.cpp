@@ -8,6 +8,14 @@
 #include <Renderer/ShaderManager.h>
 #include <Asset/Project.h>
 
+#include <Renderer/RenderPasses/TonemapPass.h>
+#include <Renderer/RenderPasses/DepthPass.h>
+#include <Renderer/RenderPasses/ForwardPass.h>
+#include <Renderer/RenderPasses/ShadowPass.h>
+#include <Renderer/RenderPasses/OutlinePass.h>
+#include <Renderer/RenderPasses/BlitPass.h>
+#include <Renderer/RenderPasses/OutputPass.h>
+
 #ifdef ATCG_CUDA_BACKEND
     #include <BSDF/PBRBSDF.h>
     #include <BSDF/NullBSDF.h>
@@ -100,9 +108,6 @@ void Application::init(const WindowProps& props)
     _script_engine->init();
     SystemRegistry::instance()->registerSystem(_script_engine.get());
 
-    _scene_renderer = atcg::make_ref<SceneRendererSystem>(_renderer.get());
-    SystemRegistry::instance()->registerSystem(_scene_renderer.get());
-
     // Register the material types
     _material_registry = atcg::make_ref<MaterialRegistry::Registry>();
     OpaqueMaterial::registerMaterial(_material_registry.get());
@@ -110,6 +115,20 @@ void Application::init(const WindowProps& props)
     NullMaterial::registerMaterial(_material_registry.get());
 
     SystemRegistry::instance()->registerSystem(_material_registry.get());
+
+    _render_pass_registry = atcg::make_ref<RenderPassRegistry::Registry>();
+    OutputPass::registerRenderPass(_render_pass_registry.get());
+    TonemapPass::registerRenderPass(_render_pass_registry.get());
+    DepthPass::registerRenderPass(_render_pass_registry.get());
+    ForwardPass::registerRenderPass(_render_pass_registry.get());
+    ShadowPass::registerRenderPass(_render_pass_registry.get());
+    OutlinePass::registerRenderPass(_render_pass_registry.get());
+    BlitPass::registerRenderPass(_render_pass_registry.get());
+
+    SystemRegistry::instance()->registerSystem(_render_pass_registry.get());
+
+    _scene_renderer = atcg::make_ref<SceneRendererSystem>(_renderer.get());
+    SystemRegistry::instance()->registerSystem(_scene_renderer.get());
 
     _plugin_manager = atcg::make_ref<PluginManagerSystem>();
     SystemRegistry::instance()->registerSystem(_plugin_manager.get());
