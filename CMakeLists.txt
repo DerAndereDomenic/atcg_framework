@@ -20,7 +20,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 # Manage options
 option(ATCG_CUDA_BACKEND "Compile cuda backend" ON)
@@ -33,6 +33,11 @@ option(ATCG_SPECTRAL_RENDERING "Use spectral renderer" OFF)
 
 # OpenMesh and OpenVR use Cmake < 3.10
 set(CMAKE_POLICY_VERSION_MINIMUM 3.10)
+
+if(MSVC)
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} \
+        -Xcompiler=/Zc:preprocessor")
+endif()
 
 if(ATCG_HEADLESS)
     if(NOT UNIX)
@@ -162,6 +167,8 @@ endif()
 if(NOT TARGET spdlog_header_only)
     add_subdirectory(external/spdlog)
 endif()
+include(cmake/FixSpdlogCudaFlags.cmake)
+fix_spdlog_cuda_flags()
 if(NOT MSVC)
     target_compile_definitions(spdlog_header_only INTERFACE FMT_USE_CONSTEXPR)
 endif()

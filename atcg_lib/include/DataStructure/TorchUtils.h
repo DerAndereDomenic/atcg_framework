@@ -62,10 +62,12 @@ ATCG_INLINE torch::TensorOptions uint64HostOptions()
     return torch::TensorOptions {}.dtype(torch::kUInt64).device(atcg::CPU);
 }
 
+#ifdef ATCG_CUDA_BACKEND
 ATCG_INLINE torch::TensorOptions halfHostOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kFloat16).device(atcg::CPU);
 }
+#endif
 
 ATCG_INLINE torch::TensorOptions floatHostOptions()
 {
@@ -117,10 +119,12 @@ ATCG_INLINE torch::TensorOptions uint64DeviceOptions()
     return torch::TensorOptions {}.dtype(torch::kUInt64).device(atcg::GPU);
 }
 
+#ifdef ATCG_CUDA_BACKEND
 ATCG_INLINE torch::TensorOptions halfDeviceOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kFloat16).device(atcg::GPU);
 }
+#endif
 
 ATCG_INLINE torch::TensorOptions floatDeviceOptions()
 {
@@ -186,11 +190,13 @@ ATCG_INLINE torch::TensorOptions HostOptions<uint64_t>()
     return uint64HostOptions();
 }
 
+#ifdef ATCG_CUDA_BACKEND
 template<>
 ATCG_INLINE torch::TensorOptions HostOptions<half>()
 {
     return halfHostOptions();
 }
+#endif
 
 template<>
 ATCG_INLINE torch::TensorOptions HostOptions<float>()
@@ -252,11 +258,13 @@ ATCG_INLINE torch::TensorOptions DeviceOptions<uint64_t>()
     return uint64DeviceOptions();
 }
 
+#ifdef ATCG_CUDA_BACKEND
 template<>
 ATCG_INLINE torch::TensorOptions DeviceOptions<half>()
 {
     return halfDeviceOptions();
 }
+#endif
 
 template<>
 ATCG_INLINE torch::TensorOptions DeviceOptions<float>()
