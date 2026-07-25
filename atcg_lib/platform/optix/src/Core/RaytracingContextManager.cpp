@@ -34,7 +34,7 @@ atcg::ref_ptr<atcg::RaytracingContext> RaytracingContextManagerSystem::createCon
 {
     atcg::ref_ptr<atcg::RaytracingContext> context =
         atcg::ref_ptr<atcg::RaytracingContext>(new atcg::RaytracingContext());
-    context->initRaytracingAPI();    // The first context created this way, will enable the optix API
+    // context->initRaytracingAPI();    // The first context created this way, will enable the optix API
     context->create(device_id);
 
     std::lock_guard guard(impl->map_mutex);

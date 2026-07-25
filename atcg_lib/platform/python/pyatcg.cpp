@@ -110,6 +110,7 @@ inline void defineBindings(py::module_& m)
     auto m_edge_renderer          = py::class_<atcg::EdgeRenderComponent>(m, "EdgeRenderComponent");
     auto m_edge_cylinder_renderer = py::class_<atcg::EdgeCylinderRenderComponent>(m, "EdgeCylinderRenderComponent");
     auto m_instance_renderer      = py::class_<atcg::InstanceRenderComponent>(m, "InstanceRenderComponent");
+    auto m_camera_component       = py::class_<atcg::CameraComponent>(m, "CameraComponent");
     auto m_vertex_buffer         = py::class_<atcg::VertexBuffer, atcg::ref_ptr<atcg::VertexBuffer>>(m, "VertexBuffer");
     auto m_buffer_layout         = py::class_<atcg::BufferLayout>(m, "BufferLayout");
     auto m_buffer_element        = py::class_<atcg::BufferElement>(m, "BufferElement");
@@ -150,13 +151,20 @@ inline void defineBindings(py::module_& m)
     auto m_raytracing_context_manager = m.def_submodule("RaytracingContextManager");
     auto m_raytracing_context =
         py::class_<atcg::RaytracingContext, atcg::ref_ptr<atcg::RaytracingContext>>(m, "RaytracingContext");
+
+    auto m_integrator = py::class_<atcg::Integrator, atcg::ref_ptr<atcg::Integrator>>(m, "Integrator");
     auto m_path_integrator =
-        py::class_<atcg::PathtracingIntegrator, atcg::ref_ptr<atcg::PathtracingIntegrator>>(m, "PathIntegrator");
+        py::class_<atcg::PathtracingIntegrator, atcg::Integrator, atcg::ref_ptr<atcg::PathtracingIntegrator>>(m,
+                                                                                                              "PathInte"
+                                                                                                              "grator");
     auto m_volpath_integrator =
-        py::class_<atcg::VolPathtracingIntegrator, atcg::ref_ptr<atcg::VolPathtracingIntegrator>>(m,
-                                                                                                  "VolPathIntegrator");
+        py::class_<atcg::VolPathtracingIntegrator, atcg::Integrator, atcg::ref_ptr<atcg::VolPathtracingIntegrator>>(
+            m,
+            "VolPathIntegrator");
     auto m_photon_mapping_integrator =
-        py::class_<atcg::PhotonMapIntegrator, atcg::ref_ptr<atcg::PhotonMapIntegrator>>(m, "PhotonMapIntegrator");
+        py::class_<atcg::PhotonMapIntegrator, atcg::Integrator, atcg::ref_ptr<atcg::PhotonMapIntegrator>>(m,
+                                                                                                          "PhotonMapInt"
+                                                                                                          "egrator");
     auto m_integrator_registry = m.def_submodule("IntegratorRegistry");
     auto m_bsdf_registry       = m.def_submodule("BSDFRegistry");
 #endif
@@ -532,16 +540,18 @@ inline void defineBindings(py::module_& m)
         .def("selectAsset", &atcg::GUI::AssetPanel::selectAsset);
 
     m_project.def_static("create", &atcg::Project::create)
-        .def_static("load", &atcg::Project::load)
-        .def("save", py::overload_cast<>(&atcg::Project::save))
-        .def("save", py::overload_cast<const std::filesystem::path&>(&atcg::Project::save))
+        .def_static("load", [](const std::string& path) { return atcg::Project::load(path); })
+        .def("save", [](const atcg::ref_ptr<atcg::Project>& project) { return project->save(); })
+        .def("save",
+             [](const atcg::ref_ptr<atcg::Project>& project, const std::string& path) { return project->save(path); })
         .def("setActiveScene", py::overload_cast<const atcg::ref_ptr<atcg::Scene>&>(&atcg::Project::setActiveScene))
         .def("setActiveScene", py::overload_cast<atcg::AssetHandle>(&atcg::Project::setActiveScene))
         .def("getActiveScene", &atcg::Project::getActiveScene)
         .def_static("getActive", &atcg::Project::getActive)
-        .def_static("saveActive", py::overload_cast<>(&atcg::Project::saveActive))
-        .def_static("saveActive", py::overload_cast<const std::filesystem::path&>(&atcg::Project::saveActive))
-        .def("getFilePath", &atcg::Project::getFilePath);
+        .def_static("saveActive", []() { atcg::Project::saveActive(); })
+        .def_static("saveActive", [](const std::string& path) { atcg::Project::saveActive(path); })
+        .def("getFilePath",
+             [](const atcg::ref_ptr<atcg::Project>& project) { return project->getFilePath().string(); });
 
     // ------------------- Datastructure ---------------------------------
 
@@ -691,6 +701,32 @@ inline void defineBindings(py::module_& m)
             },
             "show_window"_a)
         .def("registerFrameTime", &atcg::GUI::PerformancePanel::registerFrameTime);
+
+    m_dictionary.def(py::init<>())
+        .def("setInt8", &atcg::Dictionary::setInt8, "key"_a, "value"_a)
+        .def("getInt8", &atcg::Dictionary::getInt8, "key"_a)
+        .def("setInt16", &atcg::Dictionary::setInt16, "key"_a, "value"_a)
+        .def("getInt16", &atcg::Dictionary::getInt16, "key"_a)
+        .def("setInt32", &atcg::Dictionary::setInt32, "key"_a, "value"_a)
+        .def("getInt32", &atcg::Dictionary::getInt32, "key"_a)
+        .def("setInt64", &atcg::Dictionary::setInt64, "key"_a, "value"_a)
+        .def("getInt64", &atcg::Dictionary::getInt64, "key"_a)
+        .def("setUInt8", &atcg::Dictionary::setUInt8, "key"_a, "value"_a)
+        .def("getUInt8", &atcg::Dictionary::getUInt8, "key"_a)
+        .def("setUInt16", &atcg::Dictionary::setUInt16, "key"_a, "value"_a)
+        .def("getUInt16", &atcg::Dictionary::getUInt16, "key"_a)
+        .def("setUInt32", &atcg::Dictionary::setUInt32, "key"_a, "value"_a)
+        .def("getUInt32", &atcg::Dictionary::getUInt32, "key"_a)
+        .def("setUInt64", &atcg::Dictionary::setUInt64, "key"_a, "value"_a)
+        .def("getUInt64", &atcg::Dictionary::getUInt64, "key"_a)
+        .def("setFloat", &atcg::Dictionary::setFloat, "key"_a, "value"_a)
+        .def("getFloat", &atcg::Dictionary::getFloat, "key"_a)
+        .def("setDouble", &atcg::Dictionary::setDouble, "key"_a, "value"_a)
+        .def("getDouble", &atcg::Dictionary::getDouble, "key"_a)
+        .def("setString", &atcg::Dictionary::setString, "key"_a, "value"_a)
+        .def("getString", &atcg::Dictionary::getString, "key"_a)
+        .def("setTensor", &atcg::Dictionary::setTensor, "key"_a, "value"_a)
+        .def("getTensor", &atcg::Dictionary::getTensor, "key"_a);
 
     // ------------------- RENDERER ---------------------------------
 
@@ -1206,6 +1242,22 @@ inline void defineBindings(py::module_& m)
         .def_readwrite("instances", &atcg::InstanceRenderComponent::instance_vbos)
         .def_readwrite("material_handle", &atcg::InstanceRenderComponent::material_handle);
 
+    m_camera_component.def(py::init<>())
+        .def(py::init<>(
+                 [](const atcg::ref_ptr<atcg::PerspectiveCamera>& camera, const uint32_t width, const uint32_t height)
+                 { return atcg::CameraComponent(camera, width, height); }),
+             "camera"_a,
+             "width"_a,
+             "height"_a)
+        .def("camera",
+             [](const atcg::CameraComponent& self)
+             { return std::dynamic_pointer_cast<atcg::PerspectiveCamera>(self.camera); })
+        .def_readwrite("color", &atcg::CameraComponent::color)
+        .def_readwrite("width", &atcg::CameraComponent::width)
+        .def_readwrite("height", &atcg::CameraComponent::height)
+        .def_readwrite("preview", &atcg::CameraComponent::preview)
+        .def("image", &atcg::CameraComponent::image);
+
     m_name.def(py::init<>()).def(py::init<std::string>(), "name"_a).def("name", &atcg::NameComponent::name);
 
     m_point_light.def(py::init<float, glm::vec3>(), "intensity"_a, "color"_a)
@@ -1319,6 +1371,20 @@ inline void defineBindings(py::module_& m)
             [](atcg::Entity& entity, atcg::PointLightComponent& component)
             { return entity.replaceComponent<atcg::PointLightComponent>(component); },
             "component"_a)
+        .def(
+            "addCameraComponent",
+            [](atcg::Entity& entity,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
+               const uint32_t width,
+               const uint32_t height) { return entity.addComponent<atcg::CameraComponent>(camera, width, height); },
+            "camera"_a,
+            "width"_a,
+            "height"_a)
+        .def(
+            "replaceCameraComponent",
+            [](atcg::Entity& entity, atcg::CameraComponent& component)
+            { return entity.replaceComponent<atcg::CameraComponent>(component); },
+            "component"_a)
         .def("addNameComponent",
              [](atcg::Entity& entity, const std::string& name)
              { return entity.addComponent<atcg::NameComponent>(name); })
@@ -1352,6 +1418,7 @@ inline void defineBindings(py::module_& m)
         .def("getEdgeCylinderRenderComponent", &atcg::Entity::getComponent<atcg::EdgeCylinderRenderComponent>)
         .def("getInstanceRenderComponent", &atcg::Entity::getComponent<atcg::InstanceRenderComponent>)
         .def("getScriptComponent", &atcg::Entity::getComponent<atcg::ScriptComponent>)
+        .def("getCameraComponent", &atcg::Entity::getComponent<atcg::CameraComponent>)
         .def("getNameComponent", &atcg::Entity::getComponent<atcg::NameComponent>)
         .def("handle", &atcg::Entity::entity_handle);
 
@@ -1651,6 +1718,15 @@ inline void defineBindings(py::module_& m)
 #ifdef ATCG_CUDA_BACKEND
     m_raytracing_context_manager.def("createContext", &atcg::RaytracingContextManager::createContext)
         .def("destroyContext", &atcg::RaytracingContextManager::destroyContext);
+
+    m_integrator.def("generateRays",
+                     [](const atcg::ref_ptr<atcg::Integrator>& self)
+                     {
+                         atcg::Dictionary dict;
+                         self->generateRays(dict);
+                         return dict.getValue<torch::Tensor>("output");
+                     });
+
     m_path_integrator
         .def(py::init(
             [](const atcg::ref_ptr<atcg::RaytracingContext>& context,
@@ -1673,6 +1749,7 @@ inline void defineBindings(py::module_& m)
                  self->generateRays(dict);
                  return dict.getValue<torch::Tensor>("output");
              });
+
     m_volpath_integrator
         .def(py::init(
             [](const atcg::ref_ptr<atcg::RaytracingContext>& context,
