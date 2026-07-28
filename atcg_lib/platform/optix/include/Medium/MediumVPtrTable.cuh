@@ -9,21 +9,21 @@ namespace atcg
 struct MediumSamplingResult
 {
     MediumInteraction interaction;
-    SampledSpectrum transmittance_weight;
-    SampledSpectrum radiance_weight;
+    SampledSpectrum transmittance_weight = SampledSpectrum(0.0f);
+    SampledSpectrum radiance_weight      = SampledSpectrum(0.0f);
 };
 
 struct DualMediumSamplingResult
 {
     DualMediumInteraction interaction;
-    glm::vec3 transmittance_weight;
-    atcg::mat6x3 dtransmittance_dx0x1;
+    glm::vec3 transmittance_weight    = glm::vec3(0.0f);
+    atcg::mat6x3 dtransmittance_dx0x1 = atcg::mat6x3(0.0f);
 };
 
 struct DualTransmittanceEvalResult
 {
-    float transmittance;
-    atcg::mat6x3 dtransmittance_dx0x1;
+    float transmittance               = 0.0f;
+    atcg::mat6x3 dtransmittance_dx0x1 = atcg::mat6x3(0.0f);
 };
 
 struct MediumVPtrTable

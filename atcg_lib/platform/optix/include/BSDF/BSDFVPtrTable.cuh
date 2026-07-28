@@ -23,10 +23,10 @@ struct BSDFSamplingResult
 struct BSDFDualSamplingResult
 {
     CuDiff::Dual<6, glm::vec3> out_dir;
-    glm::vec3 bsdf_weight;
-    float sample_probability;
-    atcg::mat6x3 dbsdf_dx0x1;
-    BSDFComponentType flags = BSDFComponentType::Any;
+    glm::vec3 bsdf_weight    = glm::vec3(0.0f);
+    float sample_probability = 0.0f;
+    atcg::mat6x3 dbsdf_dx0x1 = atcg::mat6x3(0.0f);
+    BSDFComponentType flags  = BSDFComponentType::Any;
 };
 
 struct BSDFEvalResult
@@ -38,10 +38,10 @@ struct BSDFEvalResult
 
 struct BSDFDualEvalResult
 {
-    glm::vec3 bsdf_value;
-    float sample_probability;
-    atcg::mat6x3 dbsdf_dx0x1;
-    BSDFComponentType flags = BSDFComponentType::Any;
+    glm::vec3 bsdf_value     = glm::vec3(0.0f);
+    float sample_probability = 0.0f;
+    atcg::mat6x3 dbsdf_dx0x1 = atcg::mat6x3(0.0f);
+    BSDFComponentType flags  = BSDFComponentType::Any;
 };
 
 struct BSDFBackwardEvalResult

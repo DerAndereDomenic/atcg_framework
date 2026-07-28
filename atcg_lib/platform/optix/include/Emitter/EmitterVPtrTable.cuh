@@ -17,8 +17,8 @@ struct EmitterSamplingResult
     glm::vec3 direction_to_light;
     float distance_to_light;
     glm::vec3 normal_at_light;
-    SampledSpectrum radiance_weight_at_receiver;
-    float sampling_pdf;
+    SampledSpectrum radiance_weight_at_receiver = SampledSpectrum(0.0f);
+    float sampling_pdf                          = 0.0f;
     glm::vec3 uvs;
 };
 
@@ -26,15 +26,15 @@ struct EmitterDualSamplingResult
 {
     CuDiff::Dual<6, glm::vec3> direction_to_light;
     float distance_to_light;
-    glm::vec3 radiance_weight_at_receiver;
-    atcg::mat6x3 dLe_dx0x1;
-    float sampling_pdf;
+    glm::vec3 radiance_weight_at_receiver = glm::vec3(0.0f);
+    atcg::mat6x3 dLe_dx0x1                = atcg::mat6x3(0.0f);
+    float sampling_pdf                    = 0.0f;
 };
 
 struct EmitterDualEvalResult
 {
-    glm::vec3 radiance_weight_at_receiver;
-    atcg::mat6x3 dLe_dx0x1;
+    glm::vec3 radiance_weight_at_receiver = glm::vec3(0.0f);
+    atcg::mat6x3 dLe_dx0x1                = atcg::mat6x3(0.0f);
 };
 
 struct PhotonSamplingResult
@@ -42,8 +42,8 @@ struct PhotonSamplingResult
     glm::vec3 position;
     glm::vec3 direction;
     glm::vec3 normal;
-    SampledSpectrum radiance_weight;
-    float pdf;
+    SampledSpectrum radiance_weight = SampledSpectrum(0.0f);
+    float pdf                       = 0.0f;
     glm::vec3 uvs;
 };
 
@@ -52,8 +52,8 @@ struct EdgeSamplingResult
     glm::vec3 position;
     glm::vec3 direction;
     glm::vec3 normal;
-    SampledSpectrum radiance_weight;
-    float pdf;
+    SampledSpectrum radiance_weight = SampledSpectrum(0.0f);
+    float pdf                       = 0.0f;
 };
 
 struct EmitterVPtrTable

@@ -12,29 +12,29 @@ namespace atcg
 struct PhaseFunctionSamplingResult
 {
     glm::vec3 outgoing_ray_dir;
-    float phase_function_weight;
-    float sampling_pdf;
+    float phase_function_weight = 0.0f;
+    float sampling_pdf          = 0.0f;
 };
 
 struct DualPhaseFunctionSamplingResult
 {
     CuDiff::Dual<6, glm::vec3> outgoing_ray_dir;
-    float phase_function_weight;
-    float sampling_pdf;
-    atcg::mat6x3 dphase_dx0x1;
+    float phase_function_weight = 0.0f;
+    float sampling_pdf          = 0.0f;
+    atcg::mat6x3 dphase_dx0x1   = atcg::mat6x3(0.0f);
 };
 
 struct PhaseFunctionEvalResult
 {
-    float phase_function_value;
-    float sampling_pdf;
+    float phase_function_value = 0.0f;
+    float sampling_pdf         = 0.0f;
 };
 
 struct DualPhaseFunctionEvalResult
 {
-    float phase_function_value;
-    float sampling_pdf;
-    atcg::mat6x3 dphase_dx0x1;
+    float phase_function_value = 0.0f;
+    float sampling_pdf         = 0.0f;
+    atcg::mat6x3 dphase_dx0x1  = atcg::mat6x3(0.0f);
 };
 
 struct PhaseFunctionVPtrTable
