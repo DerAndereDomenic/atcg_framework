@@ -29,6 +29,7 @@ struct EmitterDualSamplingResult
     glm::vec3 radiance_weight_at_receiver = glm::vec3(0.0f);
     atcg::mat6x3 dLe_dx0x1                = atcg::mat6x3(0.0f);
     float sampling_pdf                    = 0.0f;
+    atcg::vec6 dpdf_dx0x1                 = atcg::vec6(0.0f);
 };
 
 struct EmitterDualEvalResult
@@ -65,6 +66,7 @@ struct EmitterVPtrTable
     uint32_t sampleCallIndex;
     uint32_t sampleForwardCallIndex;
     uint32_t evalPdfCallIndex;
+    uint32_t evalPdfForwardCallIndex;
     uint32_t sampleEdgeCallIndex;
     uint32_t samplePhotonCallIndex;
 
@@ -123,6 +125,15 @@ struct EmitterVPtrTable
     __device__ float evalLightSamplingPdf(const AnyInteraction& last_si, const SurfaceInteraction& si) const
     {
         return optixDirectCall<float, const AnyInteraction&, const SurfaceInteraction&>(evalPdfCallIndex, last_si, si);
+    }
+
+    __device__ CuDiff::Dual<6, float> evalLightSamplingPdfForward(const AnyDualInteraction& last_si,
+                                                                  const DualSurfaceInteraction& si) const
+    {
+        return optixDirectCall<CuDiff::Dual<6, float>, const AnyDualInteraction&, const DualSurfaceInteraction&>(
+            evalPdfForwardCallIndex,
+            last_si,
+            si);
     }
 
     __device__ PhotonSamplingResult samplePhoton(const atcg::SampledWavelengths& wavelengths, PCG32& rng) const

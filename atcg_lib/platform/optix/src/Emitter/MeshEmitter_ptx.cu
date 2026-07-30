@@ -330,7 +330,7 @@ __direct_callable__sample_forward_meshemitter(const atcg::AnyDualInteraction& si
     glm::vec3 light_normal = glm::normalize(glm::transpose(glm::mat3(world_to_local)) * local_light_normal);
 
     // Assemble sampling result
-    result.sampling_pdf = 0;    // initialize with invalid sample
+    result.sampling_pdf = 0.0f;    // initialize with invalid sample
 
     // light source sampling
     result.direction_to_light = CuDiff::normalize(light_position - si->position);
@@ -344,7 +344,8 @@ __direct_callable__sample_forward_meshemitter(const atcg::AnyDualInteraction& si
 
 
     // Probability of sampling this direction via light source sampling
-    result.sampling_pdf = 1 / (one_over_light_direction_pdf + 1e-5f);
+    auto sampling_pdf   = 1 / (one_over_light_direction_pdf + 1e-5f);
+    result.sampling_pdf = sampling_pdf.val();
 
     auto emissive_color = sbt_data->emissive_texture.read(uv);
 
@@ -360,6 +361,9 @@ __direct_callable__sample_forward_meshemitter(const atcg::AnyDualInteraction& si
                                       radiance_weight_at_receiver.derivative(5));
 
     result.dLe_dx0x1 = atcg::mat6x3(JLe_nee_dx0, JLe_nee_dx1);
+    result.dpdf_dx0x1 =
+        atcg::vec6(glm::vec3(sampling_pdf.derivative(0), sampling_pdf.derivative(1), sampling_pdf.derivative(2)),
+                   glm::vec3(sampling_pdf.derivative(3), sampling_pdf.derivative(4), sampling_pdf.derivative(5)));
 
     return result;
 }
@@ -371,6 +375,31 @@ extern "C" __device__ float __direct_callable__evalpdf_meshemitter(const atcg::A
     // We can assume that outgoing ray dir actually intersects the light source.
 
     return detail::evalMeshEmitterPDF(last_si, sbt_data->total_area, si);
+}
+
+extern "C" __device__ CuDiff::Dual<6, float>
+__direct_callable__evalpdf_forward_meshemitter(const atcg::AnyDualInteraction& last_si,
+                                               const atcg::DualSurfaceInteraction& si)
+{
+    const atcg::MeshEmitterData* sbt_data = *reinterpret_cast<const atcg::MeshEmitterData**>(optixGetSbtDataPointer());
+    // We can assume that outgoing ray dir actually intersects the light source.
+
+    // We can assume that outgoing ray dir actually intersects the light source.
+
+    // Some useful quantities
+    auto light_normal             = si.normal;
+    auto light_ray_dir            = CuDiff::normalize(si.position - last_si->position);
+    auto light_ray_length         = CuDiff::length(si.position - last_si->position);
+    auto light_ray_length_squared = light_ray_length * light_ray_length;
+
+    // The probability of sampling any position on the surface of the mesh is the reciprocal of its surface area.
+    float light_position_pdf = 1 / sbt_data->total_area;
+
+    // Probability of sampling this direction via light source sampling
+    auto cos_theta_on_light  = CuDiff::abs(CuDiff::dot(light_ray_dir, light_normal));
+    auto light_direction_pdf = light_position_pdf * light_ray_length_squared / cos_theta_on_light;
+
+    return light_direction_pdf;
 }
 
 extern "C" __device__ atcg::EdgeSamplingResult
