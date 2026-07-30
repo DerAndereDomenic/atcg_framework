@@ -30,8 +30,9 @@ struct SamplingStrategy<SamplingStrategyType::HEMISPHERE_GGX, T>
     ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto sample(const glm::vec2& uv)
     {
         // GGX NDF sampling
-        auto cos_theta = CuDiff::sqrt((1.0f - uv.x) / (1.0f + (_roughness * _roughness - 1.0f) * uv.x));
-        auto sin_theta = CuDiff::sqrt(CuDiff::max(0.0f, 1.0f - cos_theta * cos_theta));
+        auto cos_theta =
+            CuDiff::sqrt(CuDiff::max(1e-4f, (1.0f - uv.x) / (1.0f + (_roughness * _roughness - 1.0f) * uv.x)));
+        auto sin_theta = CuDiff::sqrt(CuDiff::max(1e-4f, 1.0f - cos_theta * cos_theta));
         auto phi       = 2.0f * glm::pi<float>() * uv.y;
 
         auto x = sin_theta * CuDiff::cos(phi);
