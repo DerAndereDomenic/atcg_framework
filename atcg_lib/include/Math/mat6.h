@@ -100,6 +100,9 @@ struct vec6
     vec6() = default;
 
     ATCG_HOST_DEVICE
+    vec6(float v) : a(v), b(v) {}
+
+    ATCG_HOST_DEVICE
     vec6(const glm::vec3& a, const glm::vec3& b) : a(a), b(b) {}
 
     glm::vec3 a;
@@ -127,6 +130,26 @@ ATCG_HOST_DEVICE ATCG_INLINE mat6 operator*(const mat6& A, const mat6& B)
 ATCG_HOST_DEVICE ATCG_INLINE vec6 operator*(const mat6& A, const vec6& v)
 {
     return vec6(A.m00 * v.a + A.m01 * v.b, A.m10 * v.a + A.m11 * v.b);
+}
+
+ATCG_HOST_DEVICE ATCG_INLINE vec6 operator*(const vec6& v, const mat6& A)
+{
+    return vec6(v.a * A.m00 + v.b * A.m10, v.a * A.m01 + v.b * A.m11);
+}
+
+ATCG_HOST_DEVICE ATCG_INLINE vec6 operator*(const float w, const vec6& v)
+{
+    return vec6(w * v.a, w * v.b);
+}
+
+ATCG_HOST_DEVICE ATCG_INLINE vec6 operator+(const vec6& v1, const vec6& v2)
+{
+    return vec6(v1.a + v2.a, v1.b + v2.b);
+}
+
+ATCG_HOST_DEVICE ATCG_INLINE vec6 operator/(const vec6& v1, const float a)
+{
+    return vec6(v1.a / a, v1.b / a);
 }
 
 ATCG_HOST_DEVICE ATCG_INLINE mat6 inverse(const mat6& A)
