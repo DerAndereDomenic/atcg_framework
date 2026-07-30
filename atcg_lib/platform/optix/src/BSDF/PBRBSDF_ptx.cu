@@ -354,6 +354,11 @@ __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si
     glm::mat3 Jbsdf_dx1 = glm::mat3(bsdf_weight.derivative(3), bsdf_weight.derivative(4), bsdf_weight.derivative(5));
 
     result.dbsdf_dx0x1 = atcg::mat6x3(Jbsdf_dx0, Jbsdf_dx1);
+    result.dpdf_dx0x1  = atcg::vec6(
+        glm::vec3(sample_probability.derivative(0), sample_probability.derivative(1), sample_probability.derivative(2)),
+        glm::vec3(sample_probability.derivative(3),
+                  sample_probability.derivative(4),
+                  sample_probability.derivative(5)));
 
     return result;
 }
@@ -403,22 +408,23 @@ __direct_callable__eval_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si,
     auto kS = F;
     auto kD = glm::vec3(1.0f) - kS;
 
-    float diffuse_probability =
-        glm::dot(diffuse_color.val(), glm::vec3(1.0f)) /
-        (glm::dot(diffuse_color.val(), glm::vec3(1.0f)) + glm::dot(metallic_color.val(), glm::vec3(1.0f)) + 1e-5f);
-    float specular_probability = 1 - diffuse_probability;
-    float diffuse_pdf          = NdotL / glm::pi<float>();
-    float halfway_pdf          = NDF * NdotH;
-    float halfway_to_outgoing_pdf =
+    auto diffuse_probability =
+        CuDiff::dot(diffuse_color, glm::vec3(1.0f)) /
+        (CuDiff::dot(diffuse_color, glm::vec3(1.0f)) + CuDiff::dot(metallic_color, glm::vec3(1.0f)) + 1e-5f);
+    auto specular_probability = 1.0f - diffuse_probability;
+    auto diffuse_pdf          = NdotL / glm::pi<float>();
+    auto halfway_pdf          = NDF * NdotH;
+    auto halfway_to_outgoing_pdf =
         atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
-            outgoing_dir.val(),
-            H.val());
-    float specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
+            outgoing_dir,
+            H);
+    auto specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
 
     auto bsdf_value = (specular + kD * diffuse_color / glm::pi<float>()) * NdotL;
 
     result.bsdf_value         = bsdf_value.val();
-    result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
+    auto sample_probability   = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
+    result.sample_probability = sample_probability.val();
     result.flags =
         (roughness < 0.01f ? atcg::BSDFComponentType::IdealReflection
                            : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::DiffuseReflection);
@@ -427,6 +433,11 @@ __direct_callable__eval_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si,
     glm::mat3 Jbsdf_dx1 = glm::mat3(bsdf_value.derivative(3), bsdf_value.derivative(4), bsdf_value.derivative(5));
 
     result.dbsdf_dx0x1 = atcg::mat6x3(Jbsdf_dx0, Jbsdf_dx1);
+    result.dpdf_dx0x1  = atcg::vec6(
+        glm::vec3(sample_probability.derivative(0), sample_probability.derivative(1), sample_probability.derivative(2)),
+        glm::vec3(sample_probability.derivative(3),
+                  sample_probability.derivative(4),
+                  sample_probability.derivative(5)));
 
     return result;
 }
@@ -511,6 +522,121 @@ __direct_callable__eval_backward_pbrbsdf(const atcg::SurfaceInteraction& si,
         {
             glm::vec3 dbsdfdm = bsdf_value.derivative(3);
             float dLdm        = glm::dot(dbsdfdm, dLdbsdf);
+            if(isfinite(dLdm))
+            {
+                sbt_data->metallic_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(dLdm, si.uv);
+                result.payload[payload_index++] = dLdm;
+                result.num_payloads             = payload_index;
+            }
+        }
+    }
+    return result;
+}
+
+extern "C" __device__ atcg::BSDFBackwardEvalResult
+__direct_callable__eval_backward_pdf_pbrbsdf(const atcg::SurfaceInteraction& si,
+                                             const glm::vec3& outgoing_dir,
+                                             const glm::vec3& dLdbsdf,
+                                             const glm::vec3& dLdpdf)
+{
+    atcg::BSDFBackwardEvalResult result;
+    memset(&result, 0, sizeof(result));
+    {
+        atcg::PBRBSDFData* sbt_data = *reinterpret_cast<atcg::PBRBSDFData**>(optixGetSbtDataPointer());
+
+        if(!sbt_data->optimize_diffuse && !sbt_data->optimize_metallic && !sbt_data->optimize_roughness) return result;
+
+        glm::vec3 alpha_ = sbt_data->diffuse_texture.read(si.uv);
+        float m_         = sbt_data->metallic_texture.read(si.uv);
+        float r_         = sbt_data->roughness_texture.read(si.uv);
+
+        auto [alpha, m, r] = CuDiff::make_variables<5>(alpha_, m_, r_);
+
+        auto roughness = r * r;    // In the real time shaders, roughness is squared
+        if(roughness.val() < 1e-3f) roughness.mut_val() = 1e-3f;
+        auto diffuse_color = (1.0f - m) * alpha;    // glm::lerp(alpha, glm::vec3(0), m) * si.color;
+
+        auto metallic_color = (1.0f - m) * glm::vec3(0.04f) + m * alpha;
+
+        glm::vec3 light_dir = outgoing_dir;
+        glm::vec3 view_dir  = -si.incoming_direction;
+
+        glm::vec3 H = glm::normalize(light_dir + view_dir);
+
+        float NdotH = glm::max(glm::dot(si.normal, H), 0.0f);
+        float NdotV = glm::max(glm::dot(si.normal, view_dir), 0.0f);
+        float NdotL = glm::max(glm::dot(si.normal, light_dir), 0.0f);
+        float VdotH = glm::max(glm::dot(H, view_dir), 0.0f);
+
+        if(NdotL <= 0.0f || NdotV <= 0.0f) return result;
+
+        auto NDF = atcg::D_GGX(NdotH, roughness);
+        auto V   = atcg::V_SmithGGX(NdotL, NdotV, roughness);
+        auto F   = atcg::fresnel_schlick(metallic_color, VdotH);
+        auto kS  = F;
+        auto kD  = glm::vec3(1.0) - kS;
+
+        auto specular = NDF * V * F;
+
+        auto bsdf_value = (specular + kD * diffuse_color / glm::pi<float>()) * NdotL;
+
+        auto diffuse_probability =
+            CuDiff::dot(diffuse_color, glm::vec3(1.0f)) /
+            (CuDiff::dot(diffuse_color, glm::vec3(1.0f)) + CuDiff::dot(metallic_color, glm::vec3(1.0f)) + 1e-5f);
+        auto specular_probability = 1.0f - diffuse_probability;
+        auto diffuse_pdf          = NdotL / glm::pi<float>();
+        auto halfway_pdf          = NDF * NdotH;
+        auto halfway_to_outgoing_pdf =
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
+                outgoing_dir,
+                H);
+        auto specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
+
+        auto sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
+
+        int payload_index = 0;
+        if(sbt_data->optimize_diffuse)
+        {
+            glm::mat3 dbsdfdalpha =
+                glm::mat3(bsdf_value.derivative(0), bsdf_value.derivative(1), bsdf_value.derivative(2));
+
+            glm::vec3 dpdfdalpha = glm::vec3(sample_probability.derivative(0),
+                                             sample_probability.derivative(1),
+                                             sample_probability.derivative(2));
+
+            glm::vec3 dLdalbedo = dLdbsdf * dbsdfdalpha + dLdpdf * dpdfdalpha;
+
+            if(isfinite(dLdalbedo.x) || isfinite(dLdalbedo.y) || isfinite(dLdalbedo.z))
+            {
+                sbt_data->diffuse_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(dLdalbedo, si.uv);
+                result.payload[payload_index++] = dLdalbedo.x;
+                result.payload[payload_index++] = dLdalbedo.y;
+                result.payload[payload_index++] = dLdalbedo.z;
+                result.num_payloads             = payload_index;
+            }
+        }
+
+        if(sbt_data->optimize_roughness)
+        {
+            glm::vec3 dbsdfdr = bsdf_value.derivative(4);
+            glm::vec3 dpdfdr  = glm::vec3(sample_probability.derivative(4));
+
+            float dLdr = glm::dot(dbsdfdr, dLdbsdf) + glm::dot(dpdfdr, dLdpdf);
+
+            if(isfinite(dLdr))
+            {
+                sbt_data->roughness_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(dLdr, si.uv);
+                result.payload[payload_index++] = dLdr;
+                result.num_payloads             = payload_index;
+            }
+        }
+
+        if(sbt_data->optimize_metallic)
+        {
+            glm::vec3 dbsdfdm = bsdf_value.derivative(3);
+            glm::vec3 dpdfdm  = glm::vec3(sample_probability.derivative(3));
+
+            float dLdm = glm::dot(dbsdfdm, dLdbsdf) + glm::dot(dpdfdm, dLdpdf);
             if(isfinite(dLdm))
             {
                 sbt_data->metallic_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(dLdm, si.uv);
@@ -685,6 +811,189 @@ __direct_callable__sample_backward_pbrbsdf(const atcg::SurfaceInteraction& si,
             glm::vec3 dbsdf_weightdm = bsdf_weight.derivative(3);
 
             float gradient = glm::dot(dLdwo, dwodm) + glm::dot(dLdbsdf, dbsdf_weightdm);
+
+            if(isfinite(gradient))
+            {
+                sbt_data->metallic_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(gradient, si.uv);
+
+                result.payload[payload_index++] = gradient;
+                result.num_payloads             = payload_index;
+            }
+        }
+    }
+    return result;
+}
+
+extern "C" __device__ atcg::BSDFBackwardEvalResult
+__direct_callable__sample_backward_pdf_pbrbsdf(const atcg::SurfaceInteraction& si,
+                                               atcg::PCG32& rng,
+                                               const glm::vec3& dLdbsdf,
+                                               const glm::vec3& dLdpdf,
+                                               const glm::vec3& dLdwo_)
+{
+    atcg::BSDFBackwardEvalResult result;
+    memset(&result, 0, sizeof(result));
+    {
+        atcg::PBRBSDFData* sbt_data = *reinterpret_cast<atcg::PBRBSDFData**>(optixGetSbtDataPointer());
+
+        if(!sbt_data->optimize_diffuse && !sbt_data->optimize_roughness && !sbt_data->optimize_metallic) return result;
+
+        glm::vec3 dLdwo = dLdwo_;
+        if(!isfinite(dLdwo.x) || !isfinite(dLdwo.y) || !isfinite(dLdwo.z))
+        {
+            dLdwo = glm::vec3(0.0f);
+        }
+
+        glm::vec3 albedo_ = sbt_data->diffuse_texture.read(si.uv);
+        float m_          = sbt_data->metallic_texture.read(si.uv);
+        float r_          = sbt_data->roughness_texture.read(si.uv);
+
+        auto [albedo, m, r] = CuDiff::make_variables<5>(albedo_, m_, r_);
+
+        // auto roughness = CuDiff::max(r * r, 1e-3f);    // In the real time shaders, roughness is squared
+        auto roughness = r * r;    // In the real time shaders, roughness is squared
+        if(roughness.val() < 1e-3f) roughness.mut_val() = 1e-3f;
+        auto diffuse_color = (1.0f - m) * albedo;
+
+        auto metallic_color = (1.0f - m) * glm::vec3(0.04f) + m * albedo;
+
+        // Direction towards viewer
+        glm::vec3 view_dir = -si.incoming_direction;
+        glm::vec3 normal   = si.normal;
+
+        // Don't trace a new ray if surface is viewed from below
+        float NdotV = glm::dot(normal, view_dir);
+        if(NdotV <= 0)
+        {
+            return result;
+        }
+
+        // The matrix local_frame transforms a vector from the coordinate system where geom.N corresponds to the z-axis
+        // to the world coordinate system.
+        atcg::Frame local_frame = atcg::Frame(normal);
+
+        auto diffuse_probability =
+            CuDiff::dot(diffuse_color, glm::vec3(1)) /
+            (CuDiff::dot(diffuse_color, glm::vec3(1)) + CuDiff::dot(metallic_color, glm::vec3(1)) + 1e-5f);
+        auto specular_probability = 1 - diffuse_probability;
+
+        CuDiff::Dual<5, glm::vec3> out_dir;
+        if(rng.next1d() < diffuse_probability)
+        {
+            // Sample light direction from diffuse bsdf
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_COSINE> strategy;
+            glm::vec3 local_outgoing_ray_dir = strategy.sample(rng.next2d());
+            // Transform local outgoing direction from tangent space to world space
+            out_dir = CuDiff::Dual<5, glm::vec3>(local_frame.toWorld(local_outgoing_ray_dir));
+        }
+        else
+        {
+            // Sample light direction from specular bsdf
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX, decltype(roughness)> strategy(roughness);
+            auto local_halfway = strategy.sample(rng.next2d());
+            // Transform local halfway vector from tangent space to world space
+            auto halfway = local_frame.toWorld(local_halfway);
+            out_dir      = CuDiff::reflect(si.incoming_direction, halfway);
+        }
+
+        glm::mat3 dwodalbedo = glm::mat3(out_dir.derivative(0), out_dir.derivative(1), out_dir.derivative(2));
+        glm::vec3 dwodm      = out_dir.derivative(3);
+        glm::vec3 dwodr      = out_dir.derivative(4);
+
+        // I think that light_dir needs to be detached here because of these lines in the pseudo code:
+        // # Backpropagate gradients of the current BSDF value
+        // δπ += backward_grad(bsdf_weight, δL ∗ L / bsdf_weight)
+        // # Backpropagate through shading frame and
+        // # BSDF sampling calculation
+        // δπ += backward_grad(ray′, δL @ J′  L)
+        CuDiff::Dual<5, glm::vec3> light_dir = out_dir;
+
+        // It is possible that light directions below the horizon are sampled..
+        // If outgoing ray direction is below horizon, let the sampling fail!
+        auto NdotL = CuDiff::dot(normal, light_dir);
+        if(NdotL <= 0)
+        {
+            return result;
+        }
+
+        auto diffuse_bsdf = diffuse_color / glm::pi<float>();
+        auto diffuse_pdf  = NdotL / glm::pi<float>();
+
+
+        auto H     = CuDiff::normalize(light_dir + view_dir);
+        auto NdotH = CuDiff::max(CuDiff::dot(si.normal, H), 0.0f);
+        auto VdotH = CuDiff::max(CuDiff::dot(H, view_dir), 0.0f);
+
+        // Normal distribution
+        auto NDF = atcg::D_GGX(NdotH, roughness);
+
+        // Visibility
+        auto V = atcg::V_SmithGGX(NdotL, NdotV, roughness);
+
+        // Fresnel
+        auto F = atcg::fresnel_schlick(metallic_color, VdotH);
+
+        auto kS = F;
+        auto kD = glm::vec3(1.0f) - kS;
+
+        auto specular_bsdf = NDF * V * F;
+
+        auto halfway_pdf = NDF * NdotH;
+        auto halfway_to_outgoing_pdf =
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
+                out_dir.val(),
+                H.val());
+        auto specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
+
+        auto sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
+        auto bsdf_value         = (specular_bsdf + kD * diffuse_bsdf) * NdotL;
+        auto bsdf_weight        = bsdf_value / (sample_probability + 1e-5f);
+
+        int payload_index = 0;
+        if(sbt_data->optimize_diffuse)
+        {
+            glm::mat3 dbsdf_weightdalbedo =
+                glm::mat3(bsdf_weight.derivative(0), bsdf_weight.derivative(1), bsdf_weight.derivative(2));
+
+            glm::vec3 dpdf_dalbedo = glm::vec3(sample_probability.derivative(0),
+                                               sample_probability.derivative(1),
+                                               sample_probability.derivative(2));
+
+            glm::vec3 gradient = dLdwo * dwodalbedo + dLdbsdf * dbsdf_weightdalbedo + dLdpdf * dpdf_dalbedo;
+
+            if(isfinite(gradient.x) && isfinite(gradient.y) && isfinite(gradient.z))
+            {
+                sbt_data->diffuse_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(gradient, si.uv);
+
+                result.payload[payload_index++] = gradient.x;
+                result.payload[payload_index++] = gradient.y;
+                result.payload[payload_index++] = gradient.z;
+                result.num_payloads             = payload_index;
+            }
+        }
+
+        if(sbt_data->optimize_roughness)
+        {
+            glm::vec3 dbsdf_weightdr = bsdf_weight.derivative(4);
+            glm::vec3 dpdf_dr        = glm::vec3(sample_probability.derivative(4));
+
+            float gradient = glm::dot(dLdwo, dwodr) + glm::dot(dLdbsdf, dbsdf_weightdr) + glm::dot(dLdpdf, dpdf_dr);
+
+            if(isfinite(gradient))
+            {
+                sbt_data->roughness_grad.write<glm::vec2, atcg::TexelWriteMode::ATOMIC_ADD>(gradient, si.uv);
+
+                result.payload[payload_index++] = gradient;
+                result.num_payloads             = payload_index;
+            }
+        }
+
+        if(sbt_data->optimize_metallic)
+        {
+            glm::vec3 dbsdf_weightdm = bsdf_weight.derivative(3);
+            glm::vec3 dpdf_dm        = glm::vec3(sample_probability.derivative(3));
+
+            float gradient = glm::dot(dLdwo, dwodm) + glm::dot(dLdbsdf, dbsdf_weightdm) + glm::dot(dLdpdf, dpdf_dm);
 
             if(isfinite(gradient))
             {

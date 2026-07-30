@@ -26,6 +26,7 @@ struct BSDFDualSamplingResult
     glm::vec3 bsdf_weight    = glm::vec3(0.0f);
     float sample_probability = 0.0f;
     atcg::mat6x3 dbsdf_dx0x1 = atcg::mat6x3(0.0f);
+    atcg::vec6 dpdf_dx0x1    = atcg::vec6(0.0f);
     BSDFComponentType flags  = BSDFComponentType::Any;
 };
 
@@ -41,6 +42,7 @@ struct BSDFDualEvalResult
     glm::vec3 bsdf_value     = glm::vec3(0.0f);
     float sample_probability = 0.0f;
     atcg::mat6x3 dbsdf_dx0x1 = atcg::mat6x3(0.0f);
+    atcg::vec6 dpdf_dx0x1    = atcg::vec6(0.0f);
     BSDFComponentType flags  = BSDFComponentType::Any;
 };
 
@@ -58,6 +60,8 @@ struct BSDFVPtrTable
     uint32_t evalForwardCallIndex;
     uint32_t sampleBackwardCallIndex;
     uint32_t evalBackwardCallIndex;
+    uint32_t evalBackwardPdfCallIndex;
+    uint32_t sampleBackwardPdfCallIndex;
 
 
     BSDFComponentType flags;
@@ -116,6 +120,18 @@ struct BSDFVPtrTable
             out_grad);
     }
 
+    __device__ BSDFBackwardEvalResult evalBSDFBackward(const SurfaceInteraction& si,
+                                                       const glm::vec3& outgoing_dir,
+                                                       const glm::vec3& dLdbsdf,
+                                                       const glm::vec3& dLdpdf) const
+    {
+        return optixDirectCall<BSDFBackwardEvalResult,
+                               const SurfaceInteraction&,
+                               const glm::vec3&,
+                               const glm::vec3&,
+                               const glm::vec3&>(evalBackwardPdfCallIndex, si, outgoing_dir, dLdbsdf, dLdpdf);
+    }
+
     __device__ BSDFBackwardEvalResult sampleBSDFBackward(const SurfaceInteraction& si,
                                                          PCG32& rng,
                                                          const glm::vec3& dLdbsdf,
@@ -126,6 +142,20 @@ struct BSDFVPtrTable
                                PCG32&,
                                const glm::vec3&,
                                const glm::vec3&>(sampleBackwardCallIndex, si, rng, dLdbsdf, dLdwo);
+    }
+
+    __device__ BSDFBackwardEvalResult sampleBSDFBackward(const SurfaceInteraction& si,
+                                                         PCG32& rng,
+                                                         const glm::vec3& dLdbsdf,
+                                                         const glm::vec3& dLdpdf,
+                                                         const glm::vec3& dLdwo) const
+    {
+        return optixDirectCall<BSDFBackwardEvalResult,
+                               const SurfaceInteraction&,
+                               PCG32&,
+                               const glm::vec3&,
+                               const glm::vec3&,
+                               const glm::vec3&>(sampleBackwardPdfCallIndex, si, rng, dLdbsdf, dLdpdf, dLdwo);
     }
 
 #endif

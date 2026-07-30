@@ -69,7 +69,7 @@ __direct_callable__eval_forward_nullbsdf(const atcg::DualSurfaceInteraction& si,
     atcg::BSDFDualEvalResult result;
 
     result.bsdf_value         = CuDiff::Dual<6, glm::vec3>(glm::vec3(0.0f));
-    result.sample_probability = 0.0f;
+    result.sample_probability = CuDiff::Dual<6, float>(0.0f);
     result.flags              = atcg::BSDFComponentType::NullTransmission;
     result.dbsdf_dx0x1        = atcg::mat6x3(0.0f);
 
