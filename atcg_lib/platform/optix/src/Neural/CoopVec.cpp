@@ -1,6 +1,7 @@
 #include <Neural/CoopVec.h>
 
 #include <Core/Common.h>
+#include <optix_stubs.h>
 
 namespace atcg
 {
