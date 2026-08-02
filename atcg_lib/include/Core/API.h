@@ -28,8 +28,10 @@
 #if ATCG_PLATFORM_WINDOWS
     #if defined(ATCG_EXPORT)
         #define ATCG_API __declspec(dllexport)
+        #define ATCG_LOCAL
     #else
         #define ATCG_API __declspec(dllimport)
+        #defien ATCG_LOCAL
     #endif
 #else
     // Linux / macOS
