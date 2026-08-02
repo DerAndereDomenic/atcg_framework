@@ -26,7 +26,7 @@
 // Shared / static build toggle
 // -----------------------------
 #if ATCG_PLATFORM_WINDOWS
-    #if defined(ATCG_EXPORT)
+    #if defined(ATCG_EXPORT_DLL)
         #define ATCG_API __declspec(dllexport)
         #define ATCG_LOCAL
     #else
