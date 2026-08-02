@@ -25,7 +25,7 @@ private:
 };
 
 template<>
-struct atcg::MaterialGUIRenderer<DiffuseMaterial>
+struct MaterialGUIRenderer<DiffuseMaterial>
 {
     static bool renderGUI(const atcg::ref_ptr<DiffuseMaterial>& material, const std::string& key, bool& deactivated);
 };

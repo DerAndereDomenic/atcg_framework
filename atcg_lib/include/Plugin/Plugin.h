@@ -107,7 +107,7 @@ ATCG_INLINE bool releaseAllPlugins()
 }    // namespace PluginManager
 
 #define ATCG_PLUGIN_LIBRARY()                                                                                          \
-    extern "C" __declspec(dllexport) void registerSystems(ImGuiContext* imgui_context)                                 \
+    extern "C" ATCG_EXPORT void registerSystems(ImGuiContext* imgui_context)                                           \
     {                                                                                                                  \
         ImGui::SetCurrentContext(imgui_context);                                                                       \
     }

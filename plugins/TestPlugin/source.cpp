@@ -203,13 +203,13 @@ bool MaterialGUIRenderer<DiffuseMaterial>::renderGUI(const atcg::ref_ptr<Diffuse
 
 ATCG_PLUGIN_LIBRARY();
 
-extern "C" __declspec(dllexport) void registerPlugin(atcg::PluginRegistry& registry)
+extern "C" ATCG_EXPORT void registerPlugin(atcg::PluginRegistry& registry)
 {
     registry.registerMaterial<atcg::DiffuseMaterial>("Diffuse");
     registry.registerIntegrator<atcg::TestIntegrator>("TestIntegrator");
 }
 
-extern "C" __declspec(dllexport) void registerPythonBindings(pybind11::module& m)
+extern "C" ATCG_EXPORT void registerPythonBindings(pybind11::module& m)
 {
     ATCG_DEBUG("Registering Python bindings for TestPlugin");
     auto test_plugin = m.def_submodule("TestPlugin");
