@@ -6,24 +6,9 @@
 #include <Renderer/Renderer.h>
 #include <Renderer/VRSystem.h>
 #include <Renderer/ShaderManager.h>
+#include <Scene/RevisionStack.h>
 #include <Asset/Project.h>
 
-#include <Renderer/RenderPasses/TonemapPass.h>
-#include <Renderer/RenderPasses/DepthPass.h>
-#include <Renderer/RenderPasses/ForwardPass.h>
-#include <Renderer/RenderPasses/ShadowPass.h>
-#include <Renderer/RenderPasses/OutlinePass.h>
-#include <Renderer/RenderPasses/BlitPass.h>
-#include <Renderer/RenderPasses/OutputPass.h>
-
-#ifdef ATCG_CUDA_BACKEND
-    #include <BSDF/PBRBSDF.h>
-    #include <BSDF/NullBSDF.h>
-    #include <BSDF/DielectricBSDF.h>
-    #include <Integrator/PathtracingIntegrator.h>
-    #include <Integrator/VolPathtracingIntegrator.h>
-    #include <Integrator/PhotonMapIntegrator.h>
-#endif
 
 namespace atcg
 {
@@ -42,10 +27,7 @@ Application::Application(const WindowProps& props)
 Application::~Application()
 {
     _layer_stack.clear();
-    _revision_system->clearChache();
-    if(_asset_manager) _asset_manager->destroy();
-    if(_script_engine) _script_engine->destroy();
-    if(_plugin_manager) _plugin_manager->releaseAllPlugins();
+    _systems->shutdownSystems();
 }
 
 void Application::init(const WindowProps& props)
@@ -53,85 +35,8 @@ void Application::init(const WindowProps& props)
     ATCG_ASSERT(!s_instance, "There can only be one application instance at a time.");
     ATCG_ASSERT(SystemRegistry::instance(), "SystemRegistry must be initialized before initializing the Application");
 
-    _asset_manager = atcg::make_ref<AssetManagerSystem>();
-    SystemRegistry::instance()->registerSystem(_asset_manager.get());
-
-    _context_manager = atcg::make_ref<ContextManagerSystem>();
-    SystemRegistry::instance()->registerSystem(_context_manager.get());
-
-#ifdef ATCG_CUDA_BACKEND
-    atcg::RaytracingContext::initRaytracingAPI();
-    _rt_context_manager = atcg::make_ref<RaytracingContextManagerSystem>();
-    SystemRegistry::instance()->registerSystem(_rt_context_manager.get());
-
-    _bsdf_registry = atcg::make_ref<BSDFRegistry::Registry>();
-    PBRBSDF::registerBSDF(_bsdf_registry.get());
-    DielectricBSDF::registerBSDF(_bsdf_registry.get());
-    NullBSDF::registerBSDF(_bsdf_registry.get());
-    SystemRegistry::instance()->registerSystem(_bsdf_registry.get());
-
-    _integrator_registry = atcg::make_ref<IntegratorRegistry::Registry>();
-    VolPathtracingIntegrator::registerIntegrator(_integrator_registry.get());
-    PathtracingIntegrator::registerIntegrator(_integrator_registry.get());
-    PhotonMapIntegrator::registerIntegrator(_integrator_registry.get());
-    SystemRegistry::instance()->registerSystem(_integrator_registry.get());
-#endif
-
-    _shader_manager = atcg::make_ref<ShaderManagerSystem>();
-    SystemRegistry::instance()->registerSystem(_shader_manager.get());
-
-    _window = atcg::make_scope<Window>(props);
-    _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
-
-    _graphics_api = atcg::make_ref<GraphicsAPI>();
-    _graphics_api->init();
-    SystemRegistry::instance()->registerSystem(_graphics_api.get());
-
-    _renderer = atcg::make_ref<RendererSystem>();
-    _renderer->init(_window->getWidth(), _window->getHeight(), _window->getContext(), _shader_manager);
-    SystemRegistry::instance()->registerSystem(_renderer.get());
-
-    // Needs to be called after the renderer is initialized
-    _asset_manager->loadStandardAssets();
-
-    _vr_system = atcg::make_ref<VRSystem>();
-    _vr_system->init(ATCG_BIND_EVENT_FN(Application::onEvent));
-    SystemRegistry::instance()->registerSystem(_vr_system.get());
-
-    _revision_system = atcg::make_ref<RevisionSystem>();
-    SystemRegistry::instance()->registerSystem(_revision_system.get());
-
-    _component_registry = atcg::make_ref<ComponentRegistrySystem>();
-    SystemRegistry::instance()->registerSystem(_component_registry.get());
-
-    _script_engine = atcg::make_ref<PythonScriptEngine>();
-    _script_engine->init();
-    SystemRegistry::instance()->registerSystem(_script_engine.get());
-
-    // Register the material types
-    _material_registry = atcg::make_ref<MaterialRegistry::Registry>();
-    OpaqueMaterial::registerMaterial(_material_registry.get());
-    DielectricMaterial::registerMaterial(_material_registry.get());
-    NullMaterial::registerMaterial(_material_registry.get());
-
-    SystemRegistry::instance()->registerSystem(_material_registry.get());
-
-    _render_pass_registry = atcg::make_ref<RenderPassRegistry::Registry>();
-    OutputPass::registerRenderPass(_render_pass_registry.get());
-    TonemapPass::registerRenderPass(_render_pass_registry.get());
-    DepthPass::registerRenderPass(_render_pass_registry.get());
-    ForwardPass::registerRenderPass(_render_pass_registry.get());
-    ShadowPass::registerRenderPass(_render_pass_registry.get());
-    OutlinePass::registerRenderPass(_render_pass_registry.get());
-    BlitPass::registerRenderPass(_render_pass_registry.get());
-
-    SystemRegistry::instance()->registerSystem(_render_pass_registry.get());
-
-    _scene_renderer = atcg::make_ref<SceneRendererSystem>(_renderer.get());
-    SystemRegistry::instance()->registerSystem(_scene_renderer.get());
-
-    _plugin_manager = atcg::make_ref<PluginManagerSystem>();
-    SystemRegistry::instance()->registerSystem(_plugin_manager.get());
+    _systems = atcg::make_scope<SystemCollection>();
+    _systems->initSystems(props, ATCG_BIND_EVENT_FN(Application::onEvent));
 
     // Create an active project
     atcg::Project::create("./DefaultProject");
@@ -184,7 +89,7 @@ glm::ivec2 Application::getViewportSize() const
     }
 #endif
 
-    return glm::ivec2(_window->getWidth(), _window->getHeight());
+    return glm::ivec2(getWindow()->getWidth(), getWindow()->getHeight());
 }
 
 glm::ivec2 Application::getViewportPosition() const
@@ -241,7 +146,7 @@ void Application::run()
 
         VR::onUpdate(delta_time);
         VR::emitEvents();
-        _window->onUpdate();
+        getWindow()->onUpdate();
         ++_application_counter;
 
 #ifndef ATCG_HEADLESS
@@ -293,17 +198,17 @@ bool Application::onKeyPress(KeyPressedEvent* e)
 {
     if(e->getKeyCode() == ATCG_KEY_F11)
     {
-        _window->toggleFullscreen();
+        getWindow()->toggleFullscreen();
     }
 
     if(e->getKeyCode() == ATCG_KEY_Y && atcg::Input::isKeyPressed(ATCG_KEY_LEFT_CONTROL))
     {
-        _revision_system->rollback();
+        RevisionStack::rollback();
     }
 
     if(e->getKeyCode() == ATCG_KEY_Z && atcg::Input::isKeyPressed(ATCG_KEY_LEFT_CONTROL))
     {
-        _revision_system->apply();
+        RevisionStack::apply();
     }
 
     return false;

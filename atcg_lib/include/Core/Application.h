@@ -5,31 +5,15 @@
 #include <Core/LayerStack.h>
 #include <Core/Memory.h>
 #include <Core/Platform.h>
-#include <Core/Window.h>
+#include <Core/SystemCollection.h>
 #include <Events/KeyEvent.h>
 #include <Events/WindowEvent.h>
-#include <Plugin/Plugin.h>
-#include <Renderer/ContextManager.h>
-#include <Renderer/GraphicsAPI.h>
-#include <Renderer/Material.h>
-#include <Renderer/Renderer.h>
-#include <Renderer/ShaderManager.h>
-#include <Renderer/VRSystem.h>
-#include <Renderer/RenderPassRegistry.h>
-#include <Scene/ComponentRegistry.h>
-#include <Scene/RevisionStack.h>
-#include <Scene/SceneRenderer.h>
-#include <Scripting/ScriptEngine.h>
+
 
 #ifndef ATCG_HEADLESS
     #include <ImGui/ImGuiLayer.h>
 #endif
 
-#ifdef ATCG_CUDA_BACKEND
-    #include <Core/RaytracingContextManager.h>
-    #include <BSDF/BSDFRegistry.h>
-    #include <Integrator/IntegratorRegistry.h>
-#endif
 namespace atcg
 {
 class Application;
@@ -107,7 +91,7 @@ public:
      *
      * @return const atcg::scope_ptr<Window>& The window
      */
-    ATCG_INLINE const atcg::scope_ptr<Window>& getWindow() const { return _window; }
+    ATCG_INLINE const atcg::scope_ptr<Window>& getWindow() const { return _systems->getWindow(); }
 
     /**
      * @brief Get an instance of the application
@@ -165,33 +149,14 @@ private:
 
 private:
     bool _running = false;
-    atcg::ref_ptr<ContextManagerSystem> _context_manager;
-#ifdef ATCG_CUDA_BACKEND
-    atcg::ref_ptr<RaytracingContextManagerSystem> _rt_context_manager;
-    atcg::ref_ptr<BSDFRegistry::Registry> _bsdf_registry;
-    atcg::ref_ptr<IntegratorRegistry::Registry> _integrator_registry;
-#endif
-    atcg::scope_ptr<Window> _window;
 #ifndef ATCG_HEADLESS
     ImGuiLayer* _imgui_layer;
 #endif
     LayerStack _layer_stack;
 
-    uint64_t _application_counter = 0;
+    atcg::scope_ptr<SystemCollection> _systems;
 
-    // Systems
-    atcg::ref_ptr<AssetManagerSystem> _asset_manager;
-    atcg::ref_ptr<ShaderManagerSystem> _shader_manager;
-    atcg::ref_ptr<MaterialRegistry::Registry> _material_registry;
-    atcg::ref_ptr<RenderPassRegistry::Registry> _render_pass_registry;
-    atcg::ref_ptr<SceneRendererSystem> _scene_renderer;
-    atcg::ref_ptr<RendererSystem> _renderer;
-    atcg::ref_ptr<VRSystem> _vr_system;
-    atcg::ref_ptr<ScriptEngine> _script_engine;
-    atcg::ref_ptr<RevisionSystem> _revision_system;
-    atcg::ref_ptr<GraphicsAPI> _graphics_api;
-    atcg::ref_ptr<ComponentRegistrySystem> _component_registry;
-    atcg::ref_ptr<PluginManagerSystem> _plugin_manager;
+    uint64_t _application_counter = 0;
 
     friend int atcg::atcg_main();
     static Application* s_instance;
