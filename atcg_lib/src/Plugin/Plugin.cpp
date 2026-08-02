@@ -49,7 +49,7 @@ bool PluginManagerSystem::loadPlugin(const std::filesystem::path& path)
 {
     // Create temp copy of dll at path_temp to avoid file locking issues when reloading the plugin
     std::filesystem::path temp_path = path;
-    temp_path.replace_extension(".temp.dll");
+    temp_path.replace_extension(".temp");
     std::filesystem::copy(path, temp_path, std::filesystem::copy_options::overwrite_existing);
 
     // TODO Platform-specific implementation for loading plugin using LoadLibrary (Windows) or dlopen (Linux)
@@ -133,7 +133,7 @@ bool PluginManagerSystem::releasePlugin(const std::filesystem::path& path)
         _loaded_plugins.erase(it);
 
         std::filesystem::path temp_path = path;
-        temp_path.replace_extension(".temp.dll");
+        temp_path.replace_extension(".temp");
         std::filesystem::remove(temp_path);
 
         return true;
@@ -164,7 +164,7 @@ bool PluginManagerSystem::releaseAllPlugins()
         }
 
         std::filesystem::path temp_path = path;
-        temp_path.replace_extension(".temp.dll");
+        temp_path.replace_extension(".temp");
         std::filesystem::remove(temp_path);
     }
     _loaded_plugins.clear();
