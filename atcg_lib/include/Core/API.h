@@ -26,15 +26,19 @@
 // Shared / static build toggle
 // -----------------------------
 #if ATCG_PLATFORM_WINDOWS
+    #define ATCG_IMPORT __declspec(dllimport)
+    #define ATCG_EXPORT __declspec(dllexport)
     #if defined(ATCG_EXPORT_DLL)
-        #define ATCG_API __declspec(dllexport)
+        #define ATCG_API ATCG_EXPORT
         #define ATCG_LOCAL
     #else
-        #define ATCG_API __declspec(dllimport)
-        #defien ATCG_LOCAL
+        #define ATCG_API ATCG_IMPORT
+        #define ATCG_LOCAL
     #endif
 #else
     // Linux / macOS
+    #define ATCG_IMPORT __attribute__((visibility("default")))
+    #define ATCG_EXPORT __attribute__((visibility("default")))
 
     // Hidden by default improves compile times and symbol cleanliness
     #if ATCG_COMPILER_GCC_OR_CLANG
