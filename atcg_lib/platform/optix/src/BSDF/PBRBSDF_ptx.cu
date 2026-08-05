@@ -275,10 +275,10 @@ __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si
     // the world coordinate system.
     auto local_frame = atcg::Frame(normal);
 
-    auto diffuse_probability =
-        CuDiff::dot(diffuse_color, glm::vec3(1)) /
-        (CuDiff::dot(diffuse_color, glm::vec3(1)) + CuDiff::dot(metallic_color, glm::vec3(1)) + 1e-5f);
-    auto specular_probability = 1.0f - diffuse_probability;
+    float diffuse_probability =
+        glm::dot(diffuse_color.val(), glm::vec3(1)) /
+        (glm::dot(diffuse_color.val(), glm::vec3(1)) + glm::dot(metallic_color.val(), glm::vec3(1)) + 1e-5f);
+    float specular_probability = 1.0f - diffuse_probability;
     if(rng.next1d() < diffuse_probability)
     {
         // Sample light direction from diffuse bsdf
@@ -408,12 +408,12 @@ __direct_callable__eval_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si,
     auto kS = F;
     auto kD = glm::vec3(1.0f) - kS;
 
-    auto diffuse_probability =
-        CuDiff::dot(diffuse_color, glm::vec3(1.0f)) /
-        (CuDiff::dot(diffuse_color, glm::vec3(1.0f)) + CuDiff::dot(metallic_color, glm::vec3(1.0f)) + 1e-5f);
-    auto specular_probability = 1.0f - diffuse_probability;
-    auto diffuse_pdf          = NdotL / glm::pi<float>();
-    auto halfway_pdf          = NDF * NdotH;
+    float diffuse_probability =
+        glm::dot(diffuse_color.val(), glm::vec3(1.0f)) /
+        (glm::dot(diffuse_color.val(), glm::vec3(1.0f)) + glm::dot(metallic_color.val(), glm::vec3(1.0f)) + 1e-5f);
+    float specular_probability = 1.0f - diffuse_probability;
+    auto diffuse_pdf           = NdotL / glm::pi<float>();
+    auto halfway_pdf           = NDF * NdotH;
     auto halfway_to_outgoing_pdf =
         atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
             outgoing_dir,
@@ -580,12 +580,12 @@ __direct_callable__eval_backward_pdf_pbrbsdf(const atcg::SurfaceInteraction& si,
 
         auto bsdf_value = (specular + kD * diffuse_color / glm::pi<float>()) * NdotL;
 
-        auto diffuse_probability =
-            CuDiff::dot(diffuse_color, glm::vec3(1.0f)) /
-            (CuDiff::dot(diffuse_color, glm::vec3(1.0f)) + CuDiff::dot(metallic_color, glm::vec3(1.0f)) + 1e-5f);
-        auto specular_probability = 1.0f - diffuse_probability;
-        auto diffuse_pdf          = NdotL / glm::pi<float>();
-        auto halfway_pdf          = NDF * NdotH;
+        float diffuse_probability =
+            glm::dot(diffuse_color.val(), glm::vec3(1.0f)) /
+            (glm::dot(diffuse_color.val(), glm::vec3(1.0f)) + glm::dot(metallic_color.val(), glm::vec3(1.0f)) + 1e-5f);
+        float specular_probability = 1.0f - diffuse_probability;
+        float diffuse_pdf          = NdotL / glm::pi<float>();
+        auto halfway_pdf           = NDF * NdotH;
         auto halfway_to_outgoing_pdf =
             atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
                 outgoing_dir,
@@ -695,10 +695,10 @@ __direct_callable__sample_backward_pbrbsdf(const atcg::SurfaceInteraction& si,
         // to the world coordinate system.
         atcg::Frame local_frame = atcg::Frame(normal);
 
-        auto diffuse_probability =
-            CuDiff::dot(diffuse_color, glm::vec3(1)) /
-            (CuDiff::dot(diffuse_color, glm::vec3(1)) + CuDiff::dot(metallic_color, glm::vec3(1)) + 1e-5f);
-        auto specular_probability = 1 - diffuse_probability;
+        float diffuse_probability =
+            glm::dot(diffuse_color.val(), glm::vec3(1)) /
+            (glm::dot(diffuse_color.val(), glm::vec3(1)) + glm::dot(metallic_color.val(), glm::vec3(1)) + 1e-5f);
+        float specular_probability = 1 - diffuse_probability;
 
         CuDiff::Dual<5, glm::vec3> out_dir;
         if(rng.next1d() < diffuse_probability)
@@ -872,10 +872,10 @@ __direct_callable__sample_backward_pdf_pbrbsdf(const atcg::SurfaceInteraction& s
         // to the world coordinate system.
         atcg::Frame local_frame = atcg::Frame(normal);
 
-        auto diffuse_probability =
-            CuDiff::dot(diffuse_color, glm::vec3(1)) /
-            (CuDiff::dot(diffuse_color, glm::vec3(1)) + CuDiff::dot(metallic_color, glm::vec3(1)) + 1e-5f);
-        auto specular_probability = 1 - diffuse_probability;
+        float diffuse_probability =
+            glm::dot(diffuse_color.val(), glm::vec3(1)) /
+            (glm::dot(diffuse_color.val(), glm::vec3(1)) + glm::dot(metallic_color.val(), glm::vec3(1)) + 1e-5f);
+        float specular_probability = 1 - diffuse_probability;
 
         CuDiff::Dual<5, glm::vec3> out_dir;
         if(rng.next1d() < diffuse_probability)
