@@ -19,7 +19,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto D_GGX(const NdotHType& NdotH, const roug
 {
     auto a2 = roughness * roughness;
     auto d  = (NdotH * a2 - NdotH) * NdotH + 1.0f;
-    return a2 / (glm::pi<float>() * d * d + 1e-5f);
+    return a2 / CuDiff::max(glm::pi<float>() * d * d, 1e-8f);
 }
 
 /**
@@ -60,4 +60,4 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 faceForward(const glm::vec3& normal
 {
     return glm::dot(normal, direction) < 0.0f ? -normal : normal;
 }
-}
+}    // namespace atcg
