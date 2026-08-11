@@ -2,7 +2,7 @@
 
 #include <Core/glm.h>
 #include <Medium/PhaseFunctionVPtrTable.cuh>
-#include <Spectrum/SampledSpectrum.h>
+#include <DataStructure/SampledSpectrum.h>
 
 namespace atcg
 {

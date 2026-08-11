@@ -4,7 +4,7 @@
 #include <Film/HDRFilmData.cuh>
 #include <Film/FilmVPtrTable.cuh>
 
-#include <Spectrum/SampledSpectrum.h>
+#include <DataStructure/SampledSpectrum.h>
 
 extern "C" __device__ void __direct_callable__add_sample_hdrfilm(const glm::ivec3& sample_index,
                                                                  const glm::vec3& lrgb_radiance)

@@ -4,7 +4,7 @@
 #include <Sensor/PinholeCameraData.cuh>
 #include <Sensor/SensorVPtrTable.cuh>
 
-#include <Spectrum/SampledSpectrum.h>
+#include <DataStructure/SampledSpectrum.h>
 
 extern "C" __device__ atcg::CameraRay __direct_callable__generate_ray_pinhole(const glm::ivec2& raster_pos,
                                                                               atcg::PCG32& rng)

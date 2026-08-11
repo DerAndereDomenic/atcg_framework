@@ -2,7 +2,7 @@
 
 #include <Core/glm.h>
 
-#include <Spectrum/SampledSpectrum.h>
+#include <DataStructure/SampledSpectrum.h>
 
 namespace atcg
 {

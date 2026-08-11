@@ -1,7 +1,7 @@
 #pragma once
 
 #include <DataStructure/Ray.h>
-#include <Spectrum/SampledSpectrum.h>
+#include <DataStructure/SampledSpectrum.h>
 
 namespace atcg
 {

@@ -4,7 +4,7 @@
 #include <DataStructure/SurfaceInteraction.h>
 #include <Math/Random.h>
 #include <Emitter/EmitterFlags.h>
-#include <Spectrum/SampledSpectrum.h>
+#include <DataStructure/SampledSpectrum.h>
 
 #include <optix.h>
 

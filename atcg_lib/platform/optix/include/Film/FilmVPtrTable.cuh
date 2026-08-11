@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/glm.h>
-#include <Spectrum/SampledSpectrum.h>
+#include <DataStructure/SampledSpectrum.h>
 #include <Math/Random.h>
 #include <optix.h>
 

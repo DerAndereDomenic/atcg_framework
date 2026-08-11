@@ -9,7 +9,7 @@
 #include <Core/Payload.h>
 #include <Math/Random.h>
 
-#include <Spectrum/SampledSpectrum.h>
+#include <DataStructure/SampledSpectrum.h>
 #include <Integrator/MIS.h>
 
 extern "C"

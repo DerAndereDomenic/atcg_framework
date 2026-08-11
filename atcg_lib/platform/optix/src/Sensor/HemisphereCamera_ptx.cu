@@ -6,7 +6,7 @@
 #include <BSDF/Sampling.h>
 #include <DataStructure/Frame.h>
 
-#include <Spectrum/SampledSpectrum.h>
+#include <DataStructure/SampledSpectrum.h>
 
 extern "C" __device__ atcg::CameraRay __direct_callable__generate_ray_hemisphere(const glm::ivec2& raster_pos,
                                                                                  atcg::PCG32& rng)
