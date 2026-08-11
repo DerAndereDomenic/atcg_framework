@@ -113,6 +113,8 @@ MicrofacetMaterial::MicrofacetMaterial(const std::string& type) : Material(type)
     spec_ior.format = TextureFormat::RFLOAT;
     float ior_value = 1.45f;
     _ior_texture    = atcg::Texture2D::create(&ior_value, spec_ior);
+
+    _flags = MaterialFlag::GlossyReflection | MaterialFlag::DiffuseReflection;
 }
 
 void MicrofacetMaterial::setDiffuseColor(const glm::vec4& color)
@@ -238,7 +240,10 @@ void OpaqueMaterial::registerMaterial(MaterialRegistry::Registry* registry)
     ATCG_REGISTER_MATERIAL(registry, "Opaque", OpaqueMaterial);
 }
 
-DielectricMaterial::DielectricMaterial() : MicrofacetMaterial("Dielectric") {}
+DielectricMaterial::DielectricMaterial() : MicrofacetMaterial("Dielectric")
+{
+    _flags = _flags | MaterialFlag::GlossyTransmission | MaterialFlag::DiffuseTransmission;
+}
 
 void DielectricMaterial::uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader)
 {
@@ -292,7 +297,10 @@ void DielectricMaterial::registerMaterial(MaterialRegistry::Registry* registry)
     ATCG_REGISTER_MATERIAL(registry, "Dielectric", DielectricMaterial);
 }
 
-NullMaterial::NullMaterial() : Material("Null") {}
+NullMaterial::NullMaterial() : Material("Null")
+{
+    _flags = MaterialFlag::IdealTransmission | MaterialFlag::NullTransmission;
+}
 
 void NullMaterial::uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader)
 {

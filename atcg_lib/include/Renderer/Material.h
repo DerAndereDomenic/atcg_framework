@@ -6,6 +6,7 @@
 #include <Asset/Asset.h>
 #include <DataStructure/Dictionary.h>
 #include <DataStructure/Registry.h>
+#include <Renderer/MaterialFlags.h>
 
 #include <json.hpp>
 #include <filesystem>
@@ -52,11 +53,13 @@ struct ATCG_API Material : public Asset
 
     ATCG_INLINE const std::string& getMaterialType() const { return _material_type; };
 
+    ATCG_INLINE const MaterialFlag& getMaterialFlags() const { return _flags; }
 
 protected:
     std::array<uint32_t, 5> _used_texture_ids;
     bool _uploaded = false;
     std::string _material_type;
+    MaterialFlag _flags = MaterialFlag::None;
 };
 
 using MaterialBuilder           = std::function<atcg::ref_ptr<Material>(const Dictionary&)>;
