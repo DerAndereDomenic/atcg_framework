@@ -6,7 +6,7 @@
 #include <Scene/Scene.h>
 #include <Core/RaytracingPipeline.h>
 #include <Core/ShaderBindingTable.h>
-#include <Core/RaytracingContext.h>
+#include <Renderer/RaytracingContext.h>
 
 namespace atcg
 {

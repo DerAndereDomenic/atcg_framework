@@ -7,7 +7,7 @@
 #include <Core/RaytracingPipeline.h>
 #include <Core/ShaderBindingTable.h>
 #include <Core/RaytracingComponent.h>
-#include <Core/RaytracingContext.h>
+#include <Renderer/RaytracingContext.h>
 #include <Scene/Scene.h>
 #include <Renderer/PerspectiveCamera.h>
 #include <DataStructure/TorchUtils.h>

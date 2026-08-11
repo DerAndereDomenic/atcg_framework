@@ -4,7 +4,7 @@
 #include <Core/Memory.h>
 #include <Core/RaytracingComponent.h>
 #include <DataStructure/Dictionary.h>
-#include <Core/RaytracingContext.h>
+#include <Renderer/RaytracingContext.h>
 #include <Shape/ShapeData.cuh>
 
 #ifndef __CUDACC__

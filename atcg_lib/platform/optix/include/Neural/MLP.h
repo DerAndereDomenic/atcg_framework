@@ -2,7 +2,7 @@
 
 
 #include <Core/Memory.h>
-#include <Core/RaytracingContext.h>
+#include <Renderer/RaytracingContext.h>
 #include <Neural/DeviceMLP.cuh>
 #include <Neural/Activations.h>
 #include <DataStructure/TorchUtils.h>

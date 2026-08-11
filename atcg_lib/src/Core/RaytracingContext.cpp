@@ -1,4 +1,4 @@
-#include <Core/RaytracingContext.h>
+#include <Renderer/RaytracingContext.h>
 
 #include <Core/Common.h>
 #include <Core/CUDA.h>
@@ -18,23 +18,28 @@ void RaytracingContext::initRaytracingAPI()
 {
     if(!detail::s_optix_initialized)
     {
+#ifdef ATCG_CUDA_BACKEND
         OPTIX_CHECK(optixInit());
+#endif
         detail::s_optix_initialized = true;
     }
 }
 
 void RaytracingContext::destroy()
 {
+#ifdef ATCG_CUDA_BACKEND
     ATCG_ASSERT(_context != nullptr, "Try to destroy context before creation");
 
     optixDeviceContextDestroy(_context);
     _context = nullptr;
+#endif
 }
 
 void RaytracingContext::create(const int device_id)
 {
     ATCG_ASSERT(_context == nullptr, "Try to create context while already defined");
 
+#ifdef ATCG_CUDA_BACKEND
     int original_device = 0;
     CUDA_SAFE_CALL(cudaGetDevice(&original_device));
 
@@ -45,5 +50,6 @@ void RaytracingContext::create(const int device_id)
     OPTIX_CHECK(optixDeviceContextCreate(0, &options, &_context));
 
     CUDA_SAFE_CALL(cudaSetDevice(original_device));
+#endif
 }
 }    // namespace atcg

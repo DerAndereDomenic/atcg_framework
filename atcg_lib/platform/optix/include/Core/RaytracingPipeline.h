@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/API.h>
-#include <Core/RaytracingContext.h>
+#include <Renderer/RaytracingContext.h>
 #include <Core/TraceParameters.h>
 #include <optix.h>
 

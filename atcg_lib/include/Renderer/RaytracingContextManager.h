@@ -2,7 +2,7 @@
 
 #include <Core/API.h>
 #include <Core/SystemRegistry.h>
-#include <Core/RaytracingContext.h>
+#include <Renderer/RaytracingContext.h>
 
 namespace atcg
 {
