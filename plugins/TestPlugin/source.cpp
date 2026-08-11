@@ -4,20 +4,22 @@
 
 #include <ATCG.h>
 
-#include "TestIntegrator.h"
-
 #include <Core/Path.h>
 #include <Core/Assert.h>
-#include <Core/CUDA.h>
-#include <Core/Common.h>
-#include <Scene/Components.h>
-#include <Scene/Entity.h>
-#include <Shape/Shape.h>
-#include <Shape/ShapeInstance.h>
-#include <Shape/MeshShape.h>
+
+#ifdef ATCG_CUDA_BACKEND
+    #include <Core/CUDA.h>
+    #include <Core/Common.h>
+    #include <Scene/Components.h>
+    #include <Scene/Entity.h>
+    #include <Shape/Shape.h>
+    #include <Shape/ShapeInstance.h>
+    #include <Shape/MeshShape.h>
+    #include <Emitter/MeshEmitter.h>
+    #include <Scene/SceneAdapter.h>
+#endif
+
 #include <DataStructure/WorkerPool.h>
-#include <Emitter/MeshEmitter.h>
-#include <Scene/SceneAdapter.h>
 #include "TestMaterial.h"
 
 #ifndef ATCG_HEADLESS
@@ -26,6 +28,7 @@
 
 namespace atcg
 {
+#ifdef ATCG_CUDA_BACKEND
 TestIntegrator::TestIntegrator(const atcg::ref_ptr<RaytracingContext>& context, const Dictionary& dict)
     : Integrator(context, dict)
 {
@@ -58,14 +61,14 @@ void TestIntegrator::initializePipeline(const Dictionary& dict)
 
 void TestIntegrator::onImGuiRender()
 {
-#ifndef ATCG_HEADLESS
+    #ifndef ATCG_HEADLESS
     ImGui::Begin("TestIntegrator");
     for(auto shape: _optix_scene->getShapes())
     {
         shape->onImGuiRender();
     }
     ImGui::End();
-#endif
+    #endif
 }
 
 void TestIntegrator::reset()
@@ -116,6 +119,8 @@ void TestIntegrator::generateRays(Dictionary& in_out_dictionary)
     in_out_dictionary.setValue("output", output_tensor);
     in_out_dictionary.setValue("entity_ids", output_entities);
 }
+
+#endif
 
 DiffuseMaterial::DiffuseMaterial(const atcg::Dictionary& dict) : atcg::Material("Diffuse", dict)
 {
@@ -208,7 +213,9 @@ ATCG_PLUGIN_LIBRARY();
 extern "C" ATCG_EXPORT void registerPlugin(atcg::PluginRegistry& registry)
 {
     registry.registerMaterial<atcg::DiffuseMaterial>("Diffuse");
+#ifdef ATCG_CUDA_BACKEND
     registry.registerIntegrator<atcg::TestIntegrator>("TestIntegrator");
+#endif
 }
 
 extern "C" ATCG_EXPORT void registerPythonBindings(pybind11::module& m)
