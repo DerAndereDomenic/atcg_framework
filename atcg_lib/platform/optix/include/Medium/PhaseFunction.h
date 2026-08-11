@@ -12,7 +12,7 @@
 
 namespace atcg
 {
-class ATCG_API PhaseFunction : public OptixComponent
+class ATCG_API PhaseFunction : public RaytracingComponent
 {
 public:
     PhaseFunction() = default;

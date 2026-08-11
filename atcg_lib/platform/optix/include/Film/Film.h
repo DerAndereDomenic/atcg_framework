@@ -9,7 +9,7 @@
 
 namespace atcg
 {
-class ATCG_API Film : public OptixComponent
+class ATCG_API Film : public RaytracingComponent
 {
 public:
     /**

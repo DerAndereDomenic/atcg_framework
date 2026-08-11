@@ -12,7 +12,7 @@
 
 namespace atcg
 {
-class ATCG_API Medium : public OptixComponent
+class ATCG_API Medium : public RaytracingComponent
 {
 public:
     /**

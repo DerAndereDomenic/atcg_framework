@@ -15,7 +15,7 @@ namespace atcg
 /**
  * @brief A class to model an emitter
  */
-class ATCG_API Emitter : public OptixComponent
+class ATCG_API Emitter : public RaytracingComponent
 {
 public:
     /**

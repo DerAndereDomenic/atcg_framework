@@ -15,7 +15,7 @@ namespace atcg
 /**
  * @brief A class to model a BSDF
  */
-class ATCG_API BSDF : public OptixComponent
+class ATCG_API BSDF : public RaytracingComponent
 {
 public:
     /**

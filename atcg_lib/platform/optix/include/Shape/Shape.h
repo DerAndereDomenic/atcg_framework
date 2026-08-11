@@ -19,7 +19,7 @@ class ShapeInstance;
 /**
  * @brief Class to model a shape
  */
-class ATCG_API Shape : public OptixComponent
+class ATCG_API Shape : public RaytracingComponent
 {
 public:
     /**

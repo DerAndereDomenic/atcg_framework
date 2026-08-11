@@ -11,7 +11,7 @@
 
 namespace atcg
 {
-class ATCG_API Sensor : public OptixComponent
+class ATCG_API Sensor : public RaytracingComponent
 {
 public:
     /**
