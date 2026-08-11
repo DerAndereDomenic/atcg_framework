@@ -2,7 +2,7 @@
 
 #include <Core/API.h>
 #include <Core/Memory.h>
-#include <Core/OptixComponent.h>
+#include <Core/RaytracingComponent.h>
 #include <DataStructure/Dictionary.h>
 #include <Core/RaytracingContext.h>
 #include <Shape/ShapeData.cuh>

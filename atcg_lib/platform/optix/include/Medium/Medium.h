@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/Memory.h>
-#include <Core/OptixComponent.h>
+#include <Core/RaytracingComponent.h>
 #include <DataStructure/Dictionary.h>
 #include <Medium/PhaseFunction.h>
 #include <Medium/MediumVPtrTable.cuh>

@@ -6,7 +6,7 @@
 #include <Core/Platform.h>
 #include <Core/RaytracingPipeline.h>
 #include <Core/ShaderBindingTable.h>
-#include <Core/OptixComponent.h>
+#include <Core/RaytracingComponent.h>
 #include <Core/RaytracingContext.h>
 #include <Scene/Scene.h>
 #include <Renderer/PerspectiveCamera.h>

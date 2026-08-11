@@ -3,7 +3,7 @@
 #include <Core/API.h>
 #include <Core/Platform.h>
 #include <DataStructure/Dictionary.h>
-#include <Core/OptixComponent.h>
+#include <Core/RaytracingComponent.h>
 #include <BSDF/BSDFVPtrTable.cuh>
 
 #ifndef __CUDACC__

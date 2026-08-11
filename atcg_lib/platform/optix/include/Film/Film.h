@@ -2,7 +2,7 @@
 
 #include <Core/API.h>
 #include <Core/Platform.h>
-#include <Core/OptixComponent.h>
+#include <Core/RaytracingComponent.h>
 #include <DataStructure/Dictionary.h>
 #include <Film/FilmVPtrTable.cuh>
 #include <DataStructure/TorchUtils.h>

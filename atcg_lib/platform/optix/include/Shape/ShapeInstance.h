@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/OptixComponent.h>
+#include <Core/RaytracingComponent.h>
 #include <Core/glm.h>
 #include <DataStructure/Dictionary.h>
 #include <Shape/Shape.h>
