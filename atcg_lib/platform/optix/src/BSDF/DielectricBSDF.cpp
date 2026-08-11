@@ -1,7 +1,7 @@
 #include <BSDF/DielectricBSDF.h>
 
 #include <Renderer/Texture.h>
-#include <Renderer/Material.h>
+#include <Material/Material.h>
 
 #include <Core/Common.h>
 

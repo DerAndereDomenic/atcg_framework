@@ -6,7 +6,7 @@
 #include <Plugin/Plugin.h>
 #include <Renderer/ContextManager.h>
 #include <Renderer/GraphicsAPI.h>
-#include <Renderer/Material.h>
+#include <Material/Material.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/ShaderManager.h>
 #include <Renderer/VRSystem.h>

@@ -3,7 +3,7 @@
 #include <Core/Memory.h>
 #include <BSDF/BSDF.h>
 #include <DataStructure/Dictionary.h>
-#include <Renderer/Material.h>
+#include <Material/Material.h>
 #include <Core/RaytracingPipeline.h>
 #include <Core/ShaderBindingTable.h>
 #include <DataStructure/Registry.h>

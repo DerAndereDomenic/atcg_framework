@@ -2,7 +2,7 @@
 
 #include <DataStructure/Image.h>
 #include <Renderer/Texture.h>
-#include <Renderer/Material.h>
+#include <Material/Material.h>
 #include <DataStructure/Graph.h>
 #include <Scripting/Script.h>
 #include <Renderer/Shader.h>

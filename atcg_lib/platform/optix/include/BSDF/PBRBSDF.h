@@ -2,7 +2,7 @@
 
 #include <BSDF/BSDF.h>
 #include <BSDF/PBRBSDFData.cuh>
-#include <Renderer/Material.h>
+#include <Material/Material.h>
 #include <BSDF/BSDFRegistry.h>
 
 namespace atcg

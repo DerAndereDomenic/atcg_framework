@@ -7,7 +7,7 @@
 #include <Renderer/Camera.h>
 #include <Renderer/GraphicsAPI.h>
 #include <Plugin/PluginHandle.h>
-#include <Renderer/Material.h>
+#include <Material/Material.h>
 #include <Renderer/RenderPassRegistry.h>
 #ifdef ATCG_CUDA_BACKEND
     #include <BSDF/BSDFRegistry.h>

@@ -10,7 +10,7 @@
 #include <Renderer/PerspectiveCamera.h>
 #include <Renderer/ShaderManager.h>
 #include <Renderer/Framebuffer.h>
-#include <Renderer/Material.h>
+#include <Material/Material.h>
 #include <Renderer/GraphicsPipeline.h>
 #include <Renderer/GraphicsAPI.h>
 #include <DataStructure/Graph.h>

@@ -6,7 +6,7 @@
 #include <Asset/Asset.h>
 #include <DataStructure/Dictionary.h>
 #include <DataStructure/Registry.h>
-#include <Renderer/MaterialFlags.h>
+#include <Material/MaterialFlags.h>
 
 #include <json.hpp>
 #include <filesystem>

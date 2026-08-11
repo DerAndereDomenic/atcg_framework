@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Renderer/Material.h>
+#include <Material/Material.h>
 #include <Plugin/Plugin.h>
 
 namespace atcg

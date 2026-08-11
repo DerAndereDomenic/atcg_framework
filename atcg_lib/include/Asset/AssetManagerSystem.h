@@ -5,7 +5,7 @@
 #include <DataStructure/Graph.h>
 #include <Renderer/Texture.h>
 #include <DataStructure/Skybox.h>
-#include <Renderer/Material.h>
+#include <Material/Material.h>
 
 namespace atcg
 {

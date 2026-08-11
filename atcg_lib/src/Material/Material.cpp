@@ -1,6 +1,6 @@
 #include <Core/Assert.h>
 #include <Core/Application.h>
-#include <Renderer/Material.h>
+#include <Material/Material.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/Shader.h>
 
