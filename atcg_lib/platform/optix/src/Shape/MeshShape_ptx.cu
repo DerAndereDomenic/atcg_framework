@@ -5,7 +5,7 @@
 #include <Shape/MeshShapeData.cuh>
 #include <Core/Payload.h>
 
-#include <optix.h>
+#include <Core/Optix.h>
 
 extern "C" __global__ void __closesthit__mesh()
 {

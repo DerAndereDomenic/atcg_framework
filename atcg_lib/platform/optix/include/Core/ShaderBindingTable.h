@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/API.h>
-#include <optix.h>
+#include <Core/Optix.h>
 
 namespace atcg
 {

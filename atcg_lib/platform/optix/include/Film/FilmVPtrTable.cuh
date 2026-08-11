@@ -3,7 +3,7 @@
 #include <Core/glm.h>
 #include <DataStructure/SampledSpectrum.h>
 #include <Math/Random.h>
-#include <optix.h>
+#include <Core/Optix.h>
 
 namespace atcg
 {

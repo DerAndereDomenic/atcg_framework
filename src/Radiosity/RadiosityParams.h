@@ -1,6 +1,6 @@
 #pragma once
 
-#include <optix.h>
+#include <Core/Optix.h>
 #include <Core/glm.h>
 #include <Core/TraceParameters.h>
 #include <Shape/MeshShapeData.cuh>

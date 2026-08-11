@@ -7,7 +7,7 @@
 #include <Neural/Activations.h>
 #include <DataStructure/TorchUtils.h>
 
-#include <optix.h>
+#include <Core/Optix.h>
 
 
 namespace atcg

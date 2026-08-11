@@ -2,7 +2,7 @@
 
 #include <Core/API.h>
 #include <Core/Platform.h>
-#include <optix.h>
+#include <Core/Optix.h>
 
 // Just wrappers for dll export of optix cooperative vector matrix conversion and size computation functions
 namespace atcg

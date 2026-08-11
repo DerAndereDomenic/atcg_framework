@@ -1,6 +1,6 @@
 #pragma once
 
-#include <optix.h>
+#include <Core/Optix.h>
 #include <Core/Platform.h>
 #include <Core/CUDA.h>
 

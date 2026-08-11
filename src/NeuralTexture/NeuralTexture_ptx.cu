@@ -1,7 +1,7 @@
 #pragma cuda_source_property_format = PTX
 
 #include <Core/CUDA.h>
-#include <optix.h>
+#include <Core/Optix.h>
 
 #include "NeuralTextureData.cuh"
 

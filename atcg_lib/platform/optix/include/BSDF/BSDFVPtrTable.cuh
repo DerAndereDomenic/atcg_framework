@@ -5,7 +5,7 @@
 #include <Math/Random.h>
 #include <BSDF/BSDFFlags.h>
 #include <DataStructure/SampledSpectrum.h>
-#include <optix.h>
+#include <Core/Optix.h>
 
 
 namespace atcg

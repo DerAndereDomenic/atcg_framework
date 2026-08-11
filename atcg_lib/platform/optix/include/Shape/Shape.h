@@ -11,7 +11,7 @@
     #include <Scene/ComponentGUIHandler.h>
 #endif
 
-#include <optix.h>
+#include <Core/Optix.h>
 
 namespace atcg
 {

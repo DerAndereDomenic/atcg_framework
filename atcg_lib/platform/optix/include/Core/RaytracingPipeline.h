@@ -3,7 +3,7 @@
 #include <Core/API.h>
 #include <Renderer/RaytracingContext.h>
 #include <Core/TraceParameters.h>
-#include <optix.h>
+#include <Core/Optix.h>
 
 namespace atcg
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <optix.h>
+#include <Core/Optix.h>
 #include <optix_types.h>
 #include <cuda_fp16.h>
 

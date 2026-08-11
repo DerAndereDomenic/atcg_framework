@@ -6,7 +6,7 @@
 #include <Emitter/EmitterFlags.h>
 #include <DataStructure/SampledSpectrum.h>
 
-#include <optix.h>
+#include <Core/Optix.h>
 
 namespace atcg
 {

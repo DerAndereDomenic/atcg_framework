@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Neural/Linear.h>
-#include <optix.h>
+#include <Core/Optix.h>
 
 namespace atcg
 {

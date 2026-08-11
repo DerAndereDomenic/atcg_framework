@@ -2,7 +2,7 @@
 
 #include <Core/Platform.h>
 #include <Core/CUDA.h>
-#include <optix.h>
+#include <Core/Optix.h>
 #include <optix_types.h>
 #include <cuda_fp16.h>
 

@@ -4,7 +4,7 @@
 #include <Core/Memory.h>
 #include <Core/Platform.h>
 
-#include <optix.h>
+#include <Core/Optix.h>
 
 namespace atcg
 {
