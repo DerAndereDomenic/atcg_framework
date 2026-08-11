@@ -1,6 +1,6 @@
 #include <Shape/MeshShape.h>
 
-#include <Core/Common.h>
+#include <Core/Optix.h>
 
 #include <optix_stubs.h>
 

@@ -2,7 +2,7 @@
 #include <ATen/cuda/ApplyGridUtils.cuh>
 #include <c10/cuda/CUDAGuard.h>
 #include <Shape/MeshShape.h>
-#include <Core/Common.h>
+#include <Core/Optix.h>
 
 namespace atcg
 {

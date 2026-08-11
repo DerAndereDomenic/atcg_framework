@@ -4,7 +4,7 @@
 #include <Material/Material.h>
 #include <Material/DielectricMaterial.h>
 
-#include <Core/Common.h>
+#include <Core/Optix.h>
 
 namespace atcg
 {

@@ -1,6 +1,6 @@
 #include <BSDF/PBRBSDF.h>
 
-#include <Core/Common.h>
+#include <Core/Optix.h>
 #include <Renderer/Texture.h>
 #include <Material/OpaqueMaterial.h>
 

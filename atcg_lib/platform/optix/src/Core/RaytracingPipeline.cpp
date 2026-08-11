@@ -1,6 +1,6 @@
 #include <Core/RaytracingPipeline.h>
 
-#include <Core/Common.h>
+#include <Core/Optix.h>
 
 #include <unordered_map>
 

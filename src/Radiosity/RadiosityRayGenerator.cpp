@@ -1,6 +1,6 @@
 #include "RadiosityRayGenerator.h"
 
-#include <Core/Common.h>
+#include <Core/Optix.h>
 #include <DataStructure/Graph.h>
 
 void RadiosityRayGenerator::initializePipeline()

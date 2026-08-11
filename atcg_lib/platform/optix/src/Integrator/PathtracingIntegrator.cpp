@@ -3,7 +3,7 @@
 #include <Core/Path.h>
 #include <Core/Assert.h>
 #include <Core/CUDA.h>
-#include <Core/Common.h>
+#include <Core/Optix.h>
 #include <Scene/Components.h>
 #include <Scene/Entity.h>
 #include <Shape/Shape.h>

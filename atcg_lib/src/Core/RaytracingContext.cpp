@@ -1,6 +1,6 @@
 #include <Renderer/RaytracingContext.h>
 
-#include <Core/Common.h>
+#include <Core/Optix.h>
 #include <Core/CUDA.h>
 #include <Core/Assert.h>
 

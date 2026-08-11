@@ -9,7 +9,7 @@
 
 #ifdef ATCG_CUDA_BACKEND
     #include <Core/CUDA.h>
-    #include <Core/Common.h>
+    #include <Core/Optix.h>
     #include <Scene/Components.h>
     #include <Scene/Entity.h>
     #include <Shape/Shape.h>

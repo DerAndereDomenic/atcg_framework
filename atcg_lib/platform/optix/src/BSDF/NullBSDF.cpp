@@ -1,6 +1,6 @@
 #include <BSDF/NullBSDF.h>
 
-#include <Core/Common.h>
+#include <Core/Optix.h>
 
 namespace atcg
 {

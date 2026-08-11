@@ -8,7 +8,7 @@
 #include <random>
 #include <portable-file-dialogs.h>
 
-#include <Core/Common.h>
+#include <Core/Optix.h>
 #include <torch/optim.h>
 
 #include "NeuralTexture.h"
