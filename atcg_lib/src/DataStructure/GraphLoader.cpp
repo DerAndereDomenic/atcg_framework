@@ -5,6 +5,7 @@
 #include <Scene/Scene.h>
 #include <Scene/Entity.h>
 #include <Scene/Components.h>
+#include <Material/OpaqueMaterial.h>
 
 namespace atcg
 {

@@ -15,6 +15,7 @@
 #include <Utils/Utils.h>
 #include <Renderer/Renderer.h>
 #include <Scene/SceneRenderer.h>
+#include <Material/MaterialRegistry.h>
 
 namespace atcg
 {
@@ -890,7 +891,8 @@ void AssetPanel::drawAdd()
         }
         if(_panel_state == AssetType::Material)
         {
-            new_asset = AssetManager::registerAsset(atcg::make_ref<OpaqueMaterial>(), "material");
+            Dictionary dict;    // No parameters
+            new_asset = AssetManager::registerAsset(atcg::MaterialRegistry::createMaterial("Opaque", dict), "material");
         }
         if(_panel_state == AssetType::Script)
         {

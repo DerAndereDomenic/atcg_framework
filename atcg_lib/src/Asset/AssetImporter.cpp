@@ -7,6 +7,7 @@
 #include <Scripting/Script.h>
 #include <Renderer/Shader.h>
 #include <Scene/Serializer.h>
+#include <Material/MaterialRegistry.h>
 
 #include <json.hpp>
 
@@ -16,20 +17,11 @@ namespace atcg
 namespace detail
 {
 
-#define DIFFUSE_KEY           "Diffuse"
-#define DIFFUSE_TEXTURE_KEY   "DiffuseTexture"
-#define NORMAL_TEXTURE_KEY    "NormalTexture"
-#define ROUGHNESS_KEY         "Roughness"
-#define ROUGHNESS_TEXTURE_KEY "RoughnessTexture"
-#define METALLIC_KEY          "Metallic"
-#define METALLIC_TEXTURE_KEY  "MetallicTexture"
-#define IOR_KEY               "IoR"
-#define IOR_TEXTURE_KEY       "IoRTexture"
-#define TYPE_KEY              "Type"
-#define VERTICES_KEY          "Vertices"
-#define FACES_KEY             "Faces"
-#define EDGES_KEY             "Edges"
-#define GEOMETRY_KEY          "Geometry"
+#define TYPE_KEY     "Type"
+#define VERTICES_KEY "Vertices"
+#define FACES_KEY    "Faces"
+#define EDGES_KEY    "Edges"
+#define GEOMETRY_KEY "Geometry"
 
 atcg::ref_ptr<Material> deserializeMaterialType_ver1(const std::filesystem::path& path,
                                                      const nlohmann::json& material_node)

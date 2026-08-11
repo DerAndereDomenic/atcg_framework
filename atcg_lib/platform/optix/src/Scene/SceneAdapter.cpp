@@ -6,6 +6,7 @@
 #include <Core/Path.h>
 #include <Core/Assert.h>
 #include <BSDF/BSDFRegistry.h>
+#include <Material/MaterialRegistry.h>
 
 // !TEST
 #include <Medium/HenyeyGreensteinPhaseFunction.h>
@@ -418,7 +419,8 @@ SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene, const uint32_t width, con
     }
 
     // Insert default material
-    atcg::ref_ptr<Material> material = atcg::make_ref<OpaqueMaterial>();
+    atcg::Dictionary default_material_dict;
+    atcg::ref_ptr<Material> material = atcg::MaterialRegistry::createMaterial("Opaque", default_material_dict);
     atcg::Dictionary bsdf_dict;
     bsdf_dict.setValue("material", material);
     atcg::ref_ptr<BSDF> bsdf = BSDFRegistry::createBSDF(material->getMaterialType(), bsdf_dict, _pipeline, _sbt);

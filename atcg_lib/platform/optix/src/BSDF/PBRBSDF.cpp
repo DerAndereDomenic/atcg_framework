@@ -2,6 +2,7 @@
 
 #include <Core/Common.h>
 #include <Renderer/Texture.h>
+#include <Material/OpaqueMaterial.h>
 
 namespace atcg
 {

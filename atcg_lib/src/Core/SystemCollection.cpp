@@ -6,7 +6,6 @@
 #include <Plugin/Plugin.h>
 #include <Renderer/ContextManager.h>
 #include <Renderer/GraphicsAPI.h>
-#include <Material/Material.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/ShaderManager.h>
 #include <Renderer/VRSystem.h>
@@ -15,6 +14,12 @@
 #include <Scene/RevisionStack.h>
 #include <Scene/SceneRenderer.h>
 #include <Scripting/ScriptEngine.h>
+
+#include <Material/Material.h>
+#include <Material/MaterialRegistry.h>
+#include <Material/DielectricMaterial.h>
+#include <Material/OpaqueMaterial.h>
+#include <Material/NullMaterial.h>
 
 // Render Passes
 #include <Renderer/RenderPasses/TonemapPass.h>

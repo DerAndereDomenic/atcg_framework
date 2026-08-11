@@ -48,9 +48,15 @@
 #include <Renderer/VertexArray.h>
 #include <Renderer/Texture.h>
 #include <Renderer/Framebuffer.h>
-#include <Material/Material.h>
 #include <Renderer/VRSystem.h>
 #include <Renderer/RenderGraph.h>
+
+//-------- Material ------
+#include <Material/Material.h>
+#include <Material/MaterialRegistry.h>
+#include <Material/DielectricMaterial.h>
+#include <Material/OpaqueMaterial.h>
+#include <Material/NullMaterial.h>
 
 //-------- Render Passes ------
 #include <Renderer/RenderPasses/ShadowPass.h>

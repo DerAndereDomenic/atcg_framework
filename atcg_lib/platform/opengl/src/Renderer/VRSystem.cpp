@@ -7,6 +7,7 @@
 #include <Renderer/Renderer.h>
 #include <Events/VREvent.h>
 #include <openvr.h>
+#include <Material/OpaqueMaterial.h>
 
 #include <Scene/Entity.h>
 #include <Scene/Components.h>

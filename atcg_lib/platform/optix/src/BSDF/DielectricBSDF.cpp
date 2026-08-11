@@ -2,6 +2,7 @@
 
 #include <Renderer/Texture.h>
 #include <Material/Material.h>
+#include <Material/DielectricMaterial.h>
 
 #include <Core/Common.h>
 
