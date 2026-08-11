@@ -117,13 +117,15 @@ void TestIntegrator::generateRays(Dictionary& in_out_dictionary)
     in_out_dictionary.setValue("entity_ids", output_entities);
 }
 
-DiffuseMaterial::DiffuseMaterial() : atcg::Material("Diffuse")
+DiffuseMaterial::DiffuseMaterial(const atcg::Dictionary& dict) : atcg::Material("Diffuse", dict)
 {
     atcg::TextureSpecification spec_diffuse;
     spec_diffuse.width  = 1;
     spec_diffuse.height = 1;
     glm::u8vec4 white(255);
     _diffuse_texture = atcg::Texture2D::create(&white, spec_diffuse);
+
+    _diffuse_texture = dict.getValueOr<atcg::ref_ptr<atcg::Texture2D>>("diffuse_texture", _diffuse_texture);
 }
 
 void DiffuseMaterial::uploadMaterial(atcg::RendererSystem* renderer, const atcg::ref_ptr<atcg::Shader>& shader)
@@ -156,7 +158,7 @@ void DiffuseMaterial::uploadMaterial(atcg::RendererSystem* renderer, const atcg:
 
 atcg::ref_ptr<atcg::Material> DiffuseMaterial::clone() const
 {
-    atcg::ref_ptr<DiffuseMaterial> material = atcg::make_ref<DiffuseMaterial>();
+    atcg::ref_ptr<DiffuseMaterial> material = atcg::make_ref<DiffuseMaterial>(atcg::Dictionary());
 
     material->setDiffuseTexture(std::dynamic_pointer_cast<atcg::Texture2D>(getDiffuseTexture()->clone()));
 

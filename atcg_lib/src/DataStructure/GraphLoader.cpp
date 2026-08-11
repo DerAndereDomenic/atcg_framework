@@ -352,7 +352,8 @@ atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
     for(uint32_t i = 0; i < materials_obj.size(); ++i)
     {
         const tinyobj::material_t& mat_obj = materials_obj[i];
-        auto material                      = atcg::make_ref<atcg::OpaqueMaterial>();
+        atcg::Dictionary dict;
+        auto material = atcg::make_ref<atcg::OpaqueMaterial>(dict);
 
         if(mat_obj.diffuse_texname != "")
         {

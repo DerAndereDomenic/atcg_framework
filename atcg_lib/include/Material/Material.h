@@ -24,7 +24,7 @@ struct ATCG_API Material : public Asset
     /**
      * @brief Constructor
      */
-    Material(const std::string& type);
+    Material(const std::string& type, const atcg::Dictionary& dict);
 
     virtual ~Material() {}
 

@@ -5,6 +5,7 @@
 #include <Asset/AssetExporter.h>
 #include <Asset/Project.h>
 #include <DataStructure/GraphLoader.h>
+#include <Material/OpaqueMaterial.h>
 
 #include <json.hpp>
 
@@ -467,7 +468,7 @@ void AssetManagerSystem::loadStandardAssets()
     }
 
     _dummy_skybox             = atcg::make_ref<Skybox>();
-    _default_material         = atcg::make_ref<OpaqueMaterial>();
+    _default_material         = atcg::make_ref<OpaqueMaterial>(atcg::Dictionary());
     _default_material->handle = 7;    // Assign a fixed handle for the standard default material
 
     registerStandardAssets();

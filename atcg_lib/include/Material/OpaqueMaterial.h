@@ -8,7 +8,7 @@ namespace atcg
 class ATCG_API OpaqueMaterial : public MicrofacetMaterial
 {
 public:
-    OpaqueMaterial();
+    OpaqueMaterial(const atcg::Dictionary& dict);
 
     /**
      * @brief Get the normal texture.

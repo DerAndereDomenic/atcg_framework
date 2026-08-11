@@ -19,7 +19,7 @@
 
 namespace atcg
 {
-DielectricMaterial::DielectricMaterial() : MicrofacetMaterial("Dielectric")
+DielectricMaterial::DielectricMaterial(const atcg::Dictionary& dict) : MicrofacetMaterial("Dielectric", dict)
 {
     _flags = _flags | MaterialFlag::GlossyTransmission | MaterialFlag::DiffuseTransmission;
 }
@@ -62,7 +62,8 @@ void DielectricMaterial::uploadMaterial(RendererSystem* renderer, const atcg::re
 
 atcg::ref_ptr<Material> DielectricMaterial::clone() const
 {
-    atcg::ref_ptr<DielectricMaterial> material = atcg::make_ref<DielectricMaterial>();
+    atcg::Dictionary dict;
+    atcg::ref_ptr<DielectricMaterial> material = atcg::make_ref<DielectricMaterial>(dict);
 
     material->setDiffuseTexture(std::dynamic_pointer_cast<atcg::Texture2D>(getDiffuseTexture()->clone()));
     material->setRoughnessTexture(std::dynamic_pointer_cast<atcg::Texture2D>(getRoughnessTexture()->clone()));
@@ -376,7 +377,8 @@ atcg::ref_ptr<DielectricMaterial>
 MaterialSerializer<DielectricMaterial>::deserialize(const std::filesystem::path& path,
                                                     const nlohmann::json& material_node)
 {
-    atcg::ref_ptr<DielectricMaterial> material = atcg::make_ref<DielectricMaterial>();
+    atcg::Dictionary dict;
+    atcg::ref_ptr<DielectricMaterial> material = atcg::make_ref<DielectricMaterial>(dict);
 
     // Diffuse
     if(material_node.contains(DIFFUSE_KEY))

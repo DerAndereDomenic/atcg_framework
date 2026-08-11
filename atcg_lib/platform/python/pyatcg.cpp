@@ -1151,7 +1151,13 @@ inline void defineBindings(py::module_& m)
              })
         .def("getMaterialType", &atcg::Material::getMaterialType);
 
-    m_opaque_material.def(py::init<>())
+    m_opaque_material
+        .def(py::init<>(
+            []()
+            {
+                atcg::Dictionary dict;
+                return atcg::make_ref<atcg::OpaqueMaterial>(dict);
+            }))
         .def("getDiffuseTexture", &atcg::OpaqueMaterial::getDiffuseTexture)
         .def("getNormalTexture", &atcg::OpaqueMaterial::getNormalTexture)
         .def("getRoughnessTexture", &atcg::OpaqueMaterial::getRoughnessTexture)
@@ -1171,7 +1177,13 @@ inline void defineBindings(py::module_& m)
         .def("setIor", &atcg::OpaqueMaterial::setIor)
         .def("removeNormalMap", &atcg::OpaqueMaterial::removeNormalMap);
 
-    m_dielectric_material.def(py::init<>())
+    m_dielectric_material
+        .def(py::init<>(
+            []()
+            {
+                atcg::Dictionary dict;
+                return atcg::make_ref<atcg::DielectricMaterial>(dict);
+            }))
         .def("getDiffuseTexture", &atcg::DielectricMaterial::getDiffuseTexture)
         .def("getRoughnessTexture", &atcg::DielectricMaterial::getRoughnessTexture)
         .def("getIorTexture", &atcg::DielectricMaterial::getIorTexture)

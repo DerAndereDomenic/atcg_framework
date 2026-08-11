@@ -7,7 +7,7 @@ namespace atcg
 class ATCG_API MicrofacetMaterial : public Material
 {
 public:
-    MicrofacetMaterial(const std::string& type);
+    MicrofacetMaterial(const std::string& type, const atcg::Dictionary& dict);
 
     /**
      * @brief Get the diffuse texture.

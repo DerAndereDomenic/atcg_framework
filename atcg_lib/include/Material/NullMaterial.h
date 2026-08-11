@@ -8,7 +8,7 @@ namespace atcg
 class ATCG_API NullMaterial : public Material
 {
 public:
-    NullMaterial();
+    NullMaterial(const atcg::Dictionary& dict);
 
     /**
      * @brief Upload the material to a shader

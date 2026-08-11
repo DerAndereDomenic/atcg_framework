@@ -8,7 +8,7 @@ namespace atcg
 class ATCG_API DielectricMaterial : public MicrofacetMaterial
 {
 public:
-    DielectricMaterial();
+    DielectricMaterial(const atcg::Dictionary& dict);
 
     /**
      * @brief Upload the material to a shader

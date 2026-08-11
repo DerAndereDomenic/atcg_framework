@@ -2,7 +2,7 @@
 
 namespace atcg
 {
-MicrofacetMaterial::MicrofacetMaterial(const std::string& type) : Material(type)
+MicrofacetMaterial::MicrofacetMaterial(const std::string& type, const atcg::Dictionary& dict) : Material(type, dict)
 {
     TextureSpecification spec_diffuse;
     spec_diffuse.width  = 1;
@@ -23,6 +23,10 @@ MicrofacetMaterial::MicrofacetMaterial(const std::string& type) : Material(type)
     spec_ior.format = TextureFormat::RFLOAT;
     float ior_value = 1.45f;
     _ior_texture    = atcg::Texture2D::create(&ior_value, spec_ior);
+
+    _diffuse_texture   = dict.getValueOr<atcg::ref_ptr<atcg::Texture2D>>("diffuse_texture", _diffuse_texture);
+    _roughness_texture = dict.getValueOr<atcg::ref_ptr<atcg::Texture2D>>("roughness_texture", _roughness_texture);
+    _ior_texture       = dict.getValueOr<atcg::ref_ptr<atcg::Texture2D>>("ior_texture", _ior_texture);
 
     _flags = MaterialFlag::GlossyReflection | MaterialFlag::DiffuseReflection;
 }

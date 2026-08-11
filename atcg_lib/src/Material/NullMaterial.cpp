@@ -19,7 +19,7 @@
 
 namespace atcg
 {
-NullMaterial::NullMaterial() : Material("Null")
+NullMaterial::NullMaterial(const atcg::Dictionary& dict) : Material("Null", dict)
 {
     _flags = MaterialFlag::IdealTransmission | MaterialFlag::NullTransmission;
 }
@@ -63,7 +63,8 @@ void NullMaterial::uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<
 
 atcg::ref_ptr<Material> NullMaterial::clone() const
 {
-    atcg::ref_ptr<NullMaterial> material = atcg::make_ref<NullMaterial>();
+    atcg::Dictionary dict;
+    atcg::ref_ptr<NullMaterial> material = atcg::make_ref<NullMaterial>(dict);
 
     return material;
 }
@@ -96,6 +97,6 @@ void MaterialSerializer<NullMaterial>::serialize(const atcg::ref_ptr<NullMateria
 atcg::ref_ptr<NullMaterial> MaterialSerializer<NullMaterial>::deserialize(const std::filesystem::path& path,
                                                                           const nlohmann::json& material_node)
 {
-    return atcg::make_ref<NullMaterial>();
+    return atcg::make_ref<NullMaterial>(atcg::Dictionary());
 }
 }    // namespace atcg

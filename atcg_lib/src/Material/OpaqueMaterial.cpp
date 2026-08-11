@@ -22,7 +22,7 @@
 
 namespace atcg
 {
-OpaqueMaterial::OpaqueMaterial() : MicrofacetMaterial("Opaque")
+OpaqueMaterial::OpaqueMaterial(const atcg::Dictionary& dict) : MicrofacetMaterial("Opaque", dict)
 {
     TextureSpecification spec_normal;
     spec_normal.width  = 1;
@@ -36,6 +36,9 @@ OpaqueMaterial::OpaqueMaterial() : MicrofacetMaterial("Opaque")
     spec_metallic.format = TextureFormat::RFLOAT;
     float metallic       = 0.0f;
     _metallic_texture    = atcg::Texture2D::create(&metallic, spec_metallic);
+
+    _normal_texture   = dict.getValueOr<atcg::ref_ptr<atcg::Texture2D>>("normal_texture", _normal_texture);
+    _metallic_texture = dict.getValueOr<atcg::ref_ptr<atcg::Texture2D>>("metallic_texture", _metallic_texture);
 }
 
 void OpaqueMaterial::setMetallic(const float metallic)
@@ -94,7 +97,8 @@ void OpaqueMaterial::uploadMaterial(RendererSystem* renderer, const atcg::ref_pt
 
 atcg::ref_ptr<Material> OpaqueMaterial::clone() const
 {
-    atcg::ref_ptr<OpaqueMaterial> material = atcg::make_ref<OpaqueMaterial>();
+    atcg::Dictionary dict;
+    atcg::ref_ptr<OpaqueMaterial> material = atcg::make_ref<OpaqueMaterial>(dict);
 
     material->setDiffuseTexture(std::dynamic_pointer_cast<atcg::Texture2D>(getDiffuseTexture()->clone()));
     material->setRoughnessTexture(std::dynamic_pointer_cast<atcg::Texture2D>(getRoughnessTexture()->clone()));
@@ -554,7 +558,7 @@ void MaterialSerializer<OpaqueMaterial>::serialize(const atcg::ref_ptr<OpaqueMat
 atcg::ref_ptr<OpaqueMaterial> MaterialSerializer<OpaqueMaterial>::deserialize(const std::filesystem::path& path,
                                                                               const nlohmann::json& material_node)
 {
-    atcg::ref_ptr<OpaqueMaterial> material = atcg::make_ref<OpaqueMaterial>();
+    atcg::ref_ptr<OpaqueMaterial> material = atcg::make_ref<OpaqueMaterial>(atcg::Dictionary());
 
     // Diffuse
     if(material_node.contains(DIFFUSE_KEY))
@@ -635,4 +639,4 @@ void OpaqueMaterial::registerMaterial(MaterialRegistry::Registry* registry)
 {
     ATCG_REGISTER_MATERIAL(registry, "Opaque", OpaqueMaterial);
 }
-}
+}    // namespace atcg

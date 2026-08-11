@@ -6,7 +6,7 @@
 
 namespace atcg
 {
-Material::Material(const std::string& type) : _material_type(type) {}
+Material::Material(const std::string& type, const atcg::Dictionary& dict) : _material_type(type) {}
 
 void Material::releaseTextureIDs(RendererSystem* renderer)
 {

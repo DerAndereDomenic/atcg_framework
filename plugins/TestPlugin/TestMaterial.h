@@ -8,7 +8,7 @@ namespace atcg
 class DiffuseMaterial : public atcg::Material
 {
 public:
-    DiffuseMaterial();
+    DiffuseMaterial(const atcg::Dictionary& dict);
 
     virtual void uploadMaterial(atcg::RendererSystem* renderer, const atcg::ref_ptr<atcg::Shader>& shader) override;
 

@@ -87,7 +87,7 @@ ATCG_INLINE atcg::ref_ptr<Material> deserializeMaterial(std::string_view materia
 #define ATCG_REGISTER_MATERIAL(registry, MaterialType, MaterialClass)                                                  \
     {                                                                                                                  \
         atcg::MaterialRegistry::MaterialFunctions functions = {                                                        \
-            [](const atcg::Dictionary& dict) { return atcg::make_ref<MaterialClass>(); },                              \
+            [](const atcg::Dictionary& dict) { return atcg::make_ref<MaterialClass>(dict); },                          \
             [](const atcg::ref_ptr<atcg::Material>& material, const std::string& key, bool& deactivated)               \
             {                                                                                                          \
                 return atcg::MaterialGUIRenderer<MaterialClass>::renderGUI(                                            \
@@ -108,7 +108,7 @@ ATCG_INLINE atcg::ref_ptr<Material> deserializeMaterial(std::string_view materia
 #define ATCG_REGISTER_MATERIAL_PLUGIN(registry, handle, MaterialType, MaterialClass)                                   \
     {                                                                                                                  \
         atcg::MaterialRegistry::MaterialFunctions functions = {                                                        \
-            [](const atcg::Dictionary& dict) { return atcg::make_ref<MaterialClass>(); },                              \
+            [](const atcg::Dictionary& dict) { return atcg::make_ref<MaterialClass>(dict); },                          \
             [](const atcg::ref_ptr<atcg::Material>& material, const std::string& key, bool& deactivated)               \
             {                                                                                                          \
                 return atcg::MaterialGUIRenderer<MaterialClass>::renderGUI(                                            \
