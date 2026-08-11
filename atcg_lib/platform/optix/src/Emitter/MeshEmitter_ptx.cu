@@ -4,7 +4,7 @@
 
 #include <Math/Random.h>
 #include <Utils/HostDevice.h>
-#include <Core/SurfaceInteraction.h>
+#include <DataStructure/SurfaceInteraction.h>
 
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <Emitter/MeshEmitterData.cuh>

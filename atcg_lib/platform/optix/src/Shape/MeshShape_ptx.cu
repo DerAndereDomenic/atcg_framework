@@ -1,6 +1,6 @@
 #pragma cuda_source_property_format = PTX
 
-#include <Core/SurfaceInteraction.h>
+#include <DataStructure/SurfaceInteraction.h>
 #include <Shape/ShapeInstanceData.cuh>
 #include <Shape/MeshShapeData.cuh>
 #include <Core/Payload.h>

@@ -5,7 +5,7 @@
 #include <Math/Random.h>
 
 #include <Utils/HostDevice.h>
-#include <Core/SurfaceInteraction.h>
+#include <DataStructure/SurfaceInteraction.h>
 #include <BSDF/BSDFVPtrTable.cuh>
 #include <BSDF/PBRBSDFData.cuh>
 #include <BSDF/BSDFFunctions.h>

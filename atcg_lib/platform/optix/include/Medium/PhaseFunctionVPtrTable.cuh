@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/glm.h>
-#include <Core/SurfaceInteraction.h>
+#include <DataStructure/SurfaceInteraction.h>
 #include <Math/Random.h>
 #include <optix.h>
 

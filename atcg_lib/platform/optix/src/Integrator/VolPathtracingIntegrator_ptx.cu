@@ -5,7 +5,7 @@
 #include <Integrator/VolPathtracingData.cuh>
 
 #include <Core/TraceParameters.h>
-#include <Core/SurfaceInteraction.h>
+#include <DataStructure/SurfaceInteraction.h>
 #include <Core/Payload.h>
 #include <Math/Random.h>
 #include <Integrator/MIS.h>

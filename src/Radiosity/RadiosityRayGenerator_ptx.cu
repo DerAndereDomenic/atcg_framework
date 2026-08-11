@@ -5,7 +5,7 @@
 #include <Core/TraceParameters.h>
 #include <Core/Platform.h>
 #include <Math/Random.h>
-#include <Core/SurfaceInteraction.h>
+#include <DataStructure/SurfaceInteraction.h>
 #include <Core/Payload.h>
 #include "RadiosityParams.h"
 
