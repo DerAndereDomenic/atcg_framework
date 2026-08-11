@@ -27,7 +27,6 @@ if(ATCG_CUDA_BACKEND)
     target_compile_definitions(atcg_lib PUBLIC ATCG_CUDA_BACKEND)
     target_link_libraries(atcg_lib PUBLIC CUDA::cudart_static)
     target_link_libraries(atcg_lib PUBLIC CUDA::nvjpeg)
-    target_link_libraries(atcg_lib PUBLIC atcg::optix)
     target_link_libraries(atcg_lib PUBLIC cuBQL)
 else()
     set(ATCG_BACKEND "cpu")
@@ -120,6 +119,7 @@ target_link_libraries(atcg_lib PUBLIC OpenMeshCore
                                       Python::Python
                                       torch_python_interface
                                       atcg::openvr
+                                      atcg::optix
 )
 
 target_link_libraries(atcg_lib PRIVATE atcg::glad

@@ -210,11 +210,9 @@ if(NOT TARGET sfml)
 endif()
 
 # optix
-if(CMAKE_CUDA_COMPILER)
-    add_library(atcg_optix INTERFACE)
-    target_include_directories(atcg_optix INTERFACE "external/OptiX/include")
-    add_library(atcg::optix ALIAS atcg_optix)
-endif()
+add_library(atcg_optix INTERFACE)
+target_include_directories(atcg_optix INTERFACE "external/OptiX/include")
+add_library(atcg::optix ALIAS atcg_optix)
 
 # cuBQL
 if(CMAKE_CUDA_COMPILER)
