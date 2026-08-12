@@ -23,6 +23,24 @@ HomogeneousMedium::HomogeneousMedium(const Dictionary& dict) : Medium("Homogeneo
     _flags = MediumFlags::Homogeneous;
 }
 
+void HomogeneousMedium::uploadMedium(RendererSystem* renderer,
+                                     const atcg::ref_ptr<Shader>& shader,
+                                     const glm::mat4& model)
+{
+    // TODO: Not used here but needs to be set
+    uint32_t albedo_id   = renderer->popTextureID();
+    _texture_ids[0]      = albedo_id;
+    uint32_t density_id  = renderer->popTextureID();
+    _texture_ids[1]      = density_id;
+    uint32_t emission_id = renderer->popTextureID();
+    _texture_ids[2]      = emission_id;
+
+    shader->setVec3("albedo", _albedo);
+    shader->setFloat("density", _density);
+    shader->setFloat("Le", _Le);
+    shader->setVec3("Le_color", _Le_color);
+}
+
 atcg::ref_ptr<Medium> HomogeneousMedium::clone() const
 {
     auto medium       = atcg::make_ref<HomogeneousMedium>(atcg::Dictionary());

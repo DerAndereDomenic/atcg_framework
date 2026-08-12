@@ -4,8 +4,10 @@
 #include <Core/API.h>
 #include <DataStructure/Dictionary.h>
 #include <Material/MediumFlags.h>
+#include <Renderer/Renderer.h>
 #include <json.hpp>
 #include <filesystem>
+#include <array>
 
 namespace atcg
 {
@@ -26,7 +28,14 @@ public:
 
     virtual atcg::ref_ptr<Medium> clone() const = 0;
 
+    virtual void
+    uploadMedium(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader, const glm::mat4& model) = 0;
+
+    void releaseTextureIDs(RendererSystem* renderer);
+
 protected:
+    std::array<uint32_t, 3> _texture_ids;
+    bool _uploaded = false;
     std::string _medium_type;
     MediumFlags _flags = MediumFlags::None;
 };

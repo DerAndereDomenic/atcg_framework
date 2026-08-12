@@ -1,6 +1,7 @@
 #include <Material/HeterogeneousMedium.h>
 
 #include <Asset/AssetManagerSystem.h>
+#include <Core/glm.h>
 #include <Utils/Utils.h>
 
 #ifndef ATCG_HEADLESS
@@ -52,6 +53,57 @@ atcg::ref_ptr<Texture3D> HeterogeneousMedium::emission() const
     return AssetManager::isAssetHandleValid(emission_grid.handle)
                ? AssetManager::getAsset<Texture3D>(emission_grid.handle)
                : _default_emission_texture;
+}
+
+void HeterogeneousMedium::uploadMedium(RendererSystem* renderer,
+                                       const atcg::ref_ptr<Shader>& shader,
+                                       const glm::mat4& model)
+{
+    uint32_t albedo_id   = renderer->popTextureID();
+    _texture_ids[0]      = albedo_id;
+    uint32_t density_id  = renderer->popTextureID();
+    _texture_ids[1]      = density_id;
+    uint32_t emission_id = renderer->popTextureID();
+    _texture_ids[2]      = emission_id;
+
+    if(density())
+    {
+        shader->setInt("density_grid", density_id);
+        shader->setFloat("density_scale", density_grid.scale);
+        glm::mat4 to_uvw = glm::mat4(1);
+        glm::vec3 scale  = density_grid.bbox.max - density_grid.bbox.min;
+        to_uvw           = to_uvw * glm::scale(1.0f / scale);
+        to_uvw           = to_uvw * glm::translate(-density_grid.bbox.min);
+        to_uvw           = to_uvw * glm::inverse(model);
+        shader->setMat4("density_to_uvw", to_uvw);
+        GraphicsCommand::bindTexture(density_id, density());
+    }
+
+    if(albedo())
+    {
+        shader->setInt("albedo_grid", albedo_id);
+        shader->setFloat("albedo_scale", albedo_grid.scale);
+        glm::mat4 to_uvw = glm::mat4(1);
+        glm::vec3 scale  = albedo_grid.bbox.max - albedo_grid.bbox.min;
+        to_uvw           = to_uvw * glm::scale(1.0f / scale);
+        to_uvw           = to_uvw * glm::translate(-albedo_grid.bbox.min);
+        to_uvw           = to_uvw * glm::inverse(model);
+        shader->setMat4("albedo_to_uvw", to_uvw);
+        GraphicsCommand::bindTexture(albedo_id, albedo());
+    }
+
+    if(emission())
+    {
+        shader->setInt("emission_grid", emission_id);
+        shader->setFloat("emission_scale", emission_grid.scale);
+        glm::mat4 to_uvw = glm::mat4(1);
+        glm::vec3 scale  = emission_grid.bbox.max - emission_grid.bbox.min;
+        to_uvw           = to_uvw * glm::scale(1.0f / scale);
+        to_uvw           = to_uvw * glm::translate(-emission_grid.bbox.min);
+        to_uvw           = to_uvw * glm::inverse(model);
+        shader->setMat4("emission_to_uvw", to_uvw);
+        GraphicsCommand::bindTexture(emission_id, emission());
+    }
 }
 
 atcg::ref_ptr<Medium> HeterogeneousMedium::clone() const

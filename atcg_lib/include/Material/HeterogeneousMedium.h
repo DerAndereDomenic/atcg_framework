@@ -18,6 +18,9 @@ public:
 
     atcg::ref_ptr<Texture3D> emission() const;
 
+    virtual void
+    uploadMedium(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader, const glm::mat4& model) override;
+
     virtual atcg::ref_ptr<Medium> clone() const override;
 
     static void registerMedium(MediumRegistry::Registry* registry);

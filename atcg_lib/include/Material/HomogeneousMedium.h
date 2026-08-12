@@ -26,9 +26,13 @@ public:
 
     ATCG_INLINE glm::vec3 Le_color() const { return _Le_color; }
 
+    virtual void
+    uploadMedium(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader, const glm::mat4& model) override;
+
     virtual atcg::ref_ptr<Medium> clone() const override;
 
     static void registerMedium(MediumRegistry::Registry* registry);
+
 
 private:
     glm::vec3 _albedo   = glm::vec3(0);
