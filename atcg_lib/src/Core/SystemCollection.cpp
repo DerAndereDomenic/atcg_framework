@@ -17,13 +17,16 @@
 
 #include <Material/Material.h>
 #include <Material/Medium.h>
+#include <Material/PhaseFunction.h>
 #include <Material/MaterialRegistry.h>
 #include <Material/MediumRegistry.h>
+#include <Material/PhaseFunctionRegistry.h>
 #include <Material/DielectricMaterial.h>
 #include <Material/OpaqueMaterial.h>
 #include <Material/NullMaterial.h>
 #include <Material/HomogeneousMedium.h>
 #include <Material/HeterogeneousMedium.h>
+#include <Material/HenyeyGreensteinPhaseFunction.h>
 
 // Render Passes
 #include <Renderer/RenderPasses/TonemapPass.h>
@@ -78,6 +81,7 @@ public:
     atcg::ref_ptr<ShaderManagerSystem> _shader_manager;
     atcg::ref_ptr<MaterialRegistry::Registry> _material_registry;
     atcg::ref_ptr<MediumRegistry::Registry> _medium_registry;
+    atcg::ref_ptr<PhaseFunctionRegistry::Registry> _phase_function_registry;
     atcg::ref_ptr<RenderPassRegistry::Registry> _render_pass_registry;
     atcg::ref_ptr<SceneRendererSystem> _scene_renderer;
     atcg::ref_ptr<RendererSystem> _renderer;
@@ -163,6 +167,11 @@ void SystemCollection::Impl::initSystems(const WindowProps& props, const Window:
     HeterogeneousMedium::registerMedium(_medium_registry.get());
 
     SystemRegistry::instance()->registerSystem(_medium_registry.get());
+
+    _phase_function_registry = atcg::make_ref<PhaseFunctionRegistry::Registry>();
+    HenyeyGreensteinPhaseFunction::registerPhaseFunction(_phase_function_registry.get());
+
+    SystemRegistry::instance()->registerSystem(_phase_function_registry.get());
 
     _render_pass_registry = atcg::make_ref<RenderPassRegistry::Registry>();
     OutputPass::registerRenderPass(_render_pass_registry.get());

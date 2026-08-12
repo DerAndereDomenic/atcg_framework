@@ -6,6 +6,8 @@
 #include <Material/MaterialRegistry.h>
 #include <Material/Medium.h>
 #include <Material/MediumRegistry.h>
+#include <Material/PhaseFunction.h>
+#include <Material/PhaseFunctionRegistry.h>
 #include <Renderer/Shader.h>
 #include <DataStructure/Graph.h>
 #include <Scripting/Script.h>
@@ -67,6 +69,14 @@ ATCG_INLINE void serialize_medium_ver1(const atcg::ref_ptr<Medium>& medium, cons
     const std::string& type = medium->getMediumType();
 
     MediumRegistry::serializeMedium(medium, path);
+}
+
+ATCG_INLINE void serialize_phase_function_ver1(const atcg::ref_ptr<PhaseFunction>& phase_function,
+                                               const std::filesystem::path& path)
+{
+    const std::string& type = phase_function->getPhaseFunctionType();
+
+    PhaseFunctionRegistry::serializePhaseFunction(phase_function, path);
 }
 
 ATCG_INLINE void
@@ -269,6 +279,14 @@ export_asset_ver1(const std::filesystem::path& path, const atcg::ref_ptr<Asset>&
             auto medium_path = path / "medium" / std::to_string(asset->handle);
             std::filesystem::create_directories(medium_path);
             serialize_medium_ver1(std::dynamic_pointer_cast<Medium>(asset), medium_path / (data.name + ".medium"));
+        }
+        break;
+        case AssetType::PhaseFunction:
+        {
+            auto phase_function_path = path / "phase_functions" / std::to_string(asset->handle);
+            std::filesystem::create_directories(phase_function_path);
+            serialize_phase_function_ver1(std::dynamic_pointer_cast<PhaseFunction>(asset),
+                                          phase_function_path / (data.name + ".pf"));
         }
         break;
     }

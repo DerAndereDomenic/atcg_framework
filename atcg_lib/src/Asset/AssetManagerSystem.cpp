@@ -20,7 +20,8 @@ static std::map<std::filesystem::path, AssetType> s_asset_extension_map = {{".pn
                                                                            {".graph", AssetType::Graph},
                                                                            {".mat", AssetType::Material},
                                                                            {".scene", AssetType::Scene},
-                                                                           {".medium", AssetType::Medium}};
+                                                                           {".medium", AssetType::Medium},
+                                                                           {".pf", AssetType::PhaseFunction}};
 
 static AssetType getAssetTypeFromFileExtension(const std::filesystem::path& extension)
 {

@@ -3,12 +3,15 @@
 #include <DataStructure/Image.h>
 #include <Renderer/Texture.h>
 #include <Material/Material.h>
+#include <Material/Medium.h>
+#include <Material/PhaseFunction.h>
 #include <DataStructure/Graph.h>
 #include <Scripting/Script.h>
 #include <Renderer/Shader.h>
 #include <Scene/Serializer.h>
 #include <Material/MaterialRegistry.h>
 #include <Material/MediumRegistry.h>
+#include <Material/PhaseFunctionRegistry.h>
 
 #include <json.hpp>
 
@@ -47,6 +50,13 @@ atcg::ref_ptr<Asset> deserializeMedium_ver1(const std::filesystem::path& path, c
 {
     std::string medium_type_string = medium_node.value(TYPE_KEY, "Homogeneous");
     return MediumRegistry::deserializeMedium(medium_type_string, path, medium_node);
+}
+
+atcg::ref_ptr<Asset> deserializePhaseFunction_ver1(const std::filesystem::path& path,
+                                                   const nlohmann::json& phase_function_node)
+{
+    std::string phase_function_type_string = phase_function_node.value(TYPE_KEY, "HenyeyGreenstein");
+    return PhaseFunctionRegistry::deserializePhaseFunction(phase_function_type_string, path, phase_function_node);
 }
 
 std::vector<uint8_t> deserializeBuffer_ver1(const std::filesystem::path& file_name)
@@ -330,6 +340,23 @@ AssetImporter::importAsset(const std::filesystem::path& path, AssetHandle handle
             if(version == "1.0")
             {
                 asset = detail::deserializeMedium_ver1(medium_path, j);
+            }
+        }
+        break;
+        case AssetType::PhaseFunction:
+        {
+            auto phase_function_path = path / "phase_functions" / std::to_string(handle) / (metadata.name + ".pf");
+            if(!std::filesystem::exists(phase_function_path)) break;
+
+            std::ifstream i(phase_function_path);
+            nlohmann::json j;
+            i >> j;
+
+            std::string version = j["Version"];
+
+            if(version == "1.0")
+            {
+                asset = detail::deserializePhaseFunction_ver1(phase_function_path, j);
             }
         }
         break;

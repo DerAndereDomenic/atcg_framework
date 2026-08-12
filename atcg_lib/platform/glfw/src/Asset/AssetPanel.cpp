@@ -17,6 +17,7 @@
 #include <Scene/SceneRenderer.h>
 #include <Material/MaterialRegistry.h>
 #include <Material/MediumRegistry.h>
+#include <Material/PhaseFunctionRegistry.h>
 
 namespace atcg
 {
@@ -222,6 +223,75 @@ void AssetPanel::displayMedium(AssetHandle handle)
     if(updated)
     {
         AssetManager::registerAsset(_preview_medium, AssetManager::getMetaData(_preview_medium->handle).name);
+    }
+
+    if(deactivated && atcg::RevisionStack::isRecording())
+    {
+        atcg::RevisionStack::endRecording();
+    }
+#endif
+}
+
+void AssetPanel::displayPhaseFunction(AssetHandle handle)
+{
+#ifndef ATCG_HEADLESS
+    const std::string key = "phase_function";
+    auto phase_function_  = AssetManager::getAsset<PhaseFunction>(handle);
+
+    if(!phase_function_) return;
+
+    bool updated = false;
+
+    float content_scale = atcg::Application::get()->getWindow()->getContentScale();
+    ImGui::Separator();
+
+    ImGui::Text("Phase Function");
+
+    const std::vector<std::string>& phaseFunctionTypeLabels = PhaseFunctionRegistry::getRegisteredPhaseFunctionTypes();
+
+    std::vector<const char*> phaseFunctionTypeCStrs;
+    for(const auto& label: phaseFunctionTypeLabels)
+        phaseFunctionTypeCStrs.push_back(label.c_str());
+    int currentIndex = static_cast<int>(std::distance(phaseFunctionTypeLabels.begin(),
+                                                      std::find(phaseFunctionTypeLabels.begin(),
+                                                                phaseFunctionTypeLabels.end(),
+                                                                phase_function_->getPhaseFunctionType())));
+
+    bool deactivated                = false;
+    auto _preview_phase_function    = phase_function_->clone();
+    _preview_phase_function->handle = phase_function_->handle;
+    if(ImGui::BeginCombo("Phase Function Type", phase_function_->getPhaseFunctionType().c_str()))
+    {
+        for(int i = 0; i < phaseFunctionTypeLabels.size(); ++i)
+        {
+            bool isSelected = (i == currentIndex);
+            if(ImGui::Selectable(phaseFunctionTypeCStrs[i], isSelected))
+            {
+                Dictionary dict;
+                auto new_type                   = phaseFunctionTypeCStrs[i];
+                _preview_phase_function         = PhaseFunctionRegistry::createPhaseFunction(new_type, dict);
+                _preview_phase_function->handle = handle;
+
+                updated = true;
+            }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
+            if(isSelected) ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
+
+    updated = atcg::PhaseFunctionRegistry::renderPhaseFunctionGUI(_preview_phase_function, key, deactivated) || updated;
+
+    if(updated && !atcg::RevisionStack::isRecording())
+    {
+        atcg::RevisionStack::startRecording<AssetEditedRevision>(_preview_phase_function->handle);
+    }
+
+    if(updated)
+    {
+        AssetManager::registerAsset(_preview_phase_function,
+                                    AssetManager::getMetaData(_preview_phase_function->handle).name);
     }
 
     if(deactivated && atcg::RevisionStack::isRecording())
@@ -893,6 +963,13 @@ void AssetPanel::drawAssetList()
             _panel_state = AssetType::Medium;
         }
         ImGui::SameLine();
+        if(ImageTextButton((ImTextureID)_folder_icon->getID(),
+                           "Phase Functions",
+                           ImVec2(content_scale * 64, content_scale * 64)))
+        {
+            _panel_state = AssetType::PhaseFunction;
+        }
+        ImGui::SameLine();
     }
     else
     {
@@ -920,7 +997,8 @@ void AssetPanel::drawAssetList()
 
             auto icon = _script_icon;
 
-            if(data.type == AssetType::Material)
+            if(data.type == AssetType::Material || data.type == AssetType::Medium ||
+               data.type == AssetType::PhaseFunction)
             {
                 icon = _material_icon;
             }
@@ -1006,6 +1084,13 @@ void AssetPanel::drawAdd()
             Dictionary dict;    // No parameters
             new_asset = AssetManager::registerAsset(atcg::MediumRegistry::createMedium("Homogeneous", dict), "medium");
         }
+        if(_panel_state == AssetType::PhaseFunction)
+        {
+            Dictionary dict;    // No parameters
+            new_asset =
+                AssetManager::registerAsset(atcg::PhaseFunctionRegistry::createPhaseFunction("HenyeyGreenstein", dict),
+                                            "phase_function");
+        }
 
         if(AssetManager::isAssetHandleValid(new_asset))
         {
@@ -1088,7 +1173,10 @@ void AssetPanel::drawAssetEditor()
         {
             displayMedium(_selected_handle);
         }
-
+        else if(data.type == AssetType::PhaseFunction)
+        {
+            displayPhaseFunction(_selected_handle);
+        }
         ImGui::Separator();
 
         bool disabled = false;
