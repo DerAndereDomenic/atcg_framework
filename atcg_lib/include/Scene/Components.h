@@ -7,8 +7,6 @@
 #include <Scene/Components/EdgeRenderComponent.h>
 #include <Scene/Components/EditorCameraComponent.h>
 #include <Scene/Components/GeometryComponent.h>
-#include <Scene/Components/HeterogeneousMediumComponent.h>
-#include <Scene/Components/HomogeneousMediumComponent.h>
 #include <Scene/Components/IDComponent.h>
 #include <Scene/Components/InstanceRenderComponent.h>
 #include <Scene/Components/MeshLightComponent.h>
