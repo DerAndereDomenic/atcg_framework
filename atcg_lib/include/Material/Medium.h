@@ -3,6 +3,7 @@
 #include <Asset/Asset.h>
 #include <Core/API.h>
 #include <DataStructure/Dictionary.h>
+#include <Material/MediumFlags.h>
 #include <json.hpp>
 #include <filesystem>
 
@@ -21,10 +22,13 @@ public:
 
     ATCG_INLINE const std::string& getMediumType() const { return _medium_type; }
 
+    ATCG_INLINE const MediumFlags& getFlags() const { return _flags; }
+
     virtual atcg::ref_ptr<Medium> clone() const = 0;
 
-private:
+protected:
     std::string _medium_type;
+    MediumFlags _flags = MediumFlags::None;
 };
 
 template<typename T>

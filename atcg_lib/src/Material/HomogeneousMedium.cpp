@@ -19,6 +19,8 @@ HomogeneousMedium::HomogeneousMedium(const Dictionary& dict) : Medium("Homogeneo
     _density  = dict.getValueOr<float>("density", _density);
     _Le       = dict.getValueOr<float>("Le", _Le);
     _Le_color = dict.getValueOr<glm::vec3>("Le_color", _Le_color);
+
+    _flags = MediumFlags::Homogeneous;
 }
 
 atcg::ref_ptr<Medium> HomogeneousMedium::clone() const

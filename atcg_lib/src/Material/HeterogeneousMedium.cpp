@@ -32,6 +32,8 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium("Heter
     _default_emission_texture = atcg::Texture3D::create(&black, spec);
 
     _default_albedo_texture = atcg::Texture3D::create(&white, spec);
+
+    _flags = MediumFlags::Heterogeneous;
 }
 
 atcg::ref_ptr<Texture3D> HeterogeneousMedium::density() const
