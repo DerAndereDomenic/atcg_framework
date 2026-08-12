@@ -2,7 +2,7 @@
 
 namespace atcg
 {
-enum class MediumFlags : uint32_t
+enum class MediumFlag : uint32_t
 {
     None          = 0x00,
     Homogeneous   = 0x01,
@@ -11,37 +11,37 @@ enum class MediumFlags : uint32_t
     Any = Homogeneous | Heterogeneous,
 };
 
-ATCG_HOST_DEVICE inline MediumFlags operator~(MediumFlags a)
+ATCG_HOST_DEVICE inline MediumFlag operator~(MediumFlag a)
 {
-    return (MediumFlags) ~(int)a;
+    return (MediumFlag) ~(int)a;
 }
-ATCG_HOST_DEVICE inline MediumFlags operator|(MediumFlags a, MediumFlags b)
+ATCG_HOST_DEVICE inline MediumFlag operator|(MediumFlag a, MediumFlag b)
 {
-    return (MediumFlags)((int)a | (int)b);
+    return (MediumFlag)((int)a | (int)b);
 }
-ATCG_HOST_DEVICE inline MediumFlags operator&(MediumFlags a, MediumFlags b)
+ATCG_HOST_DEVICE inline MediumFlag operator&(MediumFlag a, MediumFlag b)
 {
-    return (MediumFlags)((int)a & (int)b);
+    return (MediumFlag)((int)a & (int)b);
 }
-ATCG_HOST_DEVICE inline MediumFlags operator^(MediumFlags a, MediumFlags b)
+ATCG_HOST_DEVICE inline MediumFlag operator^(MediumFlag a, MediumFlag b)
 {
-    return (MediumFlags)((int)a ^ (int)b);
+    return (MediumFlag)((int)a ^ (int)b);
 }
-ATCG_HOST_DEVICE inline MediumFlags& operator|=(MediumFlags& a, MediumFlags b)
+ATCG_HOST_DEVICE inline MediumFlag& operator|=(MediumFlag& a, MediumFlag b)
 {
-    return (MediumFlags&)((int&)a |= (int)b);
+    return (MediumFlag&)((int&)a |= (int)b);
 }
-ATCG_HOST_DEVICE inline MediumFlags& operator&=(MediumFlags& a, MediumFlags b)
+ATCG_HOST_DEVICE inline MediumFlag& operator&=(MediumFlag& a, MediumFlag b)
 {
-    return (MediumFlags&)((int&)a &= (int)b);
+    return (MediumFlag&)((int&)a &= (int)b);
 }
-ATCG_HOST_DEVICE inline MediumFlags& operator^=(MediumFlags& a, MediumFlags b)
+ATCG_HOST_DEVICE inline MediumFlag& operator^=(MediumFlag& a, MediumFlag b)
 {
-    return (MediumFlags&)((int&)a ^= (int)b);
+    return (MediumFlag&)((int&)a ^= (int)b);
 }
 
-ATCG_HOST_DEVICE inline bool hasMediumFlag(MediumFlags flags, MediumFlags flag)
+ATCG_HOST_DEVICE inline bool hasMediumFlag(MediumFlag flags, MediumFlag flag)
 {
-    return (flags & flag) != MediumFlags::None;
+    return (flags & flag) != MediumFlag::None;
 }
 }    // namespace atcg

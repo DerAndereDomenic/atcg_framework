@@ -24,7 +24,7 @@ public:
 
     ATCG_INLINE const std::string& getMediumType() const { return _medium_type; }
 
-    ATCG_INLINE const MediumFlags& getFlags() const { return _flags; }
+    ATCG_INLINE const MediumFlag& flags() const { return _flags; }
 
     virtual atcg::ref_ptr<Medium> clone() const = 0;
 
@@ -37,7 +37,7 @@ protected:
     std::array<uint32_t, 3> _texture_ids;
     bool _uploaded = false;
     std::string _medium_type;
-    MediumFlags _flags = MediumFlags::None;
+    MediumFlag _flags = MediumFlag::None;
 };
 
 template<typename T>

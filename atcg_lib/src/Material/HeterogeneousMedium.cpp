@@ -34,7 +34,7 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium("Heter
 
     _default_albedo_texture = atcg::Texture3D::create(&white, spec);
 
-    _flags = MediumFlags::Heterogeneous;
+    _flags = MediumFlag::Heterogeneous;
 }
 
 atcg::ref_ptr<Texture3D> HeterogeneousMedium::density() const
@@ -104,6 +104,8 @@ void HeterogeneousMedium::uploadMedium(RendererSystem* renderer,
         shader->setMat4("emission_to_uvw", to_uvw);
         GraphicsCommand::bindTexture(emission_id, emission());
     }
+
+    _uploaded = true;
 }
 
 atcg::ref_ptr<Medium> HeterogeneousMedium::clone() const

@@ -77,7 +77,7 @@ struct ATCG_API Material : public Asset
      *
      * @return The material flags
      */
-    ATCG_INLINE const MaterialFlag& getMaterialFlags() const { return _flags; }
+    ATCG_INLINE const MaterialFlag& flags() const { return _flags; }
 
 protected:
     std::array<uint32_t, 5> _used_texture_ids;

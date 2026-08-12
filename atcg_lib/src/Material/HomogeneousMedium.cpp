@@ -20,7 +20,7 @@ HomogeneousMedium::HomogeneousMedium(const Dictionary& dict) : Medium("Homogeneo
     _Le       = dict.getValueOr<float>("Le", _Le);
     _Le_color = dict.getValueOr<glm::vec3>("Le_color", _Le_color);
 
-    _flags = MediumFlags::Homogeneous;
+    _flags = MediumFlag::Homogeneous;
 }
 
 void HomogeneousMedium::uploadMedium(RendererSystem* renderer,
@@ -39,6 +39,8 @@ void HomogeneousMedium::uploadMedium(RendererSystem* renderer,
     shader->setFloat("density", _density);
     shader->setFloat("Le", _Le);
     shader->setVec3("Le_color", _Le_color);
+
+    _uploaded = true;
 }
 
 atcg::ref_ptr<Medium> HomogeneousMedium::clone() const
