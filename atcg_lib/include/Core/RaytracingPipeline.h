@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/API.h>
+#include <Core/CUDA.h>
 #include <Renderer/RaytracingContext.h>
 #include <Core/TraceParameters.h>
 #include <Core/Optix.h>
@@ -116,7 +117,7 @@ public:
                 size_t width,
                 size_t height,
                 size_t depth,
-                CUstream stream = nullptr);
+                Stream stream = nullptr);
 
 private:
     class Impl;

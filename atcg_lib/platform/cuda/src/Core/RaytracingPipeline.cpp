@@ -415,9 +415,9 @@ void RayTracingPipeline::launch(CUdeviceptr params,
                                 size_t width,
                                 size_t height,
                                 size_t depth,
-                                CUstream stream)
+                                Stream stream)
 {
-    OPTIX_CHECK(optixLaunch(getPipeline(), stream, params, params_size, sbt, width, height, depth));
+    OPTIX_CHECK(optixLaunch(getPipeline(), (CUstream)stream, params, params_size, sbt, width, height, depth));
 
     CUDA_SAFE_CALL(cudaStreamSynchronize(nullptr));
 }

@@ -81,6 +81,7 @@ ATCG_INLINE dim3 configure(glm::u32vec3 thread_count, glm::u32vec3 block_size)
 typedef cudaArray_t textureArray;
 typedef cudaTextureObject_t textureObject;
 typedef cudaSurfaceObject_t surfaceObject;
+typedef cudaStream_t Stream;
 }    // namespace atcg
 
 #else
@@ -93,6 +94,7 @@ constexpr bool cuda_available()
 typedef void* textureArray;
 typedef void* textureObject;
 typedef void* surfaceObject;
+typedef void* Stream;
 }    // namespace atcg
 
     #define ATCG_HOST
