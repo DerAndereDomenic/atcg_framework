@@ -44,14 +44,39 @@ struct ATCG_API Material : public Asset
      */
     void releaseTextureIDs(RendererSystem* renderer);
 
+    /**
+     * @brief Create a deep copy of the material.
+     *
+     * @return The cloned material.
+     */
     virtual atcg::ref_ptr<Material> clone() const = 0;
 
+    /**
+     * @brief Get the type of the asset
+     *
+     * @return The asset type
+     */
     ATCG_INLINE static AssetType getStaticType() { return AssetType::Material; }
 
+    /**
+     * @brief Get the type of the asset
+     *
+     * @return The asset type
+     */
     ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
 
+    /**
+     * @brief Get the material type
+     *
+     * @return The material type
+     */
     ATCG_INLINE const std::string& getMaterialType() const { return _material_type; };
 
+    /**
+     * @brief Get the material flags
+     *
+     * @return The material flags
+     */
     ATCG_INLINE const MaterialFlag& getMaterialFlags() const { return _flags; }
 
 protected:
