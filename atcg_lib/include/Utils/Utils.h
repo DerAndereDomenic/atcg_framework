@@ -186,6 +186,18 @@ ATCG_API AssetHandle displayMaterialSelection(const std::string& key, AssetHandl
 ATCG_API AssetHandle displayMediumSelection(const std::string& key, AssetHandle handle, bool& deactivated);
 
 /**
+ * @brief Display a phase function selection dialog and return the selected phase function handle. This is used in the
+ * editor and returns the handle of the selected phase function or an invalid handle if no phase function was selected.
+ *
+ * @param key The key to identify the selection (e.g. for which component this selection is)
+ * @param handle The currently selected handle (can be invalid)
+ * @param deactivated Whether the selection was deactivated this frame
+ *
+ * @return The handle of the selected phase function or an invalid handle if no phase function was selected
+ */
+ATCG_API AssetHandle displayPhaseFunctionSelection(const std::string& key, AssetHandle handle, bool& deactivated);
+
+/**
  * @brief Display a graph selection dialog and return the selected graph handle. This is used in the editor and returns
  * the handle of the selected graph or an invalid handle if no graph was selected.
  *

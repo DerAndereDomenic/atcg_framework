@@ -102,7 +102,7 @@ ATCG_INLINE atcg::ref_ptr<PhaseFunction> deserializePhaseFunction(std::string_vi
             },                                                                                                         \
             [](const atcg::ref_ptr<atcg::PhaseFunction>& phase_function, const std::filesystem::path& path)            \
             {                                                                                                          \
-                atcg::MaterialSerializer<PhaseFunctionClass>::serialize(                                               \
+                atcg::PhaseFunctionSerializer<PhaseFunctionClass>::serialize(                                          \
                     std::dynamic_pointer_cast<PhaseFunctionClass>(phase_function),                                     \
                     path);                                                                                             \
             },                                                                                                         \

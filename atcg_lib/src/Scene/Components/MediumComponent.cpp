@@ -3,8 +3,10 @@
 #include <Utils/Utils.h>
 
 #include <Material/MediumRegistry.h>
+#include <Material/PhaseFunctionRegistry.h>
 
-#define MEDIUM_KEY "Medium"
+#define MEDIUM_KEY         "Medium"
+#define PHASE_FUNCTION_KEY "PhaseFunction"
 
 #define HOMOGENEOUS_MEDIUM_KEY "Homogeneous Medium"
 #define ALBEDO_KEY             "albedo"
@@ -72,7 +74,14 @@ void ComponentRenderer<MediumComponent>::renderComponent(atcg::RendererSystem* _
         return;
     }
 
+    if(!medium_component.phase_function())
+    {
+        ATCG_WARN("Entity has MediumComponent but phase function is nullptr");
+        return;
+    }
+
     auto medium = medium_component.medium();
+    auto phase  = medium_component.phase_function();
 
     if(!hasMaterialFlag(mesh_renderer.material()->flags(), MaterialFlag::NullTransmission))
     {
@@ -103,7 +112,7 @@ void ComponentRenderer<MediumComponent>::renderComponent(atcg::RendererSystem* _
         shader->setInt("entityID", entity.entity_handle());
         shader->setMat4("invView", glm::inverse(camera->getView()));
         shader->setMat4("invProj", glm::inverse(camera->getProjection()));
-        shader->setFloat("g", 0.0f);    // TODO
+        phase->uploadPhaseFunction(_renderer, shader);
 
         medium->uploadMedium(_renderer, shader, transform.getModel());
 
@@ -129,7 +138,8 @@ void ComponentSerializer<MediumComponent>::serialize_component(const std::string
                                                                MediumComponent& component,
                                                                nlohmann::json& j) const
 {
-    j[MEDIUM_KEY] = (uint64_t)component.medium_handle;
+    j[MEDIUM_KEY]         = (uint64_t)component.medium_handle;
+    j[PHASE_FUNCTION_KEY] = (uint64_t)component.phase_function_handle;
 }
 
 void ComponentSerializer<MediumComponent>::deserialize_component(const std::string& file_path,
@@ -139,8 +149,9 @@ void ComponentSerializer<MediumComponent>::deserialize_component(const std::stri
 {
     if(j.contains(MEDIUM_KEY))
     {
-        auto& medium         = entity.addComponent<MediumComponent>();
-        medium.medium_handle = (AssetHandle)j[MEDIUM_KEY];
+        auto& medium                 = entity.addComponent<MediumComponent>();
+        medium.medium_handle         = (AssetHandle)j[MEDIUM_KEY];
+        medium.phase_function_handle = (AssetHandle)j[PHASE_FUNCTION_KEY];
         return;
     }
 
@@ -160,7 +171,13 @@ void ComponentSerializer<MediumComponent>::deserialize_component(const std::stri
 
         auto medium = atcg::MediumRegistry::deserializeMedium("Homogeneous", file_path, medium_json);
         atcg::AssetManager::registerAsset(medium, "medium");
-        component.medium_handle = medium->handle;
+
+        atcg::ref_ptr<PhaseFunction> phase_function =
+            atcg::PhaseFunctionRegistry::deserializePhaseFunction("HenyeyGreenstein", file_path, medium_json);
+        atcg::AssetManager::registerAsset(phase_function, "phase_function");
+
+        component.medium_handle         = medium->handle;
+        component.phase_function_handle = phase_function->handle;
         return;
     }
 
@@ -172,7 +189,13 @@ void ComponentSerializer<MediumComponent>::deserialize_component(const std::stri
 
         auto medium = atcg::MediumRegistry::deserializeMedium("Heterogeneous", file_path, medium_json);
         atcg::AssetManager::registerAsset(medium, "medium");
-        component.medium_handle = medium->handle;
+
+        atcg::ref_ptr<PhaseFunction> phase_function =
+            atcg::PhaseFunctionRegistry::deserializePhaseFunction("HenyeyGreenstein", file_path, medium_json);
+        atcg::AssetManager::registerAsset(phase_function, "phase_function");
+
+        component.medium_handle         = medium->handle;
+        component.phase_function_handle = phase_function->handle;
         return;
     }
 }
@@ -192,6 +215,11 @@ void ComponentGUIRenderer<MediumComponent>::draw_component(const atcg::ref_ptr<S
     auto new_handle      = Utils::displayMediumSelection("medium", copy.medium_handle, deactivated);
     bool updated         = (new_handle != copy.medium_handle);
     copy.medium_handle   = new_handle;
+
+    auto new_phase_handle =
+        Utils::displayPhaseFunctionSelection("phase_function", copy.phase_function_handle, deactivated);
+    updated                    = updated || (new_phase_handle != copy.phase_function_handle);
+    copy.phase_function_handle = new_phase_handle;
 
     if(updated)
     {
