@@ -63,11 +63,8 @@ if(ATCG_CUDA_BACKEND)
     list(APPEND CMAKE_MODULE_PATH "${ATCG_PROJECT_ROOT_DIR}/cmake")
     include(FilterPTX)
 
-    file (GLOB_RECURSE atcg_optix_files LIST_DIRECTORIES false "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/optix/**.c*"
-                                                               "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/optix/**.h")
-
-    filter_ptx_sources("${atcg_optix_files}" ptx_files)
-    list(REMOVE_ITEM atcg_optix_files ${ptx_files})
+    filter_ptx_sources("${atcg_backend_files}" ptx_files)
+    list(REMOVE_ITEM atcg_backend_files ${ptx_files})
     add_ptx_module(atcg "${ptx_files}")
     set(ptx_target "atcg_ptxmodules")
     add_dependencies(atcg_lib ${ptx_target} ${ptx_target}-copy)
@@ -76,8 +73,7 @@ endif()
 target_sources(atcg_lib PRIVATE ${atcg_lib_files} 
                                 ${atcg_backend_files} 
                                 ${atcg_renderer_files} 
-                                ${atcg_window_files}
-                                ${atcg_optix_files})
+                                ${atcg_window_files})
 
 if (NOT ATCG_PYTHON_MODULE)
     file (GLOB_RECURSE atcg_lib_python_files LIST_DIRECTORIES false "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/python/**.h"
