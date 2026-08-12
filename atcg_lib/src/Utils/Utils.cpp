@@ -340,6 +340,60 @@ AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle,
 #endif
 }
 
+AssetHandle displayMediumSelection(const std::string& key, AssetHandle handle, bool& deactivated)
+{
+#ifndef ATCG_HEADLESS
+    const auto& data = AssetManager::getMetaData(handle);
+
+    std::string tag = AssetManager::isAssetHandleValid(handle) ? data.name : "Default Medium";
+
+    const auto& registry = AssetManager::getAssetRegistry();
+
+    AssetHandle current_item = handle;
+
+    if(ImGui::BeginCombo(("Select Medium##" + key).c_str(), tag.c_str()))
+    {
+        // No Selection
+        {
+            bool is_selected = !AssetManager::isAssetHandleValid(current_item);
+
+            if(ImGui::Selectable("Default Medium", is_selected))
+            {
+                current_item = 0;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        for(auto it = registry.begin(); it != registry.end(); ++it)
+        {
+            if(it->second.type != AssetType::Medium) continue;
+
+            bool is_selected = it->first == current_item;
+
+            if(ImGui::Selectable((it->second.name + "##" + std::to_string(it->first)).c_str(), is_selected))
+            {
+                current_item = it->first;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+
+    return current_item;
+#else
+    return 0;
+#endif
+}
+
 AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle, bool& deactivated)
 {
 #ifndef ATCG_HEADLESS

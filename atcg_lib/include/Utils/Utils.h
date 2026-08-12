@@ -174,6 +174,18 @@ setSkyLight(atcg::RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader,
 ATCG_API AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle, bool& deactivated);
 
 /**
+ * @brief Display a medium selection dialog and return the selected medium handle. This is used in the editor and
+ * returns the handle of the selected medium or an invalid handle if no medium was selected.
+ *
+ * @param key The key to identify the selection (e.g. for which component this selection is)
+ * @param handle The currently selected handle (can be invalid)
+ * @param deactivated Whether the selection was deactivated this frame
+ *
+ * @return The handle of the selected medium or an invalid handle if no medium was selected
+ */
+ATCG_API AssetHandle displayMediumSelection(const std::string& key, AssetHandle handle, bool& deactivated);
+
+/**
  * @brief Display a graph selection dialog and return the selected graph handle. This is used in the editor and returns
  * the handle of the selected graph or an invalid handle if no graph was selected.
  *
