@@ -16,6 +16,7 @@
 #include <Renderer/Renderer.h>
 #include <Scene/SceneRenderer.h>
 #include <Material/MaterialRegistry.h>
+#include <Material/MediumRegistry.h>
 
 namespace atcg
 {
@@ -154,6 +155,73 @@ void AssetPanel::displayMaterial(AssetHandle handle)
     if(updated)
     {
         AssetManager::registerAsset(_preview_material, AssetManager::getMetaData(_preview_material->handle).name);
+    }
+
+    if(deactivated && atcg::RevisionStack::isRecording())
+    {
+        atcg::RevisionStack::endRecording();
+    }
+#endif
+}
+
+void AssetPanel::displayMedium(AssetHandle handle)
+{
+#ifndef ATCG_HEADLESS
+    const std::string key = "medium";
+    auto medium_          = AssetManager::getAsset<Medium>(handle);
+
+    if(!medium_) return;
+
+    bool updated = false;
+
+    float content_scale = atcg::Application::get()->getWindow()->getContentScale();
+    ImGui::Separator();
+
+    ImGui::Text("Medium");
+
+    const std::vector<std::string>& mediumTypeLabels = MediumRegistry::getRegisteredMediumTypes();
+
+    std::vector<const char*> mediumTypeCStrs;
+    for(const auto& label: mediumTypeLabels)
+        mediumTypeCStrs.push_back(label.c_str());
+    int currentIndex = static_cast<int>(
+        std::distance(mediumTypeLabels.begin(),
+                      std::find(mediumTypeLabels.begin(), mediumTypeLabels.end(), medium_->getMediumType())));
+
+    bool deactivated        = false;
+    auto _preview_medium    = medium_->clone();
+    _preview_medium->handle = medium_->handle;
+    if(ImGui::BeginCombo("Medium Type", medium_->getMediumType().c_str()))
+    {
+        for(int i = 0; i < mediumTypeLabels.size(); ++i)
+        {
+            bool isSelected = (i == currentIndex);
+            if(ImGui::Selectable(mediumTypeCStrs[i], isSelected))
+            {
+                Dictionary dict;
+                auto new_type           = mediumTypeCStrs[i];
+                _preview_medium         = MediumRegistry::createMedium(new_type, dict);
+                _preview_medium->handle = handle;
+
+                updated = true;
+            }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
+            if(isSelected) ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
+
+    updated = atcg::MediumRegistry::renderMediumGUI(_preview_medium, key, deactivated) || updated;
+
+    if(updated && !atcg::RevisionStack::isRecording())
+    {
+        atcg::RevisionStack::startRecording<AssetEditedRevision>(_preview_medium->handle);
+    }
+
+    if(updated)
+    {
+        AssetManager::registerAsset(_preview_medium, AssetManager::getMetaData(_preview_medium->handle).name);
     }
 
     if(deactivated && atcg::RevisionStack::isRecording())
@@ -818,6 +886,13 @@ void AssetPanel::drawAssetList()
             _panel_state = AssetType::Shader;
         }
         ImGui::SameLine();
+        if(ImageTextButton((ImTextureID)_folder_icon->getID(),
+                           "Medium",
+                           ImVec2(content_scale * 64, content_scale * 64)))
+        {
+            _panel_state = AssetType::Medium;
+        }
+        ImGui::SameLine();
     }
     else
     {
@@ -926,6 +1001,11 @@ void AssetPanel::drawAdd()
         {
             new_asset = AssetManager::registerAsset(atcg::make_ref<Scene>(), "scene");
         }
+        if(_panel_state == AssetType::Medium)
+        {
+            Dictionary dict;    // No parameters
+            new_asset = AssetManager::registerAsset(atcg::MediumRegistry::createMedium("Homogeneous", dict), "medium");
+        }
 
         if(AssetManager::isAssetHandleValid(new_asset))
         {
@@ -1003,6 +1083,10 @@ void AssetPanel::drawAssetEditor()
         else if(data.type == AssetType::Scene)
         {
             displayScene(_selected_handle);
+        }
+        else if(data.type == AssetType::Medium)
+        {
+            displayMedium(_selected_handle);
         }
 
         ImGui::Separator();

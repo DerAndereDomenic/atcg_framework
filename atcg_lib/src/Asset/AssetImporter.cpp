@@ -8,6 +8,7 @@
 #include <Renderer/Shader.h>
 #include <Scene/Serializer.h>
 #include <Material/MaterialRegistry.h>
+#include <Material/MediumRegistry.h>
 
 #include <json.hpp>
 
@@ -40,6 +41,12 @@ atcg::ref_ptr<Asset> deserializeMaterial_ver1(const std::filesystem::path& path,
 {
     atcg::ref_ptr<Material> material = deserializeMaterialType_ver1(path, material_node);
     return material;
+}
+
+atcg::ref_ptr<Asset> deserializeMedium_ver1(const std::filesystem::path& path, const nlohmann::json& medium_node)
+{
+    std::string medium_type_string = medium_node.value(TYPE_KEY, "Homogeneous");
+    return MediumRegistry::deserializeMedium(medium_type_string, path, medium_node);
 }
 
 std::vector<uint8_t> deserializeBuffer_ver1(const std::filesystem::path& file_name)
@@ -306,6 +313,23 @@ AssetImporter::importAsset(const std::filesystem::path& path, AssetHandle handle
             if(version == "1.0")
             {
                 asset = detail::deserializeShader_ver1(shader_path, j);
+            }
+        }
+        break;
+        case AssetType::Medium:
+        {
+            auto medium_path = path / "medium" / std::to_string(handle) / (metadata.name + ".medium");
+            if(!std::filesystem::exists(medium_path)) break;
+
+            std::ifstream i(medium_path);
+            nlohmann::json j;
+            i >> j;
+
+            std::string version = j["Version"];
+
+            if(version == "1.0")
+            {
+                asset = detail::deserializeMedium_ver1(medium_path, j);
             }
         }
         break;

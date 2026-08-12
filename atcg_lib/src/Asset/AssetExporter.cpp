@@ -4,6 +4,8 @@
 #include <Renderer/Texture.h>
 #include <Material/Material.h>
 #include <Material/MaterialRegistry.h>
+#include <Material/Medium.h>
+#include <Material/MediumRegistry.h>
 #include <Renderer/Shader.h>
 #include <DataStructure/Graph.h>
 #include <Scripting/Script.h>
@@ -58,6 +60,13 @@ ATCG_INLINE void serialize_material_ver1(const atcg::ref_ptr<Material>& material
     const std::string& type = material->getMaterialType();
 
     MaterialRegistry::serializeMaterial(material, path);
+}
+
+ATCG_INLINE void serialize_medium_ver1(const atcg::ref_ptr<Medium>& medium, const std::filesystem::path& path)
+{
+    const std::string& type = medium->getMediumType();
+
+    MediumRegistry::serializeMedium(medium, path);
 }
 
 ATCG_INLINE void
@@ -253,6 +262,13 @@ export_asset_ver1(const std::filesystem::path& path, const atcg::ref_ptr<Asset>&
             auto shader_path = path / "shader" / std::to_string(asset->handle);
             std::filesystem::create_directories(shader_path);
             serialize_shader_ver1(std::dynamic_pointer_cast<Shader>(asset), shader_path / data.name);
+        }
+        break;
+        case AssetType::Medium:
+        {
+            auto medium_path = path / "medium" / std::to_string(asset->handle);
+            std::filesystem::create_directories(medium_path);
+            serialize_medium_ver1(std::dynamic_pointer_cast<Medium>(asset), medium_path / (data.name + ".medium"));
         }
         break;
     }

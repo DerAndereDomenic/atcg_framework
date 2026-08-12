@@ -3,6 +3,7 @@
 #include <Core/API.h>
 #include <Asset/Asset.h>
 #include <Material/Material.h>
+#include <Material/Medium.h>
 #include <Renderer/Framebuffer.h>
 #include <Scene/Scene.h>
 
@@ -44,6 +45,8 @@ private:
 
     void displayMaterial(AssetHandle handle);
 
+    void displayMedium(AssetHandle handle);
+
     void displayGraph(AssetHandle handle);
 
     void displayScript(AssetHandle handle);
@@ -81,6 +84,7 @@ private:
 
     atcg::ref_ptr<Framebuffer> _preview_framebuffer;
     atcg::ref_ptr<Material> _preview_material;
+    atcg::ref_ptr<Medium> _preview_medium;
 };
 }    // namespace GUI
 }    // namespace atcg

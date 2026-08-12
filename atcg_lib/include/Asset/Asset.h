@@ -23,7 +23,8 @@ enum class AssetType : uint16_t
     Material,
     Graph,
     Script,
-    Shader
+    Shader,
+    Medium
 };
 
 /**
@@ -82,6 +83,8 @@ ATCG_INLINE const char* assetTypeToString(AssetType type)
             return "AssetType::Script";
         case AssetType::Shader:
             return "AssetType::Shader";
+        case AssetType::Medium:
+            return "AssetType::Medium";
     }
 
     return "AssetType::<Invalid>";
@@ -104,6 +107,7 @@ ATCG_INLINE AssetType stringToAssetType(std::string_view str)
     if(str == "AssetType::Scene") return AssetType::Scene;
     if(str == "AssetType::Script") return AssetType::Script;
     if(str == "AssetType::Shader") return AssetType::Shader;
+    if(str == "AssetType::Medium") return AssetType::Medium;
 
     // Unknown string:
     return AssetType::None;    // or AssetType::<Invalid> if you have it
