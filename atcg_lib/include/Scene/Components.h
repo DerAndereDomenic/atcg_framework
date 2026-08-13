@@ -9,6 +9,7 @@
 #include <Scene/Components/GeometryComponent.h>
 #include <Scene/Components/IDComponent.h>
 #include <Scene/Components/InstanceRenderComponent.h>
+#include <Scene/Components/MediumComponent.h>
 #include <Scene/Components/MeshLightComponent.h>
 #include <Scene/Components/MeshRenderComponent.h>
 #include <Scene/Components/NameComponent.h>

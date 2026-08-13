@@ -11,7 +11,6 @@
 #include <Material/MaterialRegistry.h>
 #include <Renderer/RenderPassRegistry.h>
 #ifdef ATCG_CUDA_BACKEND
-    #include <BSDF/BSDFRegistry.h>
     #include <Integrator/IntegratorRegistry.h>
 #endif
 #include <imgui.h>
@@ -70,13 +69,6 @@ public:
     }
 
 #ifdef ATCG_CUDA_BACKEND
-    template<typename BSDFT>
-    void registerBSDF(std::string_view type)
-    {
-        BSDFRegistry::Registry* registry = BSDFRegistry::getRegistry();
-        ATCG_REGISTER_BSDF_PLUGIN(registry, _handle, type, BSDFT);
-    }
-
     template<typename IntegratorT>
     void registerIntegrator(std::string_view type)
     {

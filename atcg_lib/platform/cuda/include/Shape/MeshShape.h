@@ -26,10 +26,8 @@ public:
      */
     virtual ~MeshShape();
 
-    /**
-     * @brief A callback to display debug information in imgui
-     */
-    virtual void onImGuiRender() override {}
+    // TODO
+    virtual void updateData() override {}
 
     /**
      * @brief Prepare the geometry acceleration structor

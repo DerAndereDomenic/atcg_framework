@@ -30,11 +30,6 @@ public:
     virtual ~Film() {}
 
     /**
-     * @brief A callback to display debug information in imgui
-     */
-    virtual void onImGuiRender() = 0;
-
-    /**
      * @brief Resize the film
      *
      * @param width The new width

@@ -4,8 +4,8 @@
 #include <Core/glm.h>
 #include <Core/TraceParameters.h>
 #include <Emitter/EmitterVPtrTable.cuh>
-#include <BSDF/BSDFVPtrTable.cuh>
-#include <Medium/MediumVPtrTable.cuh>
+#include <Material/BSDFVPtrTable.h>
+#include <Material/MediumVPtrTable.h>
 #include <Sensor/SensorVPtrTable.cuh>
 
 namespace atcg

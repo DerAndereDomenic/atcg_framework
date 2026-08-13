@@ -69,6 +69,8 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium("Heter
     _flags = MediumFlag::Heterogeneous;
 }
 
+HeterogeneousMedium::~HeterogeneousMedium() {}
+
 atcg::ref_ptr<Texture3D> HeterogeneousMedium::density() const
 {
     return AssetManager::getAsset<Texture3D>(densityGrid().handle);
@@ -225,6 +227,21 @@ void HeterogeneousMedium::initializePipeline(const atcg::ref_ptr<RayTracingPipel
 
     _medium_vptr_table.upload(&vptr_table_data);
     markInitialized();
+}
+
+HeterogeneousMedium::GridComponent& HeterogeneousMedium::densityGrid() const
+{
+    return impl->density_grid;
+}
+
+HeterogeneousMedium::GridComponent& HeterogeneousMedium::albedoGrid() const
+{
+    return impl->albedo_grid;
+}
+
+HeterogeneousMedium::GridComponent& HeterogeneousMedium::emissionGrid() const
+{
+    return impl->emission_grid;
 }
 
 atcg::ref_ptr<Medium> HeterogeneousMedium::clone() const

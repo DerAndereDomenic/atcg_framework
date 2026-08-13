@@ -4,8 +4,8 @@
 
 #include <Math/Random.h>
 
-#include <Medium/HomogeneousMediumData.cuh>
-#include <Medium/MediumVPtrTable.cuh>
+#include <Material/HomogeneousMediumData.h>
+#include <Material/MediumVPtrTable.h>
 #include <Medium/Transmittance.h>
 
 

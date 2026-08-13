@@ -4,8 +4,8 @@
 
 #include <Math/Random.h>
 
-#include <Medium/HeterogeneousMediumData.cuh>
-#include <Medium/MediumVPtrTable.cuh>
+#include <Material/HeterogeneousMediumData.h>
+#include <Material/MediumVPtrTable.h>
 #include <Medium/Transmittance.h>
 
 namespace detail

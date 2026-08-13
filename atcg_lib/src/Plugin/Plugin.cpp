@@ -120,9 +120,6 @@ bool PluginManagerSystem::releasePlugin(const std::filesystem::path& path)
         material_registry->unregisterPlugin(it->second);
 
 #ifdef ATCG_CUDA_BACKEND
-        BSDFRegistry::Registry* bsdf_registry = BSDFRegistry::getRegistry();
-        bsdf_registry->unregisterPlugin(it->second);
-
         IntegratorRegistry::Registry* integrator_registry = IntegratorRegistry::getRegistry();
         integrator_registry->unregisterPlugin(it->second);
 #endif
@@ -150,9 +147,6 @@ bool PluginManagerSystem::releaseAllPlugins()
         material_registry->unregisterPlugin(handle);
 
 #ifdef ATCG_CUDA_BACKEND
-        BSDFRegistry::Registry* bsdf_registry = BSDFRegistry::getRegistry();
-        bsdf_registry->unregisterPlugin(handle);
-
         IntegratorRegistry::Registry* integrator_registry = IntegratorRegistry::getRegistry();
         integrator_registry->unregisterPlugin(handle);
 #endif

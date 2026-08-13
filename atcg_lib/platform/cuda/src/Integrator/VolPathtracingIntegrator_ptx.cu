@@ -85,7 +85,7 @@ extern "C" __global__ void __raygen__rg()
                 // NEE
                 do
                 {
-                    if(!si.bsdf || (int)(si.bsdf->flags & atcg::BSDFComponentType::NullTransmission) == 0)
+                    if(!si.bsdf || (int)(si.bsdf->flags & atcg::MaterialFlag::NullTransmission) == 0)
                     {
                         break;
                     }
@@ -249,7 +249,7 @@ extern "C" __global__ void __raygen__rg()
                     si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light, wavelengths);
 
                 float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0 ||
-                                           (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0
+                                           (int)(bsdf_result.flags & atcg::MaterialFlag::AnyDelta) != 0
                                        ? 0.0f
                                        : bsdf_result.sample_probability;
                 float mis_weight = atcg::BalanceHeuristic::apply(emitter_sampling.sampling_pdf, bsdf_pdf);
@@ -267,14 +267,14 @@ extern "C" __global__ void __raygen__rg()
                 camera_ray.importance *= result.bsdf_weight;
                 next_ray_valid = true;
 
-                if((int)(result.flags & atcg::BSDFComponentType::NullTransmission) == 0)
+                if((int)(result.flags & atcg::MaterialFlag::NullTransmission) == 0)
                 {
                     // If the sampled component is a null transmission, we don't want to count it because for NEE we
                     // need the last non-null-transportation interaction. This is a bit hacky but it works for now.
                     last_ai      = si;
                     last_ai->pdf = result.sample_probability;
 
-                    if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
+                    if((int)(result.flags & atcg::MaterialFlag::AnyDelta) != 0)
                     {
                         last_ai->setInvalid();    // Invalidate last_ai to prevent NEE for delta interactions
                     }

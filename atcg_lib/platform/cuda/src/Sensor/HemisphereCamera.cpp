@@ -13,8 +13,6 @@ HemisphereCamera::HemisphereCamera(const Dictionary& dict)
 
 HemisphereCamera::~HemisphereCamera() {}
 
-void HemisphereCamera::onImGuiRender() {}
-
 void HemisphereCamera::markDirty()
 {
     HemisphereCameraData hemisphere_camera_data;

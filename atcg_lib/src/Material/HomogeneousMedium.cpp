@@ -49,6 +49,8 @@ HomogeneousMedium::HomogeneousMedium(const Dictionary& dict) : Medium("Homogeneo
     _flags = MediumFlag::Homogeneous;
 }
 
+HomogeneousMedium::~HomogeneousMedium() {}
+
 void HomogeneousMedium::uploadMedium(RendererSystem* renderer,
                                      const atcg::ref_ptr<Shader>& shader,
                                      const glm::mat4& model)

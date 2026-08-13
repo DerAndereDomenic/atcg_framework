@@ -6,7 +6,7 @@ namespace atcg
 ShapeInstance::ShapeInstance(const Dictionary& shape_data)
 {
     _shape          = shape_data.getValueOr<atcg::ref_ptr<Shape>>("shape", nullptr);
-    _bsdf           = shape_data.getValueOr<atcg::ref_ptr<BSDF>>("bsdf", nullptr);
+    _material       = shape_data.getValueOr<atcg::ref_ptr<Material>>("bsdf", nullptr);
     _emitter        = shape_data.getValueOr<atcg::ref_ptr<Emitter>>("emitter", nullptr);
     _inside_medium  = shape_data.getValueOr<atcg::ref_ptr<Medium>>("inside_medium", nullptr);
     _outside_medium = shape_data.getValueOr<atcg::ref_ptr<Medium>>("outside_medium", nullptr);
@@ -15,20 +15,11 @@ ShapeInstance::ShapeInstance(const Dictionary& shape_data)
     _color          = shape_data.getValueOr<glm::vec3>("color", glm::vec3(1));
 }
 
-void ShapeInstance::onImGuiRender()
-{
-    if(_shape) _shape->onImGuiRender();
-    if(_bsdf) _bsdf->onImGuiRender();
-    if(_emitter) _emitter->onImGuiRender();
-    if(_inside_medium) _inside_medium->onImGuiRender();
-    if(_outside_medium) _outside_medium->onImGuiRender();
-}
-
 void ShapeInstance::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                        const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
     auto shape          = getShape();
-    auto bsdf           = getBSDF();
+    auto material       = getMaterial();
     auto emitter        = getEmitter();
     auto inside_medium  = getInsideMedium();
     auto outside_medium = getOutsideMedium();
@@ -41,7 +32,7 @@ void ShapeInstance::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& 
 
     ShapeInstanceData data;
     data.shape             = shape->getShapeData();
-    data.bsdf              = bsdf ? bsdf->getVPtrTable() : nullptr;
+    data.bsdf              = material ? material->getVPtrTable() : nullptr;
     data.emitter           = emitter ? emitter->getVPtrTable() : nullptr;
     data.inside_medium     = inside_medium ? inside_medium->getVPtrTable() : nullptr;
     data.outside_medium    = outside_medium ? outside_medium->getVPtrTable() : nullptr;

@@ -6,8 +6,8 @@
 
 #include <Utils/HostDevice.h>
 #include <DataStructure/SurfaceInteraction.h>
-#include <BSDF/BSDFVPtrTable.cuh>
-#include <BSDF/DielectricBSDFData.cuh>
+#include <Material/BSDFVPtrTable.h>
+#include <Material/DielectricMaterialData.h>
 #include <BSDF/BSDFFunctions.h>
 #include <BSDF/Sampling.h>
 
@@ -90,8 +90,7 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
         NdotL                     = glm::dot(interface_normal, wo);
         HdotL                     = glm::dot(halfway, wo);
 
-        result.flags =
-            roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection;
+        result.flags = roughness < 0.1f ? atcg::MaterialFlag::IdealReflection : atcg::MaterialFlag::GlossyReflection;
     }
     else
     {
@@ -109,7 +108,7 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
         NdotL                     = -glm::dot(interface_normal, wo);
 
         result.flags =
-            roughness < 0.1f ? atcg::BSDFComponentType::IdealTransmission : atcg::BSDFComponentType::GlossyTransmission;
+            roughness < 0.1f ? atcg::MaterialFlag::IdealTransmission : atcg::MaterialFlag::GlossyTransmission;
     }
 
     if(NdotL <= 0)
@@ -180,8 +179,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
                 halfway);
 
         specular_bsdf = reflectance_color * D * G * F / (4.0f * NdotV * NdotL + 1e-5f);
-        result.flags =
-            roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection;
+        result.flags  = roughness < 0.1f ? atcg::MaterialFlag::IdealReflection : atcg::MaterialFlag::GlossyReflection;
     }
     else
     {
@@ -218,7 +216,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
         specular_bsdf = reflectance_color * numerator / (denom * NdotL * NdotV + 1e-5f);
 
         result.flags =
-            roughness < 0.1f ? atcg::BSDFComponentType::IdealTransmission : atcg::BSDFComponentType::GlossyTransmission;
+            roughness < 0.1f ? atcg::MaterialFlag::IdealTransmission : atcg::MaterialFlag::GlossyTransmission;
     }
 
     result.bsdf_value         = specular_bsdf * glm::abs(glm::dot(si.normal, wo));
@@ -233,8 +231,8 @@ __direct_callable__sample_dielectricbsdf(const atcg::SurfaceInteraction& si,
                                          const atcg::SampledWavelengths& wavelengths,
                                          atcg::PCG32& rng)
 {
-    const atcg::DielectricBSDFData* sbt_data =
-        *reinterpret_cast<const atcg::DielectricBSDFData**>(optixGetSbtDataPointer());
+    const atcg::DielectricMaterialData* sbt_data =
+        *reinterpret_cast<const atcg::DielectricMaterialData**>(optixGetSbtDataPointer());
 
     atcg::SampledSpectrum reflectance_color =
         atcg::SampledSpectrum::fromRGB(sbt_data->diffuse_texture.read(si.uv), wavelengths);
@@ -251,8 +249,8 @@ __direct_callable__eval_dielectricbsdf(const atcg::SurfaceInteraction& si,
                                        const glm::vec3& outgoing_dir,
                                        const atcg::SampledWavelengths& wavelengths)
 {
-    const atcg::DielectricBSDFData* sbt_data =
-        *reinterpret_cast<const atcg::DielectricBSDFData**>(optixGetSbtDataPointer());
+    const atcg::DielectricMaterialData* sbt_data =
+        *reinterpret_cast<const atcg::DielectricMaterialData**>(optixGetSbtDataPointer());
 
     atcg::SampledSpectrum reflectance_color =
         atcg::SampledSpectrum::fromRGB(sbt_data->diffuse_texture.read(si.uv), wavelengths);

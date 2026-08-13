@@ -91,7 +91,7 @@ extern "C" __global__ void __raygen__sample_photons()
             break;
         }
 
-        if(!atcg::hasBSDFFlag(si.bsdf->flags, atcg::BSDFComponentType::AnyDelta))
+        if(!atcg::hasMaterialFlag(si.bsdf->flags, atcg::MaterialFlag::AnyDelta))
         {
             int photon_index = atomicAdd(params.photon_index, 1);
 
@@ -186,8 +186,8 @@ extern "C" __global__ void __raygen__rg()
             if(si.bsdf)
             {
                 auto result = si.bsdf->sampleBSDF(si, wavelengths, rng);
-                if(!atcg::hasBSDFFlag(si.bsdf->flags, atcg::BSDFComponentType::AnyDelta) &&
-                   !atcg::hasBSDFFlag(result.flags, atcg::BSDFComponentType::AnyDelta))
+                if(!atcg::hasMaterialFlag(si.bsdf->flags, atcg::MaterialFlag::AnyDelta) &&
+                   !atcg::hasMaterialFlag(result.flags, atcg::MaterialFlag::AnyDelta))
                 {
                     cuBQL::vec3f query_pos(si.position.x, si.position.y, si.position.z);
 

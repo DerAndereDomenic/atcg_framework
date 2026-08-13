@@ -44,7 +44,7 @@ protected:
     std::string _medium_type;
     MediumFlag _flags = MediumFlag::None;
 
-    atcg::dref_ptr<const MediumVPtrTable> _medium_vptr_table;
+    atcg::dref_ptr<MediumVPtrTable> _medium_vptr_table;
 };
 
 template<typename T>

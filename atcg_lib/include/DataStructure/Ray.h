@@ -2,7 +2,7 @@
 
 #include <Core/glm.h>
 
-#include <Medium/MediumVPtrTable.cuh>
+#include <Material/MediumVPtrTable.h>
 
 namespace atcg
 {

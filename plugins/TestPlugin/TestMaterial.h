@@ -14,6 +14,14 @@ public:
 
     virtual atcg::ref_ptr<atcg::Material> clone() const override;
 
+    virtual void updateData() override {}
+
+    virtual void initializePipeline(const atcg::ref_ptr<atcg::RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<atcg::ShaderBindingTable>& sbt) override
+    {
+        // No initialization needed for this material
+    }
+
     void setDiffuseColor(const glm::vec3& color);
 
     void setDiffuseTexture(const atcg::ref_ptr<atcg::Texture2D>& texture) { _diffuse_texture = texture; }

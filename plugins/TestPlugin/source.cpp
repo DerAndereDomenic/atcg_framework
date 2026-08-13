@@ -59,18 +59,6 @@ void TestIntegrator::initializePipeline(const Dictionary& dict)
     _sbt->createSBT();
 }
 
-void TestIntegrator::onImGuiRender()
-{
-    #ifndef ATCG_HEADLESS
-    ImGui::Begin("TestIntegrator");
-    for(auto shape: _optix_scene->getShapes())
-    {
-        shape->onImGuiRender();
-    }
-    ImGui::End();
-    #endif
-}
-
 void TestIntegrator::reset()
 {
     _frame_counter = 0;

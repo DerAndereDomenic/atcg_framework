@@ -52,18 +52,6 @@ void VolPathtracingIntegrator::initializePipeline(const Dictionary& dict)
     _sbt->createSBT();
 }
 
-void VolPathtracingIntegrator::onImGuiRender()
-{
-#ifndef ATCG_HEADLESS
-    _panel.renderPanel(_optix_scene);
-
-    if(_optix_scene->getEnvironmentEmitter())
-    {
-        _optix_scene->getEnvironmentEmitter()->onImGuiRender();
-    }
-#endif
-}
-
 void VolPathtracingIntegrator::reset()
 {
     _frame_counter = 0;

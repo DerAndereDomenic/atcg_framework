@@ -5,18 +5,34 @@
 #include <Shape/MeshShape.h>
 #include <Core/Path.h>
 #include <Core/Assert.h>
-#include <BSDF/BSDFRegistry.h>
 #include <Material/MaterialRegistry.h>
 
 // !TEST
-#include <Medium/HenyeyGreensteinPhaseFunction.h>
-#include <Medium/HomogeneousMedium.h>
-#include <Medium/HeterogeneousMedium.h>
 #include <Film/HDRFilm.h>
 #include <Sensor/PinholeCamera.h>
 
 namespace atcg
 {
+
+//! temp
+struct BSDFComponent
+{
+    BSDFComponent(AssetHandle bsdf_handle) : bsdf_handle(bsdf_handle) {}
+    AssetHandle bsdf_handle = 0;
+};
+
+struct EmitterComponent
+{
+    EmitterComponent(const atcg::ref_ptr<Emitter>& emitter) : emitter(emitter) {}
+    atcg::ref_ptr<Emitter> emitter;
+};
+
+struct ShapeComponent
+{
+    ShapeComponent(const atcg::ref_ptr<Shape>& shape) : shape(shape) {}
+    atcg::ref_ptr<Shape> shape;
+};
+
 template<typename T>
 void SceneAdapter::prepareComponent(const atcg::ref_ptr<OptixScene>& result, Entity entity)
 {
@@ -63,56 +79,31 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
 
     // Dictionary shape_data;
 
-    if(entity.hasComponent<HomogeneousMediumComponent>())
+    if(entity.hasComponent<MediumComponent>())
     {
-        auto& component = entity.getComponent<HomogeneousMediumComponent>();
+        auto& component = entity.getComponent<MediumComponent>();
 
-        Dictionary phase_dict;
-        phase_dict.setValue("g", component.g);
-        atcg::ref_ptr<HenyeyGreensteinPhaseFunction> phase = atcg::make_ref<HenyeyGreensteinPhaseFunction>(phase_dict);
-        phase->initializePipeline(_pipeline, _sbt);
+        // TODO Phase
+        // Dictionary phase_dict;
+        // phase_dict.setValue("g", component.g);
+        // atcg::ref_ptr<HenyeyGreensteinPhaseFunction> phase =
+        // atcg::make_ref<HenyeyGreensteinPhaseFunction>(phase_dict); phase->initializePipeline(_pipeline, _sbt);
 
 
-        Dictionary med_dict;
-        med_dict.setValue("density", component.density);
-        med_dict.setValue("albedo", component.albedo);
-        med_dict.setValue<atcg::ref_ptr<PhaseFunction>>("phase_func", phase);
-        med_dict.setValue("Le", component.Le * component.Le_color);
-        atcg::ref_ptr<HomogeneousMedium> medium = atcg::make_ref<HomogeneousMedium>(med_dict);
-        medium->initializePipeline(_pipeline, _sbt);
+        // Dictionary med_dict;
+        // med_dict.setValue("density", component.density);
+        // med_dict.setValue("albedo", component.albedo);
+        // med_dict.setValue<atcg::ref_ptr<PhaseFunction>>("phase_func", phase);
+        // med_dict.setValue("Le", component.Le * component.Le_color);
+        // atcg::ref_ptr<HomogeneousMedium> medium = atcg::make_ref<HomogeneousMedium>(med_dict);
+        component.medium()->initializePipeline(_pipeline, _sbt);
 
-        new_entity.addComponent<MediumComponent>(medium);
-        new_entity.addComponent<PhaseFunctionComponent>(phase);
-    }
-
-    if(entity.hasComponent<HeterogeneousMediumComponent>())
-    {
-        auto& component = entity.getComponent<HeterogeneousMediumComponent>();
-
-        if(AssetManager::isAssetHandleValid(component.density_grid.handle))
-        {
-            Dictionary med_dict;
-            med_dict.setValue("density_grid", component.density_grid);
-            med_dict.setValue("albedo_grid", component.albedo_grid);
-            med_dict.setValue("emission_grid", component.emission_grid);
-            med_dict.setValue("to_world", transform.getModel());
-            Dictionary phase_dict;
-            phase_dict.setValue("g", component.g);
-            atcg::ref_ptr<HenyeyGreensteinPhaseFunction> phase =
-                atcg::make_ref<HenyeyGreensteinPhaseFunction>(phase_dict);
-            phase->initializePipeline(_pipeline, _sbt);
-            med_dict.setValue<atcg::ref_ptr<PhaseFunction>>("phase_func", phase);
-
-            atcg::ref_ptr<HeterogeneousMedium> medium = atcg::make_ref<HeterogeneousMedium>(med_dict);
-            medium->initializePipeline(_pipeline, _sbt);
-
-            new_entity.addComponent<MediumComponent>(medium);
-            new_entity.addComponent<PhaseFunctionComponent>(phase);
-        }
+        new_entity.addComponent<MediumComponent>(component.medium());
+        // new_entity.addComponent<PhaseFunctionComponent>(phase);
     }
 
     new_entity.addComponent<ShapeComponent>(shape);
-    new_entity.addComponent<BSDFComponent>(bsdf);
+    new_entity.addComponent<BSDFComponent>(component.material_handle);
     new_entity.addComponent<TransformComponent>(transform);
     new_entity.addComponent<int32_t>((int32_t)entity.entity_handle());
 
@@ -180,7 +171,7 @@ void SceneAdapter::prepareComponent<PointSphereRenderComponent>(const atcg::ref_
                                     global_transform * inv_scale_model * scale_primitive;
 
         new_entity.addComponent<ShapeComponent>(shape);
-        new_entity.addComponent<BSDFComponent>(bsdf);
+        new_entity.addComponent<BSDFComponent>(component.material_handle);
         new_entity.addComponent<TransformComponent>(total_transform);
         new_entity.addComponent<int32_t>((int32_t)entity.entity_handle());
         new_entity.addComponent<glm::vec3>(color);
@@ -267,7 +258,7 @@ void SceneAdapter::prepareComponent<EdgeCylinderRenderComponent>(const atcg::ref
         glm::mat4 model_edge = model_translate * model_rotation * model_scale;
 
         new_entity.addComponent<ShapeComponent>(shape);
-        new_entity.addComponent<BSDFComponent>(bsdf);
+        new_entity.addComponent<BSDFComponent>(component.material_handle);
         new_entity.addComponent<TransformComponent>(model_edge);
         new_entity.addComponent<int32_t>((int32_t)entity.entity_handle());
         new_entity.addComponent<glm::vec3>(edge_color);
@@ -326,7 +317,7 @@ void SceneAdapter::prepareComponent<InstanceRenderComponent>(const atcg::ref_ptr
     {
         auto new_entity = result->createEntity(original_name);
         new_entity.addComponent<ShapeComponent>(shape);
-        new_entity.addComponent<BSDFComponent>(bsdf);
+        new_entity.addComponent<BSDFComponent>(component.material_handle);
         new_entity.addComponent<TransformComponent>(global_transform * transforms[i]);
         new_entity.addComponent<int32_t>((int32_t)entity.entity_handle());
         new_entity.addComponent<glm::vec3>(colors[i]);
@@ -408,12 +399,8 @@ SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene, const uint32_t width, con
             auto material = AssetManager::getAsset<Material>(entry.first);
             if(material)
             {
-                atcg::Dictionary bsdf_dict;
-                bsdf_dict.setValue("material", material);
-                atcg::ref_ptr<BSDF> bsdf =
-                    BSDFRegistry::createBSDF(material->getMaterialType(), bsdf_dict, _pipeline, _sbt);
-
-                _bsdf_cache.insert(std::make_pair(entry.first, bsdf));
+                material->initializePipeline(_pipeline, _sbt);
+                _bsdf_cache.insert(std::make_pair(entry.first, material));
             }
         }
     }
@@ -421,11 +408,9 @@ SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene, const uint32_t width, con
     // Insert default material
     atcg::Dictionary default_material_dict;
     atcg::ref_ptr<Material> material = atcg::MaterialRegistry::createMaterial("Opaque", default_material_dict);
-    atcg::Dictionary bsdf_dict;
-    bsdf_dict.setValue("material", material);
-    atcg::ref_ptr<BSDF> bsdf = BSDFRegistry::createBSDF(material->getMaterialType(), bsdf_dict, _pipeline, _sbt);
+    material->initializePipeline(_pipeline, _sbt);
 
-    _bsdf_cache.insert(std::make_pair(0, bsdf));
+    _bsdf_cache.insert(std::make_pair(0, material));
 
     atcg::ref_ptr<OptixScene> result = atcg::make_ref<OptixScene>();
     std::vector<const EmitterVPtrTable*> tables;
@@ -500,7 +485,8 @@ SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene, const uint32_t width, con
 
         if(entity.hasComponent<BSDFComponent>())
         {
-            shape_data.setValue("bsdf", entity.getComponent<BSDFComponent>().bsdf);
+            auto handle = entity.getComponent<BSDFComponent>().bsdf_handle;
+            shape_data.setValue("bsdf", _bsdf_cache.at(handle));
         }
 
         if(entity.hasComponent<TransformComponent>())
@@ -510,7 +496,7 @@ SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene, const uint32_t width, con
 
         if(entity.hasComponent<MediumComponent>())
         {
-            shape_data.setValue("inside_medium", entity.getComponent<MediumComponent>().medium);
+            shape_data.setValue("inside_medium", entity.getComponent<MediumComponent>().medium());
         }
 
         if(entity.hasComponent<EmitterComponent>())

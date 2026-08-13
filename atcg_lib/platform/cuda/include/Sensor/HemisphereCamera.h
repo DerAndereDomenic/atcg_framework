@@ -24,10 +24,8 @@ public:
      */
     virtual ~HemisphereCamera();
 
-    /**
-     * @brief A callback to display debug information in imgui
-     */
-    virtual void onImGuiRender() override;
+    // TODO
+    virtual void updateData() override {}
 
     /**
      * @brief Initialize the pipeline

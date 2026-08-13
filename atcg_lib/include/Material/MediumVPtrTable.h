@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/glm.h>
-#include <Medium/PhaseFunctionVPtrTable.cuh>
+#include <Material/PhaseFunctionVPtrTable.h>
 #include <DataStructure/SampledSpectrum.h>
 
 namespace atcg

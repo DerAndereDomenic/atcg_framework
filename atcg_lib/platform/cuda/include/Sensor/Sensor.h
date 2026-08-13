@@ -32,11 +32,6 @@ public:
     virtual ~Sensor() {}
 
     /**
-     * @brief A callback to display debug information in imgui
-     */
-    virtual void onImGuiRender() = 0;
-
-    /**
      * @brief Mark the sensor as dirty (e.g. camera changed)
      */
     virtual void markDirty() = 0;

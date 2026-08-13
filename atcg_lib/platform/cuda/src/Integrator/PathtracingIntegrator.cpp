@@ -51,18 +51,6 @@ void PathtracingIntegrator::initializePipeline(const Dictionary& dict)
     _sbt->createSBT();
 }
 
-void PathtracingIntegrator::onImGuiRender()
-{
-#ifndef ATCG_HEADLESS
-    ImGui::Begin("PathtracingIntegrator");
-    for(auto shape: _optix_scene->getShapes())
-    {
-        shape->onImGuiRender();
-    }
-    ImGui::End();
-#endif
-}
-
 void PathtracingIntegrator::reset()
 {
     _frame_counter = 0;

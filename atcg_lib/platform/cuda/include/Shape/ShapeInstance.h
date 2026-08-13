@@ -4,9 +4,9 @@
 #include <Core/glm.h>
 #include <DataStructure/Dictionary.h>
 #include <Shape/Shape.h>
-#include <BSDF/BSDF.h>
+#include <Material/Material.h>
 #include <Emitter/Emitter.h>
-#include <Medium/Medium.h>
+#include <Material/Medium.h>
 
 namespace atcg
 {
@@ -32,10 +32,8 @@ public:
 
     virtual ~ShapeInstance() = default;
 
-    /**
-     * @brief A callback to display debug information in imgui
-     */
-    virtual void onImGuiRender() override;
+    // TODO
+    virtual void updateData() override {}
 
     /**
      * @brief Initialize the pipeline
@@ -53,7 +51,7 @@ public:
      */
     ATCG_INLINE atcg::ref_ptr<Shape> getShape() const { return _shape; }
 
-    ATCG_INLINE atcg::ref_ptr<BSDF> getBSDF() const { return _bsdf; }
+    ATCG_INLINE atcg::ref_ptr<Material> getMaterial() const { return _material; }
 
     ATCG_INLINE atcg::ref_ptr<Emitter> getEmitter() const { return _emitter; }
 
@@ -75,7 +73,7 @@ public:
 private:
     glm::mat4 _transform;
     atcg::ref_ptr<Shape> _shape;
-    atcg::ref_ptr<BSDF> _bsdf;
+    atcg::ref_ptr<Material> _material;
     atcg::ref_ptr<Emitter> _emitter;
     atcg::ref_ptr<Medium> _inside_medium;
     atcg::ref_ptr<Medium> _outside_medium;

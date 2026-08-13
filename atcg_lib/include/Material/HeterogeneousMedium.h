@@ -41,9 +41,7 @@ public:
 
     static void registerMedium(MediumRegistry::Registry* registry);
 
-    const
-
-        struct GridComponent
+    struct GridComponent
     {
         BoundingBox bbox;
         AssetHandle handle = 0;

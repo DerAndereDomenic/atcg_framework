@@ -38,7 +38,7 @@ public:
 
 DielectricMaterial::Impl::Impl(const atcg::Dictionary& dict) {}
 
-DielectricMaterial::~DielectricMaterial() {}
+DielectricMaterial::Impl::~Impl() {}
 
 DielectricMaterial::DielectricMaterial(const atcg::Dictionary& dict) : MicrofacetMaterial("Dielectric", dict)
 {
@@ -46,6 +46,8 @@ DielectricMaterial::DielectricMaterial(const atcg::Dictionary& dict) : Microface
 
     _flags = _flags | MaterialFlag::GlossyTransmission | MaterialFlag::DiffuseTransmission;
 }
+
+DielectricMaterial::~DielectricMaterial() {}
 
 void DielectricMaterial::uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader)
 {

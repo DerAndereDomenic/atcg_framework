@@ -60,18 +60,6 @@ void PhotonMapIntegrator::initializePipeline(const Dictionary& dict)
         DeviceBuffer<PhotonGatherData>(dict.getValue<uint32_t>("width") * dict.getValue<uint32_t>("height"));
 }
 
-void PhotonMapIntegrator::onImGuiRender()
-{
-#ifndef ATCG_HEADLESS
-    ImGui::Begin("PhotonMapIntegrator");
-    for(auto shape: _optix_scene->getShapes())
-    {
-        shape->onImGuiRender();
-    }
-    ImGui::End();
-#endif
-}
-
 void PhotonMapIntegrator::reset()
 {
     _frame_counter = 0;

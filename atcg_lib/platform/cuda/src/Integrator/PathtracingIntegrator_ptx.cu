@@ -112,7 +112,7 @@ extern "C" __global__ void __raygen__rg()
                         si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light, wavelengths);
 
                     float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0 ||
-                                               (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0
+                                               (int)(bsdf_result.flags & atcg::MaterialFlag::AnyDelta) != 0
                                            ? 0.0f
                                            : bsdf_result.sample_probability;
                     float mis_weight = atcg::BalanceHeuristic::apply(emitter_sampling.sampling_pdf, bsdf_pdf);
@@ -133,7 +133,7 @@ extern "C" __global__ void __raygen__rg()
                     last_si     = si;
                     last_si.pdf = result.sample_probability;
 
-                    if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
+                    if((int)(result.flags & atcg::MaterialFlag::AnyDelta) != 0)
                     {
                         last_si.setInvalid();
                     }

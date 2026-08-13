@@ -40,11 +40,6 @@ public:
     virtual ~Shape() {}
 
     /**
-     * @brief A callback to display debug information in imgui
-     */
-    virtual void onImGuiRender() = 0;
-
-    /**
      * @brief Prepare the acceleration structure of the shape
      *
      * @param context The raytracing context
@@ -75,25 +70,4 @@ protected:
 
     ShapeData* _shape_data;
 };
-
-struct ShapeComponent
-{
-    ShapeComponent() = default;
-    ShapeComponent(const atcg::ref_ptr<Shape>& shape) : shape(shape) {}
-
-    atcg::ref_ptr<Shape> shape;
-
-    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "ShapeComponent"; }
-};
-
-#ifndef __CUDACC__
-namespace GUI
-{
-template<>
-struct is_gui_addable<ShapeComponent> : std::false_type
-{
-};
-ATCG_DECLARE_COMPONENT_GUI_RENDERER(ShapeComponent);
-}    // namespace GUI
-#endif
 }    // namespace atcg

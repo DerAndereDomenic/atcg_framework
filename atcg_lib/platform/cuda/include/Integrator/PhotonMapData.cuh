@@ -4,7 +4,7 @@
 #include <Core/glm.h>
 #include <Core/TraceParameters.h>
 #include <Emitter/EmitterVPtrTable.cuh>
-#include <BSDF/BSDFVPtrTable.cuh>
+#include <Material/BSDFVPtrTable.h>
 #include <Sensor/SensorVPtrTable.cuh>
 #include <cuBQL/bvh.h>
 #include <cuBQL/math/box.h>

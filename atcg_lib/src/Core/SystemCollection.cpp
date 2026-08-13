@@ -46,11 +46,7 @@
 // Optix Components
 #ifdef ATCG_CUDA_BACKEND
     #include <Renderer/RaytracingContextManager.h>
-    #include <BSDF/BSDFRegistry.h>
     #include <Integrator/IntegratorRegistry.h>
-    #include <BSDF/PBRBSDF.h>
-    #include <BSDF/NullBSDF.h>
-    #include <BSDF/DielectricBSDF.h>
     #include <Integrator/PathtracingIntegrator.h>
     #include <Integrator/VolPathtracingIntegrator.h>
     #include <Integrator/PhotonMapIntegrator.h>
@@ -73,7 +69,6 @@ public:
     atcg::ref_ptr<ContextManagerSystem> _context_manager;
 #ifdef ATCG_CUDA_BACKEND
     atcg::ref_ptr<RaytracingContextManagerSystem> _rt_context_manager;
-    atcg::ref_ptr<BSDFRegistry::Registry> _bsdf_registry;
     atcg::ref_ptr<IntegratorRegistry::Registry> _integrator_registry;
 #endif
     atcg::scope_ptr<Window> _window;
@@ -109,12 +104,6 @@ void SystemCollection::Impl::initSystems(const WindowProps& props, const Window:
     atcg::RaytracingContext::initRaytracingAPI();
     _rt_context_manager = atcg::make_ref<RaytracingContextManagerSystem>();
     SystemRegistry::instance()->registerSystem(_rt_context_manager.get());
-
-    _bsdf_registry = atcg::make_ref<BSDFRegistry::Registry>();
-    PBRBSDF::registerBSDF(_bsdf_registry.get());
-    DielectricBSDF::registerBSDF(_bsdf_registry.get());
-    NullBSDF::registerBSDF(_bsdf_registry.get());
-    SystemRegistry::instance()->registerSystem(_bsdf_registry.get());
 
     _integrator_registry = atcg::make_ref<IntegratorRegistry::Registry>();
     VolPathtracingIntegrator::registerIntegrator(_integrator_registry.get());

@@ -1,9 +1,9 @@
 #pragma once
 
 #include <Shape/ShapeData.cuh>
-#include <BSDF/BSDFVPtrTable.cuh>
+#include <Material/BSDFVPtrTable.h>
 #include <Emitter/EmitterVPtrTable.cuh>
-#include <Medium/MediumVPtrTable.cuh>
+#include <Material/MediumVPtrTable.h>
 
 namespace atcg
 {

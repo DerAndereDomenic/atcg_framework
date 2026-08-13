@@ -40,11 +40,6 @@ public:
     virtual ~Integrator() = default;
 
     /**
-     * @brief A callback to display debug information in imgui
-     */
-    virtual void onImGuiRender() = 0;
-
-    /**
      * @brief Generate the rays and write output
      *
      * @param in_out_dictionary The input and output data

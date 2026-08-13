@@ -419,10 +419,6 @@ public:
             ImGui::End();
         }
 
-    #ifdef ATCG_CUDA_BACKEND
-        if(enable_pathtracing) integrator->onImGuiRender();
-    #endif
-
         performance_panel.renderPanel(show_performance);
         panel.renderPanel(atcg::Project::getActive()->getActiveScene());
         hovered_entity = panel.getSelectedEntity();

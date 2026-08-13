@@ -11,8 +11,6 @@ PinholeCamera::PinholeCamera(const Dictionary& dict)
 
 PinholeCamera::~PinholeCamera() {}
 
-void PinholeCamera::onImGuiRender() {}
-
 void PinholeCamera::markDirty()
 {
     PinholeCameraData pinhole_camera_data;

@@ -5,8 +5,8 @@
 #include <Math/Random.h>
 
 #include <Utils/HostDevice.h>
-#include <Medium/PhaseFunctionVPtrTable.cuh>
-#include <Medium/HenyeyGreensteinPhaseFunctionData.cuh>
+#include <Material/PhaseFunctionVPtrTable.h>
+#include <Material/HenyeyGreensteinPhaseFunctionData.h>
 
 #include <DataStructure/Frame.h>
 #include <Medium/Sampling.h>

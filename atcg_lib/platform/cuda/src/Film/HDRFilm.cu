@@ -65,8 +65,6 @@ HDRFilm::HDRFilm(const atcg::Dictionary& dict) : Film(dict)
 
 HDRFilm::~HDRFilm() {}
 
-void HDRFilm::onImGuiRender() {}
-
 torch::Tensor HDRFilm::develop() const
 {
     torch::Tensor output_image =

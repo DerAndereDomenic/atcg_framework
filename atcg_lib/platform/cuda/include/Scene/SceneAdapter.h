@@ -55,7 +55,7 @@ private:
     atcg::ref_ptr<ShaderBindingTable> _sbt;
 
     std::unordered_map<AssetHandle, atcg::ref_ptr<Shape>> _shape_cache;
-    std::unordered_map<AssetHandle, atcg::ref_ptr<BSDF>> _bsdf_cache;
+    std::unordered_map<AssetHandle, atcg::ref_ptr<Material>> _bsdf_cache;
 
     atcg::BoundingBox _scene_aabb;
 };

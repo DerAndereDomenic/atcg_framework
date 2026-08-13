@@ -24,6 +24,8 @@ NullMaterial::NullMaterial(const atcg::Dictionary& dict) : Material("Null", dict
     _flags = MaterialFlag::IdealTransmission | MaterialFlag::NullTransmission;
 }
 
+NullMaterial::~NullMaterial() {}
+
 void NullMaterial::uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader)
 {
     ATCG_ASSERT(!_uploaded, "Material was already uploaded");

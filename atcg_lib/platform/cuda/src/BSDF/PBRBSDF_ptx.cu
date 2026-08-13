@@ -6,8 +6,8 @@
 
 #include <Utils/HostDevice.h>
 #include <DataStructure/SurfaceInteraction.h>
-#include <BSDF/BSDFVPtrTable.cuh>
-#include <BSDF/PBRBSDFData.cuh>
+#include <Material/BSDFVPtrTable.h>
+#include <Material/OpaqueMaterialData.h>
 #include <BSDF/BSDFFunctions.h>
 #include <BSDF/Sampling.h>
 
@@ -62,7 +62,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
         glm::vec3 local_outgoing_ray_dir = strategy.sample(rng.next2d());
         // Transform local outgoing direction from tangent space to world space
         result.out_dir = local_frame.toWorld(local_outgoing_ray_dir);
-        result.flags   = atcg::BSDFComponentType::DiffuseReflection;
+        result.flags   = atcg::MaterialFlag::DiffuseReflection;
     }
     else
     {
@@ -73,8 +73,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
         glm::vec3 halfway = local_frame.toWorld(local_halfway);
         result.out_dir    = glm::reflect(si.incoming_direction, halfway);
 
-        result.flags =
-            (roughness < 0.01f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection);
+        result.flags = (roughness < 0.01f ? atcg::MaterialFlag::IdealReflection : atcg::MaterialFlag::GlossyReflection);
     }
 
     // It is possible that light directions below the horizon are sampled..
@@ -180,9 +179,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalPBR(const atcg::Surf
 
     result.bsdf_value         = (specular + kD * diffuse_color / glm::pi<float>()) * NdotL;
     result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
-    result.flags =
-        (roughness < 0.01f ? atcg::BSDFComponentType::IdealReflection
-                           : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::DiffuseReflection);
+    result.flags = (roughness < 0.01f ? atcg::MaterialFlag::IdealReflection
+                                      : atcg::MaterialFlag::GlossyReflection | atcg::MaterialFlag::DiffuseReflection);
 
     return result;
 }
@@ -193,7 +191,8 @@ __direct_callable__sample_pbrbsdf(const atcg::SurfaceInteraction& si,
                                   const atcg::SampledWavelengths& wavelengths,
                                   atcg::PCG32& rng)
 {
-    const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
+    const atcg::OpaqueMaterialData* sbt_data =
+        *reinterpret_cast<const atcg::OpaqueMaterialData**>(optixGetSbtDataPointer());
 
     atcg::SampledSpectrum diffuse_color =
         atcg::SampledSpectrum::fromRGB(sbt_data->diffuse_texture.read(si.uv), wavelengths);
@@ -211,7 +210,8 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_pbrbsdf(const
                                                                            const glm::vec3& outgoing_dir,
                                                                            const atcg::SampledWavelengths& wavelengths)
 {
-    const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
+    const atcg::OpaqueMaterialData* sbt_data =
+        *reinterpret_cast<const atcg::OpaqueMaterialData**>(optixGetSbtDataPointer());
 
     atcg::SampledSpectrum diffuse_color =
         atcg::SampledSpectrum::fromRGB(sbt_data->diffuse_texture.read(si.uv), wavelengths);
