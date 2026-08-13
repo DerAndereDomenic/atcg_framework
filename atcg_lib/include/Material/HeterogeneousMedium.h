@@ -12,6 +12,8 @@ class HeterogeneousMedium : public Medium
 public:
     HeterogeneousMedium(const Dictionary& dict);
 
+    ~HeterogeneousMedium();
+
     atcg::ref_ptr<Texture3D> density() const;
 
     atcg::ref_ptr<Texture3D> albedo() const;
@@ -21,24 +23,40 @@ public:
     virtual void
     uploadMedium(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader, const glm::mat4& model) override;
 
+    /**
+     * @brief Update the data and upload it to the GPU (if necessary)
+     */
+    virtual void updateData() override;
+
+    /**
+     * @brief Initialize the component in the raytracing pipeline
+     *
+     * @param pipeline The raytracing pipeline
+     * @param sbt The shader binding table
+     */
+    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
+
     virtual atcg::ref_ptr<Medium> clone() const override;
 
     static void registerMedium(MediumRegistry::Registry* registry);
 
-    struct GridComponent
+    const
+
+        struct GridComponent
     {
         BoundingBox bbox;
         AssetHandle handle = 0;
         float scale        = 1.0f;
     };
 
-    GridComponent density_grid;
-    GridComponent albedo_grid;
-    GridComponent emission_grid;
+    GridComponent& densityGrid() const;
+    GridComponent& albedoGrid() const;
+    GridComponent& emissionGrid() const;
 
 private:
-    atcg::ref_ptr<Texture3D> _default_emission_texture;
-    atcg::ref_ptr<Texture3D> _default_albedo_texture;
+    class Impl;
+    std::unique_ptr<Impl> impl;
 };
 
 template<>

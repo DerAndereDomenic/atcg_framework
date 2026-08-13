@@ -1,5 +1,7 @@
 #include <Material/HomogeneousMedium.h>
 
+#include <Material/HomogeneousMediumData.h>
+
 #ifndef ATCG_HEADLESS
     #include <imgui.h>
 #endif
@@ -13,12 +15,36 @@
 
 namespace atcg
 {
-HomogeneousMedium::HomogeneousMedium(const Dictionary& dict) : Medium("Homogeneous", dict)
+
+class HomogeneousMedium::Impl
+{
+public:
+    Impl(const atcg::Dictionary& dict);
+
+    ~Impl();
+
+    glm::vec3 _albedo   = glm::vec3(0);
+    float _density      = 0.0f;
+    float _Le           = 0.0f;
+    glm::vec3 _Le_color = glm::vec3(1);
+
+    // GPU interface
+    atcg::dref_ptr<HomogeneousMediumData> _medium_data_buffer;
+};
+
+HomogeneousMedium::Impl::Impl(const atcg::Dictionary& dict)
 {
     _albedo   = dict.getValueOr<glm::vec3>("albedo", _albedo);
     _density  = dict.getValueOr<float>("density", _density);
     _Le       = dict.getValueOr<float>("Le", _Le);
     _Le_color = dict.getValueOr<glm::vec3>("Le_color", _Le_color);
+}
+
+HomogeneousMedium::Impl::~Impl() {}
+
+HomogeneousMedium::HomogeneousMedium(const Dictionary& dict) : Medium("Homogeneous", dict)
+{
+    impl = std::make_unique<Impl>(dict);
 
     _flags = MediumFlag::Homogeneous;
 }
@@ -35,21 +61,102 @@ void HomogeneousMedium::uploadMedium(RendererSystem* renderer,
     uint32_t emission_id = renderer->popTextureID();
     _texture_ids[2]      = emission_id;
 
-    shader->setVec3("albedo", _albedo);
-    shader->setFloat("density", _density);
-    shader->setFloat("Le", _Le);
-    shader->setVec3("Le_color", _Le_color);
+    shader->setVec3("albedo", impl->_albedo);
+    shader->setFloat("density", impl->_density);
+    shader->setFloat("Le", impl->_Le);
+    shader->setVec3("Le_color", impl->_Le_color);
 
     _uploaded = true;
 }
 
+void HomogeneousMedium::setAlbedo(const glm::vec3& albedo)
+{
+    impl->_albedo = albedo;
+}
+
+void HomogeneousMedium::setDensity(const float density)
+{
+    impl->_density = density;
+}
+
+void HomogeneousMedium::setLe(const float Le)
+{
+    impl->_Le = Le;
+}
+
+void HomogeneousMedium::setLeColor(const glm::vec3& Le_color)
+{
+    impl->_Le_color = Le_color;
+}
+
+glm::vec3 HomogeneousMedium::albedo() const
+{
+    return impl->_albedo;
+}
+
+float HomogeneousMedium::density() const
+{
+    return impl->_density;
+}
+
+float HomogeneousMedium::Le() const
+{
+    return impl->_Le;
+}
+
+glm::vec3 HomogeneousMedium::Le_color() const
+{
+    return impl->_Le_color;
+}
+
+
+void HomogeneousMedium::updateData()
+{
+    HomogeneousMediumData data;
+    data.albedo  = impl->_albedo;
+    data.density = impl->_density;
+    data.Le      = impl->_Le * impl->_Le_color;
+
+    impl->_medium_data_buffer.upload(&data);
+}
+
+void HomogeneousMedium::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                           const atcg::ref_ptr<ShaderBindingTable>& sbt)
+{
+    updateData();
+    // TODO
+    // if(_phase_function != nullptr) _phase_function->ensureInitialized(pipeline, sbt);
+
+    // auto phase_function = getPhaseFunction();
+
+    const std::string ptx_filename = "./bin/HomogeneousMedium_ptx.ptx";
+    OptixProgramGroup eval_transmittance_prog_group =
+        pipeline->addCallableShader({ptx_filename, "__direct_callable__homogeneousMedium_evalTransmittance"});
+    OptixProgramGroup sample_medium_event_prog_group =
+        pipeline->addCallableShader({ptx_filename, "__direct_callable__homogeneousMedium_sampleMediumEvent"});
+
+    uint32_t eval_transmittance_index =
+        sbt->addCallableEntry(eval_transmittance_prog_group, impl->_medium_data_buffer.get());
+    uint32_t sample_medium_event_index =
+        sbt->addCallableEntry(sample_medium_event_prog_group, impl->_medium_data_buffer.get());
+
+    MediumVPtrTable vptr_table_data;
+    vptr_table_data.evalCallIndex   = eval_transmittance_index;
+    vptr_table_data.sampleCallIndex = sample_medium_event_index;
+    // TODO: vptr_table_data.phase_function  = phase_function ? phase_function->getVPtrTable() : nullptr;
+
+    _medium_vptr_table.upload(&vptr_table_data);
+
+    markInitialized();
+}
+
 atcg::ref_ptr<Medium> HomogeneousMedium::clone() const
 {
-    auto medium       = atcg::make_ref<HomogeneousMedium>(atcg::Dictionary());
-    medium->_albedo   = _albedo;
-    medium->_density  = _density;
-    medium->_Le       = _Le;
-    medium->_Le_color = _Le_color;
+    auto medium = atcg::make_ref<HomogeneousMedium>(atcg::Dictionary());
+    medium->setAlbedo(impl->_albedo);
+    medium->setDensity(impl->_density);
+    medium->setLe(impl->_Le);
+    medium->setLeColor(impl->_Le_color);
     return medium;
 }
 

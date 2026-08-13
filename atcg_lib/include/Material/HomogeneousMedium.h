@@ -10,21 +10,23 @@ class HomogeneousMedium : public Medium
 public:
     HomogeneousMedium(const Dictionary& dict);
 
-    ATCG_INLINE void setAlbedo(const glm::vec3& albedo) { _albedo = albedo; }
+    ~HomogeneousMedium();
 
-    ATCG_INLINE void setDensity(const float density) { _density = density; }
+    void setAlbedo(const glm::vec3& albedo);
 
-    ATCG_INLINE void setLe(const float Le) { _Le = Le; }
+    void setDensity(const float density);
 
-    ATCG_INLINE void setLeColor(const glm::vec3& Le_color) { _Le_color = Le_color; }
+    void setLe(const float Le);
 
-    ATCG_INLINE glm::vec3 albedo() const { return _albedo; }
+    void setLeColor(const glm::vec3& Le_color);
 
-    ATCG_INLINE float density() const { return _density; }
+    glm::vec3 albedo() const;
 
-    ATCG_INLINE float Le() const { return _Le; }
+    float density() const;
 
-    ATCG_INLINE glm::vec3 Le_color() const { return _Le_color; }
+    float Le() const;
+
+    glm::vec3 Le_color() const;
 
     virtual void
     uploadMedium(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader, const glm::mat4& model) override;
@@ -33,12 +35,24 @@ public:
 
     static void registerMedium(MediumRegistry::Registry* registry);
 
+    /**
+     * @brief Update the data and upload it to the GPU (if necessary)
+     */
+    virtual void updateData() override;
+
+    /**
+     * @brief Initialize the component in the raytracing pipeline
+     *
+     * @param pipeline The raytracing pipeline
+     * @param sbt The shader binding table
+     */
+    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
+
 
 private:
-    glm::vec3 _albedo   = glm::vec3(0);
-    float _density      = 0.0f;
-    float _Le           = 0.0f;
-    glm::vec3 _Le_color = glm::vec3(1);
+    class Impl;
+    std::unique_ptr<Impl> impl;
 };
 
 template<>

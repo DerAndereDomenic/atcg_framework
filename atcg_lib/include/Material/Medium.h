@@ -1,17 +1,20 @@
 #pragma once
 
 #include <Asset/Asset.h>
+#include <Core/RaytracingComponent.h>
 #include <Core/API.h>
 #include <DataStructure/Dictionary.h>
 #include <Material/MediumFlags.h>
+#include <Material/MediumVPtrTable.h>
 #include <Renderer/Renderer.h>
+
 #include <json.hpp>
 #include <filesystem>
 #include <array>
 
 namespace atcg
 {
-class ATCG_API Medium : public Asset
+class ATCG_API Medium : public Asset, public RaytracingComponent
 {
 public:
     Medium(const std::string& type, const Dictionary& dict);
@@ -33,11 +36,15 @@ public:
 
     void releaseTextureIDs(RendererSystem* renderer);
 
+    ATCG_INLINE atcg::dref_ptr<MediumVPtrTable> getVPtrTable() const { return _medium_vptr_table; }
+
 protected:
     std::array<uint32_t, 3> _texture_ids;
     bool _uploaded = false;
     std::string _medium_type;
     MediumFlag _flags = MediumFlag::None;
+
+    atcg::dref_ptr<MediumVPtrTable> _medium_vptr_table;
 };
 
 template<typename T>
