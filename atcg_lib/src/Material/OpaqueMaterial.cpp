@@ -2,6 +2,7 @@
 #include <Renderer/GraphicsAPI.h>
 #include <Renderer/Renderer.h>
 #include <Core/Application.h>
+#include <Material/OpaqueMaterialData.h>
 
 #ifndef ATCG_HEADLESS
     #include <imgui.h>
@@ -22,7 +23,27 @@
 
 namespace atcg
 {
-OpaqueMaterial::OpaqueMaterial(const atcg::Dictionary& dict) : MicrofacetMaterial("Opaque", dict)
+
+class OpaqueMaterial::Impl
+{
+public:
+    Impl(const atcg::Dictionary& dict);
+
+    ~Impl();
+
+    // Real-time data
+    atcg::ref_ptr<atcg::Texture2D> _normal_texture;
+    atcg::ref_ptr<atcg::Texture2D> _metallic_texture;
+
+    // Optix Data
+    atcg::ref_ptr<atcg::Texture2D> _diffuse_texture_gpu;
+    atcg::ref_ptr<atcg::Texture2D> _roughness_texture_gpu;
+    atcg::ref_ptr<atcg::Texture2D> _metallic_texture_gpu;
+
+    atcg::dref_ptr<OpaqueMaterialData> _material_data;
+};
+
+OpaqueMaterial::Impl::Impl(const atcg::Dictionary& dict)
 {
     TextureSpecification spec_normal;
     spec_normal.width  = 1;
@@ -41,14 +62,45 @@ OpaqueMaterial::OpaqueMaterial(const atcg::Dictionary& dict) : MicrofacetMateria
     _metallic_texture = dict.getValueOr<atcg::ref_ptr<atcg::Texture2D>>("metallic_texture", _metallic_texture);
 }
 
+OpaqueMaterial::Impl::~Impl()
+{
+    // Destructor
+}
+
+OpaqueMaterial::OpaqueMaterial(const atcg::Dictionary& dict) : MicrofacetMaterial("Opaque", dict)
+{
+    impl = std::make_unique<Impl>(dict);
+
+    _flags = MaterialFlag::GlossyReflection | MaterialFlag::DiffuseReflection;
+}
+
+OpaqueMaterial::~OpaqueMaterial()
+{
+    // Destructor
+}
+
 void OpaqueMaterial::setMetallic(const float metallic)
 {
     TextureSpecification spec_metallic;
-    spec_metallic.width  = 1;
-    spec_metallic.height = 1;
-    spec_metallic.format = TextureFormat::RFLOAT;
-    _metallic_texture    = atcg::Texture2D::create(&metallic, spec_metallic);
+    spec_metallic.width     = 1;
+    spec_metallic.height    = 1;
+    spec_metallic.format    = TextureFormat::RFLOAT;
+    impl->_metallic_texture = atcg::Texture2D::create(&metallic, spec_metallic);
 }
+
+atcg::ref_ptr<atcg::Texture2D> OpaqueMaterial::getNormalTexture() const
+{
+    return impl->_normal_texture;
+}
+
+atcg::ref_ptr<atcg::Texture2D> OpaqueMaterial::getMetallicTexture() const
+{
+    return impl->_metallic_texture;
+}
+
+void OpaqueMaterial::setNormalTexture(const atcg::ref_ptr<atcg::Texture2D>& texture) {}
+
+void OpaqueMaterial::setMetallicTexture(const atcg::ref_ptr<atcg::Texture2D>& texture) {}
 
 void OpaqueMaterial::removeNormalMap()
 {
@@ -56,7 +108,7 @@ void OpaqueMaterial::removeNormalMap()
     spec_normal.width  = 1;
     spec_normal.height = 1;
     glm::u8vec4 normal(127, 127, 255, 255);
-    _normal_texture = atcg::Texture2D::create(&normal, spec_normal);
+    impl->_normal_texture = atcg::Texture2D::create(&normal, spec_normal);
 }
 
 void OpaqueMaterial::uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader)
@@ -107,6 +159,47 @@ atcg::ref_ptr<Material> OpaqueMaterial::clone() const
     material->setNormalTexture(std::dynamic_pointer_cast<atcg::Texture2D>(getNormalTexture()->clone()));
 
     return material;
+}
+
+
+void OpaqueMaterial::updateData()
+{
+    impl->_diffuse_texture_gpu   = std::dynamic_pointer_cast<Texture2D>(getDiffuseTexture()->clone());
+    impl->_metallic_texture_gpu  = std::dynamic_pointer_cast<Texture2D>(getMetallicTexture()->clone());
+    impl->_roughness_texture_gpu = std::dynamic_pointer_cast<Texture2D>(getRoughnessTexture()->clone());
+
+    OpaqueMaterialData data;
+
+    data.diffuse_texture.texture_data.texture   = impl->_diffuse_texture_gpu->getTextureObject();
+    data.diffuse_texture.spec                   = impl->_diffuse_texture_gpu->getSpecification();
+    data.metallic_texture.texture_data.texture  = impl->_metallic_texture_gpu->getTextureObject();
+    data.metallic_texture.spec                  = impl->_metallic_texture_gpu->getSpecification();
+    data.roughness_texture.texture_data.texture = impl->_roughness_texture_gpu->getTextureObject();
+    data.roughness_texture.spec                 = impl->_roughness_texture_gpu->getSpecification();
+
+    impl->_material_data.upload(&data);
+}
+
+
+void OpaqueMaterial::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                        const atcg::ref_ptr<ShaderBindingTable>& sbt)
+{
+    updateData();
+
+    const std::string ptx_bsdf_filename = "./bin/PBRBSDF_ptx.ptx";
+    auto sample_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_pbrbsdf"});
+    auto eval_prog_group   = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_pbrbsdf"});
+    uint32_t sample_idx    = sbt->addCallableEntry(sample_prog_group, impl->_material_data.get());
+    uint32_t eval_idx      = sbt->addCallableEntry(eval_prog_group, impl->_material_data.get());
+
+    BSDFVPtrTable table;
+    table.sampleCallIndex = sample_idx;
+    table.evalCallIndex   = eval_idx;
+    table.flags           = _flags;
+
+    _bsdf_vptr_table.upload(&table);
+
+    markInitialized();
 }
 
 bool MaterialGUIRenderer<OpaqueMaterial>::renderGUI(const atcg::ref_ptr<OpaqueMaterial>& material,

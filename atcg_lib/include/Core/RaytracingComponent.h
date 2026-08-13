@@ -14,9 +14,9 @@ struct ATCG_API RaytracingComponent
 {
 public:
     /**
-     * @brief A callback to display debug information in imgui
+     * @brief Update the data and upload it to the GPU (if necessary)
      */
-    virtual void onImGuiRender() = 0;
+    virtual void updateData() = 0;
 
     /**
      * @brief Initialize the component in the raytracing pipeline

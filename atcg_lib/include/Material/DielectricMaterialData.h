@@ -4,10 +4,10 @@
 
 namespace atcg
 {
-struct PBRBSDFData
+struct DielectricMaterialData
 {
     CUDATexture<glm::vec3> diffuse_texture;
-    CUDATexture<float> metallic_texture;
     CUDATexture<float> roughness_texture;
+    CUDATexture<float> ior_texture;
 };
 }    // namespace atcg

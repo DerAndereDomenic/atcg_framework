@@ -3,7 +3,7 @@
 #include <Core/glm.h>
 #include <DataStructure/SurfaceInteraction.h>
 #include <Math/Random.h>
-#include <BSDF/BSDFFlags.h>
+#include <Material/MaterialFlags.h>
 #include <DataStructure/SampledSpectrum.h>
 #include <Core/Optix.h>
 
@@ -15,14 +15,14 @@ struct BSDFSamplingResult
     glm::vec3 out_dir;
     SampledSpectrum bsdf_weight;
     float sample_probability = 0.0f;
-    BSDFComponentType flags  = BSDFComponentType::Any;
+    MaterialFlag flags       = MaterialFlag::Any;
 };
 
 struct BSDFEvalResult
 {
     SampledSpectrum bsdf_value = SampledSpectrum(0);
     float sample_probability   = 0.0f;
-    BSDFComponentType flags    = BSDFComponentType::Any;
+    MaterialFlag flags         = MaterialFlag::Any;
 };
 
 struct BSDFVPtrTable
@@ -30,7 +30,7 @@ struct BSDFVPtrTable
     uint32_t sampleCallIndex;
     uint32_t evalCallIndex;
 
-    BSDFComponentType flags;
+    MaterialFlag flags;
 
 #ifdef __CUDACC__
 

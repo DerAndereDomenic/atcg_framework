@@ -2,6 +2,7 @@
 #include <Renderer/GraphicsAPI.h>
 #include <Renderer/Renderer.h>
 #include <Core/Application.h>
+#include <Material/DielectricMaterialData.h>
 
 #ifndef ATCG_HEADLESS
     #include <imgui.h>
@@ -19,8 +20,30 @@
 
 namespace atcg
 {
+
+class DielectricMaterial::Impl
+{
+public:
+    Impl(const atcg::Dictionary& dict);
+
+    ~Impl();
+
+    // GPU interface
+    atcg::ref_ptr<atcg::Texture2D> _diffuse_texture_gpu;
+    atcg::ref_ptr<atcg::Texture2D> _roughness_texture_gpu;
+    atcg::ref_ptr<atcg::Texture2D> _ior_texture_gpu;
+
+    atcg::dref_ptr<DielectricMaterialData> _material_data_buffer;
+};
+
+DielectricMaterial::Impl::Impl(const atcg::Dictionary& dict) {}
+
+DielectricMaterial::~DielectricMaterial() {}
+
 DielectricMaterial::DielectricMaterial(const atcg::Dictionary& dict) : MicrofacetMaterial("Dielectric", dict)
 {
+    impl = std::make_unique<Impl>(dict);
+
     _flags = _flags | MaterialFlag::GlossyTransmission | MaterialFlag::DiffuseTransmission;
 }
 
@@ -58,6 +81,48 @@ void DielectricMaterial::uploadMaterial(RendererSystem* renderer, const atcg::re
     shader->selectSubroutine("sr_image_based_lighting", "image_based_lighting_glass");
 
     _uploaded = true;
+}
+
+void DielectricMaterial::updateData()
+{
+    impl->_diffuse_texture_gpu   = std::dynamic_pointer_cast<Texture2D>(getDiffuseTexture()->clone());
+    impl->_roughness_texture_gpu = std::dynamic_pointer_cast<Texture2D>(getRoughnessTexture()->clone());
+    impl->_ior_texture_gpu       = std::dynamic_pointer_cast<Texture2D>(getIorTexture()->clone());
+
+    DielectricMaterialData data;
+
+    data.diffuse_texture.texture_data.texture   = impl->_diffuse_texture_gpu->getTextureObject();
+    data.diffuse_texture.spec                   = impl->_diffuse_texture_gpu->getSpecification();
+    data.roughness_texture.texture_data.texture = impl->_roughness_texture_gpu->getTextureObject();
+    data.roughness_texture.spec                 = impl->_roughness_texture_gpu->getSpecification();
+    data.ior_texture.texture_data.texture       = impl->_ior_texture_gpu->getTextureObject();
+    data.ior_texture.spec                       = impl->_ior_texture_gpu->getSpecification();
+
+    _flags = MaterialFlag::IdealReflection | MaterialFlag::IdealReflection;
+
+    impl->_material_data_buffer.upload(&data);
+}
+
+void DielectricMaterial::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                            const atcg::ref_ptr<ShaderBindingTable>& sbt)
+{
+    updateData();
+
+    const std::string ptx_bsdf_filename = "./bin/DielectricBSDF_ptx.ptx";
+    auto sample_prog_group =
+        pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_dielectricbsdf"});
+    auto eval_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_dielectricbsdf"});
+    uint32_t sample_idx  = sbt->addCallableEntry(sample_prog_group, impl->_material_data_buffer.get());
+    uint32_t eval_idx    = sbt->addCallableEntry(eval_prog_group, impl->_material_data_buffer.get());
+
+    BSDFVPtrTable table;
+    table.sampleCallIndex = sample_idx;
+    table.evalCallIndex   = eval_idx;
+    table.flags           = _flags;
+
+    _bsdf_vptr_table.upload(&table);
+
+    markInitialized();
 }
 
 atcg::ref_ptr<Material> DielectricMaterial::clone() const
@@ -436,4 +501,4 @@ void DielectricMaterial::registerMaterial(MaterialRegistry::Registry* registry)
 {
     ATCG_REGISTER_MATERIAL(registry, "Dielectric", DielectricMaterial);
 }
-}
+}    // namespace atcg

@@ -1,11 +1,13 @@
 #pragma once
 
+#include <Asset/Asset.h>
 #include <Core/API.h>
 #include <Core/Assert.h>
-#include <Renderer/Texture.h>
-#include <Asset/Asset.h>
+#include <Core/RaytracingComponent.h>
 #include <DataStructure/Dictionary.h>
 #include <Material/MaterialFlags.h>
+#include <Material/BSDFVPtrTable.h>
+#include <Renderer/Texture.h>
 
 #include <json.hpp>
 #include <filesystem>
@@ -19,7 +21,7 @@ class Shader;
 /**
  * @brief A class to model a material.
  */
-struct ATCG_API Material : public Asset
+struct ATCG_API Material : public Asset, public RaytracingComponent
 {
     /**
      * @brief Constructor
@@ -73,6 +75,13 @@ struct ATCG_API Material : public Asset
     ATCG_INLINE const std::string& getMaterialType() const { return _material_type; };
 
     /**
+     * @brief Get the VPtrTable
+     *
+     * @return The VPtrTable
+     */
+    ATCG_INLINE const BSDFVPtrTable* getVPtrTable() const { return _bsdf_vptr_table.get(); }
+
+    /**
      * @brief Get the material flags
      *
      * @return The material flags
@@ -84,6 +93,8 @@ protected:
     bool _uploaded = false;
     std::string _material_type;
     MaterialFlag _flags = MaterialFlag::None;
+
+    atcg::dref_ptr<BSDFVPtrTable> _bsdf_vptr_table;
 };
 
 template<typename T>

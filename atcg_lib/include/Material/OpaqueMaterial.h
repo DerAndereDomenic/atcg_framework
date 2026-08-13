@@ -10,33 +10,34 @@ class ATCG_API OpaqueMaterial : public MicrofacetMaterial
 public:
     OpaqueMaterial(const atcg::Dictionary& dict);
 
+    ~OpaqueMaterial();
+
     /**
      * @brief Get the normal texture.
      *
      * @return The normal texture
      */
-    ATCG_INLINE atcg::ref_ptr<atcg::Texture2D> getNormalTexture() const { return _normal_texture; }
+    atcg::ref_ptr<atcg::Texture2D> getNormalTexture() const;
 
     /**
      * @brief Get the metallic texture.
      *
      * @return The metallic texture
      */
-    ATCG_INLINE atcg::ref_ptr<atcg::Texture2D> getMetallicTexture() const { return _metallic_texture; }
-
+    atcg::ref_ptr<atcg::Texture2D> getMetallicTexture() const;
     /**
      * @brief Set the normal texture.
      *
      * @param texture The normal texture
      */
-    ATCG_INLINE void setNormalTexture(const atcg::ref_ptr<atcg::Texture2D>& texture) { _normal_texture = texture; }
+    void setNormalTexture(const atcg::ref_ptr<atcg::Texture2D>& texture);
 
     /**
      * @brief Set the metallic texture.
      *
      * @param texture The metallic texture
      */
-    ATCG_INLINE void setMetallicTexture(const atcg::ref_ptr<atcg::Texture2D>& texture) { _metallic_texture = texture; }
+    void setMetallicTexture(const atcg::ref_ptr<atcg::Texture2D>& texture);
 
     /**
      * @brief The the metallic value.
@@ -58,13 +59,27 @@ public:
      */
     virtual void uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader) override;
 
+    /**
+     * @brief Update the data and upload it to the GPU (if necessary)
+     */
+    virtual void updateData() override;
+
+    /**
+     * @brief Initialize the component in the raytracing pipeline
+     *
+     * @param pipeline The raytracing pipeline
+     * @param sbt The shader binding table
+     */
+    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
+
     virtual atcg::ref_ptr<Material> clone() const override;
 
     static void registerMaterial(MaterialRegistry::Registry* registry);
 
 private:
-    atcg::ref_ptr<atcg::Texture2D> _normal_texture;
-    atcg::ref_ptr<atcg::Texture2D> _metallic_texture;
+    class Impl;
+    std::unique_ptr<Impl> impl;
 };
 
 template<>
