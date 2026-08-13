@@ -36,7 +36,7 @@ public:
 
     void releaseTextureIDs(RendererSystem* renderer);
 
-    ATCG_INLINE atcg::dref_ptr<MediumVPtrTable> getVPtrTable() const { return _medium_vptr_table; }
+    ATCG_INLINE const MediumVPtrTable* getVPtrTable() const { return _medium_vptr_table.get(); }
 
 protected:
     std::array<uint32_t, 3> _texture_ids;
@@ -44,7 +44,7 @@ protected:
     std::string _medium_type;
     MediumFlag _flags = MediumFlag::None;
 
-    atcg::dref_ptr<MediumVPtrTable> _medium_vptr_table;
+    atcg::dref_ptr<const MediumVPtrTable> _medium_vptr_table;
 };
 
 template<typename T>

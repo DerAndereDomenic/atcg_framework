@@ -2,6 +2,7 @@
 
 #include <Material/PhaseFunction.h>
 #include <Material/PhaseFunctionRegistry.h>
+#include <Material/HenyeyGreensteinPhaseFunctionData.h>
 
 namespace atcg
 {
@@ -16,12 +17,19 @@ public:
 
     ATCG_INLINE float g() const { return _g; }
 
+    virtual void updateData() override;
+
+    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
+
     virtual atcg::ref_ptr<PhaseFunction> clone() const override;
 
     static void registerPhaseFunction(PhaseFunctionRegistry::Registry* registry);
 
 protected:
     float _g = 0.0f;
+
+    atcg::dref_ptr<HenyeyGreensteinPhaseFunctionData> _phase_function_data_buffer;
 };
 
 template<>

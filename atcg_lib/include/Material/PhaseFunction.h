@@ -2,13 +2,15 @@
 
 #include <Asset/Asset.h>
 #include <Core/API.h>
+#include <Core/RaytracingComponent.h>
 #include <DataStructure/Dictionary.h>
-#include <Renderer/Renderer.h>
+#include <Material/PhaseFunctionVPtrTable.h>
 #include <Material/PhaseFlags.h>
+#include <Renderer/Renderer.h>
 
 namespace atcg
 {
-class ATCG_API PhaseFunction : public Asset
+class ATCG_API PhaseFunction : public Asset, public RaytracingComponent
 {
 public:
     PhaseFunction(const std::string& type, const atcg::Dictionary& dict);
@@ -27,10 +29,14 @@ public:
 
     ATCG_INLINE const PhaseFlag& flags() const { return _flags; }
 
+    ATCG_INLINE const PhaseFunctionVPtrTable* getVPtrTable() const { return _phase_function_vptr_table.get(); }
+
 protected:
     std::string _phase_function_type;
     bool _uploaded   = false;
     PhaseFlag _flags = PhaseFlag::None;
+
+    atcg::dref_ptr<const PhaseFunctionVPtrTable> _phase_function_vptr_table;
 };
 
 template<typename T>
