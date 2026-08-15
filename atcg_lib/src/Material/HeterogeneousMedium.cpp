@@ -204,10 +204,8 @@ void HeterogeneousMedium::updateData()
 void HeterogeneousMedium::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                              const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    // TODO
-    // if(_phase_function != nullptr) _phase_function->ensureInitialized(pipeline, sbt);
-
-    // auto phase_function = getPhaseFunction();
+    updateData();
+    if(_phase_function != nullptr) _phase_function->ensureInitialized(pipeline, sbt);
 
     const std::string ptx_filename = "./bin/HeterogeneousMedium_ptx.ptx";
     OptixProgramGroup eval_transmittance_prog_group =
@@ -223,7 +221,7 @@ void HeterogeneousMedium::initializePipeline(const atcg::ref_ptr<RayTracingPipel
     MediumVPtrTable vptr_table_data;
     vptr_table_data.evalCallIndex   = eval_transmittance_index;
     vptr_table_data.sampleCallIndex = sample_medium_event_index;
-    // TODO vptr_table_data.phase_function  = phase_function ? phase_function->getVPtrTable() : nullptr;
+    vptr_table_data.phase_function  = _phase_function ? _phase_function->getVPtrTable() : nullptr;
 
     _medium_vptr_table.upload(&vptr_table_data);
     markInitialized();

@@ -4,7 +4,10 @@
 
 namespace atcg
 {
-Medium::Medium(const std::string& type, const atcg::Dictionary& dict) : _medium_type(type) {}
+Medium::Medium(const std::string& type, const atcg::Dictionary& dict) : _medium_type(type)
+{
+    _phase_function = dict.getValueOr<atcg::ref_ptr<PhaseFunction>>("phase_function", nullptr);
+}
 
 void Medium::releaseTextureIDs(RendererSystem* renderer)
 {

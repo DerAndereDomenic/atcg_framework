@@ -96,6 +96,8 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
         // med_dict.setValue<atcg::ref_ptr<PhaseFunction>>("phase_func", phase);
         // med_dict.setValue("Le", component.Le * component.Le_color);
         // atcg::ref_ptr<HomogeneousMedium> medium = atcg::make_ref<HomogeneousMedium>(med_dict);
+        component.medium()->setPhaseFunction(component.phase_function());
+        component.phase_function()->initializePipeline(_pipeline, _sbt);
         component.medium()->initializePipeline(_pipeline, _sbt);
 
         new_entity.addComponent<MediumComponent>(component.medium());

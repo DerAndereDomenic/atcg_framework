@@ -36,7 +36,7 @@ protected:
     bool _uploaded   = false;
     PhaseFlag _flags = PhaseFlag::None;
 
-    atcg::dref_ptr<PhaseFunctionVPtrTable> _phase_function_vptr_table;
+    atcg::dref_ptr<PhaseFunctionVPtrTable> _phase_function_vptr_table = nullptr;
 };
 
 template<typename T>

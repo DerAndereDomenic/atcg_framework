@@ -6,6 +6,7 @@
 #include <DataStructure/Dictionary.h>
 #include <Material/MediumFlags.h>
 #include <Material/MediumVPtrTable.h>
+#include <Material/PhaseFunction.h>
 #include <Renderer/Renderer.h>
 
 #include <json.hpp>
@@ -27,6 +28,13 @@ public:
 
     ATCG_INLINE const std::string& getMediumType() const { return _medium_type; }
 
+    ATCG_INLINE void setPhaseFunction(const atcg::ref_ptr<PhaseFunction>& phase_function)
+    {
+        _phase_function = phase_function;
+    }
+
+    ATCG_INLINE const atcg::ref_ptr<PhaseFunction>& getPhaseFunction() const { return _phase_function; }
+
     ATCG_INLINE const MediumFlag& flags() const { return _flags; }
 
     virtual atcg::ref_ptr<Medium> clone() const = 0;
@@ -43,6 +51,8 @@ protected:
     bool _uploaded = false;
     std::string _medium_type;
     MediumFlag _flags = MediumFlag::None;
+
+    atcg::ref_ptr<PhaseFunction> _phase_function;
 
     atcg::dref_ptr<MediumVPtrTable> _medium_vptr_table;
 };
