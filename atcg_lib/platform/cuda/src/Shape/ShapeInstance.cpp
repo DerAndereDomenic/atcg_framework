@@ -38,6 +38,8 @@ void ShapeInstance::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& 
     data.outside_medium    = outside_medium ? outside_medium->getVPtrTable() : nullptr;
     data.entity_id         = entity_id();
     data.color             = color();
+    data.object_to_world   = getTransform();
+    data.world_to_object   = glm::inverse(getTransform());
     const auto& hit_groups = pipeline->getRayProgramGroups(shape->getShapeType());
 
     for(const auto& shape_hit_group: hit_groups)
