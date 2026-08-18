@@ -251,5 +251,11 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE uint32_t binary_search(const T* sorted_array,
     return left;
 }
 
+ATCG_INLINE ATCG_HOST_DEVICE glm::vec3 transformPoint(const glm::mat4& mat, const glm::vec3& point)
+{
+    glm::vec4 transformed_point = mat * glm::vec4(point, 1.0f);
+    return glm::vec3(transformed_point) / transformed_point.w;
+}
+
 }    // namespace Math
 }    // namespace atcg
