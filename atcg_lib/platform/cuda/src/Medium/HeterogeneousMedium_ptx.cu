@@ -7,6 +7,7 @@
 #include <Material/HeterogeneousMediumData.h>
 #include <Material/MediumVPtrTable.h>
 #include <Medium/Transmittance.h>
+#include <Utils/HostDevice.h>
 
 namespace detail
 {
@@ -22,6 +23,7 @@ __device__ DeltaTrackingWeights sample_free_flight_distance_delta_tracking(const
                                                                            const glm::vec3& direction,
                                                                            float max_distance,
                                                                            const atcg::SampledWavelengths& wavelengths,
+                                                                           const glm::mat4& world_to_object,
                                                                            atcg::PCG32& rng)
 {
     const atcg::HeterogeneousMediumData* sbt_data =
@@ -43,17 +45,18 @@ __device__ DeltaTrackingWeights sample_free_flight_distance_delta_tracking(const
     {
         float step = sampling_strategy.sample(rng.next1d());
         distance += step;
-        glm::vec3 step_position = origin + distance * direction;
-        float step_density      = sbt_data->density_grid.eval(step_position);
+        glm::vec3 step_position        = origin + distance * direction;
+        glm::vec3 object_step_position = atcg::Math::transformPoint(world_to_object, step_position);
+        float step_density             = sbt_data->density_grid.eval(object_step_position);
 
         // Russian-roulette-style acceptance of sample.
         if(rng.next1d() < step_density / sbt_data->density_majorant)
         {
             // Scattering or absorbtion event case.
             atcg::SampledSpectrum albedo =
-                atcg::SampledSpectrum::fromRGB(sbt_data->albedo_grid.eval(step_position), wavelengths);
+                atcg::SampledSpectrum::fromRGB(sbt_data->albedo_grid.eval(object_step_position), wavelengths);
             atcg::SampledSpectrum emission =
-                atcg::SampledSpectrum::fromRGB(sbt_data->emission_grid.eval(step_position), wavelengths);
+                atcg::SampledSpectrum::fromRGB(sbt_data->emission_grid.eval(object_step_position), wavelengths);
             result.transmittance_weight = albedo;
             result.emission_weight      = emission;
             break;
@@ -76,6 +79,7 @@ __device__ DeltaTrackingWeights sample_free_flight_distance_delta_tracking(const
 extern "C" __device__ float __direct_callable__heterogeneousMedium_evalTransmittance(const glm::vec3& origin,
                                                                                      const glm::vec3& direction,
                                                                                      float distance,
+                                                                                     const glm::mat4& world_to_object,
                                                                                      atcg::PCG32& rng)
 {
     const atcg::HeterogeneousMediumData* sbt_data =
@@ -84,7 +88,7 @@ extern "C" __device__ float __direct_callable__heterogeneousMedium_evalTransmitt
                                  decltype(sbt_data->density_grid)>
         estimator(sbt_data->density_majorant, sbt_data->density_grid);
     atcg::Ray ray(origin, direction, 0.0f, distance);
-    return estimator.estimate(ray, rng);
+    return estimator.estimate(ray, world_to_object, rng);
 }
 
 extern "C" __device__ atcg::MediumSamplingResult
@@ -92,6 +96,7 @@ __direct_callable__heterogeneousMedium_sampleMediumEvent(const glm::vec3& origin
                                                          const glm::vec3& direction,
                                                          float max_distance,
                                                          const atcg::SampledWavelengths& wavelengths,
+                                                         const glm::mat4& world_to_object,
                                                          atcg::PCG32& rng)
 {
     const atcg::HeterogeneousMediumData* sbt_data =
@@ -100,8 +105,12 @@ __direct_callable__heterogeneousMedium_sampleMediumEvent(const glm::vec3& origin
     // If max_distance would be (close to) infinite, the loop below might not terminate.
     max_distance = glm::clamp(max_distance, 0.0f, 1e6f);
 
-    detail::DeltaTrackingWeights sample =
-        detail::sample_free_flight_distance_delta_tracking(origin, direction, max_distance, wavelengths, rng);
+    detail::DeltaTrackingWeights sample = detail::sample_free_flight_distance_delta_tracking(origin,
+                                                                                             direction,
+                                                                                             max_distance,
+                                                                                             wavelengths,
+                                                                                             world_to_object,
+                                                                                             rng);
 
     atcg::MediumSamplingResult result;
     // Set incoming ray direction

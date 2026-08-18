@@ -147,8 +147,6 @@ void HeterogeneousMedium::updateData()
 {
     HeterogeneousMediumData data;
 
-    // TODO: world_to_local
-
     auto density_grid          = densityGrid();
     auto density_texture       = AssetManager::getAsset<Texture3D>(density_grid.handle)->clone();
     impl->_density_texture_gpu = std::static_pointer_cast<Texture3D>(density_texture);
@@ -166,11 +164,10 @@ void HeterogeneousMedium::updateData()
     data.density_grid.scale           = density_grid.scale;
     data.density_majorant             = density_majorant * data.density_grid.scale;
     {
-        glm::mat4 to_uvw = glm::mat4(1);
-        glm::vec3 scale  = density_grid.bbox.max - density_grid.bbox.min;
-        to_uvw           = to_uvw * glm::scale(1.0f / scale);
-        to_uvw           = to_uvw * glm::translate(-density_grid.bbox.min);
-        // to_uvw                   = to_uvw * world_to_local;
+        glm::mat4 to_uvw         = glm::mat4(1);
+        glm::vec3 scale          = density_grid.bbox.max - density_grid.bbox.min;
+        to_uvw                   = to_uvw * glm::scale(1.0f / scale);
+        to_uvw                   = to_uvw * glm::translate(-density_grid.bbox.min);
         data.density_grid.to_uvw = to_uvw;
     }
 
@@ -179,22 +176,20 @@ void HeterogeneousMedium::updateData()
     data.emission_grid.default_value = glm::vec3(0);
     data.emission_grid.scale         = emission_grid.scale;
     {
-        glm::mat4 to_uvw = glm::mat4(1);
-        glm::vec3 scale  = emission_grid.bbox.max - emission_grid.bbox.min;
-        to_uvw           = to_uvw * glm::scale(1.0f / scale);
-        to_uvw           = to_uvw * glm::translate(-emission_grid.bbox.min);
-        // to_uvw                    = to_uvw * world_to_local;
+        glm::mat4 to_uvw          = glm::mat4(1);
+        glm::vec3 scale           = emission_grid.bbox.max - emission_grid.bbox.min;
+        to_uvw                    = to_uvw * glm::scale(1.0f / scale);
+        to_uvw                    = to_uvw * glm::translate(-emission_grid.bbox.min);
         data.emission_grid.to_uvw = to_uvw;
     }
 
     data.albedo_grid.storage.texture = impl->_albedo_texture_gpu ? impl->_albedo_texture_gpu->getTextureObject() : 0;
     data.albedo_grid.scale           = albedo_grid.scale;
     {
-        glm::mat4 to_uvw = glm::mat4(1);
-        glm::vec3 scale  = albedo_grid.bbox.max - albedo_grid.bbox.min;
-        to_uvw           = to_uvw * glm::scale(1.0f / scale);
-        to_uvw           = to_uvw * glm::translate(-albedo_grid.bbox.min);
-        // to_uvw                  = to_uvw * world_to_local;
+        glm::mat4 to_uvw        = glm::mat4(1);
+        glm::vec3 scale         = albedo_grid.bbox.max - albedo_grid.bbox.min;
+        to_uvw                  = to_uvw * glm::scale(1.0f / scale);
+        to_uvw                  = to_uvw * glm::translate(-albedo_grid.bbox.min);
         data.albedo_grid.to_uvw = to_uvw;
     }
 

@@ -2,6 +2,7 @@
 
 #include <DataStructure/Ray.h>
 #include <Medium/Sampling.h>
+#include <Utils/HostDevice.h>
 
 namespace atcg
 {
@@ -38,7 +39,7 @@ struct TransmittanceEstimator<TransmittanceSamplingStrategyType::DELTA_TRACKING,
     {
     }
 
-    ATCG_HOST_DEVICE float estimate(const atcg::Ray& ray, atcg::PCG32& rng)
+    ATCG_HOST_DEVICE float estimate(const atcg::Ray& ray, const glm::mat4& world_to_object, atcg::PCG32& rng)
     {
         float t = ray.tmin;
         SamplingStrategy<SamplingStrategyType::EXPONENTIAL_SAMPLING> sampling_strategy(_max_density);
@@ -48,7 +49,9 @@ struct TransmittanceEstimator<TransmittanceSamplingStrategyType::DELTA_TRACKING,
             t += sampled_distance;
             if(t < ray.tmax)
             {
-                float density = _density_grid.eval(ray.origin + t * ray.direction);
+                glm::vec3 object_space_position =
+                    atcg::Math::transformPoint(world_to_object, ray.origin + t * ray.direction);
+                float density = _density_grid.eval(object_space_position);
                 if(rng.next1d() < density / _max_density)
                 {
                     return 0.0f;
@@ -70,7 +73,7 @@ struct TransmittanceEstimator<TransmittanceSamplingStrategyType::RATIO_TRACKING,
     {
     }
 
-    ATCG_HOST_DEVICE float estimate(const atcg::Ray& ray, atcg::PCG32& rng)
+    ATCG_HOST_DEVICE float estimate(const atcg::Ray& ray, const glm::mat4& world_to_object, atcg::PCG32& rng)
     {
         float t             = ray.tmin;
         float transmittance = 1.0f;
@@ -81,7 +84,9 @@ struct TransmittanceEstimator<TransmittanceSamplingStrategyType::RATIO_TRACKING,
             t += sampled_distance;
             if(t < ray.tmax)
             {
-                float density = _density_grid.eval(ray.origin + t * ray.direction);
+                glm::vec3 object_space_position =
+                    atcg::Math::transformPoint(world_to_object, ray.origin + t * ray.direction);
+                float density = _density_grid.eval(object_space_position);
                 transmittance *= glm::clamp(1.0f - density / _majorant, 0.0f, 1.0f);
             }
         }

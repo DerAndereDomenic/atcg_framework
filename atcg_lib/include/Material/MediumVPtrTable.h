@@ -85,6 +85,8 @@ struct MediumInstance
     {
         return vptr_table->sampleMediumEvent(origin, direction, max_distance, wavelengths, world_to_object, rng);
     }
+
+    __device__ const PhaseFunctionVPtrTable* getPhaseFunctionVPtrTable() const { return vptr_table->phase_function; }
 #endif
 
     __device__ operator bool() const { return vptr_table != nullptr; }

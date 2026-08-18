@@ -68,11 +68,11 @@ extern "C" __global__ void __raygen__rg()
         {
             float max_distance = glm::length(si.position - camera_ray.ray.origin);
             atcg::MediumSamplingResult result =
-                camera_ray.ray.current_medium->sampleMediumEvent(camera_ray.ray.origin,
-                                                                 camera_ray.ray.direction,
-                                                                 max_distance,
-                                                                 wavelengths,
-                                                                 rng);
+                camera_ray.ray.current_medium.sampleMediumEvent(camera_ray.ray.origin,
+                                                                camera_ray.ray.direction,
+                                                                max_distance,
+                                                                wavelengths,
+                                                                rng);
 
             radiance += camera_ray.importance * result.radiance_weight;
             camera_ray.importance *= result.transmittance_weight;
@@ -135,12 +135,12 @@ extern "C" __global__ void __raygen__rg()
                     }
 
                     float transmittance_to_light =
-                        camera_ray.ray.current_medium->evalTransmittance(mi.position,
-                                                                         emitter_sampling.direction_to_light,
-                                                                         si_dummy.incoming_distance,
-                                                                         rng);
+                        camera_ray.ray.current_medium.evalTransmittance(mi.position,
+                                                                        emitter_sampling.direction_to_light,
+                                                                        si_dummy.incoming_distance,
+                                                                        rng);
 
-                    auto phase_result = camera_ray.ray.current_medium->phase_function->evalPhaseFunction(
+                    auto phase_result = camera_ray.ray.current_medium.getPhaseFunctionVPtrTable()->evalPhaseFunction(
                         mi,
                         emitter_sampling.direction_to_light);
                     float phase_pdf    = phase_result.sampling_pdf;
@@ -154,8 +154,9 @@ extern "C" __global__ void __raygen__rg()
                                 phase_result.phase_function_value * emitter_sampling.radiance_weight_at_receiver;
                 } while(false);
 
-                const atcg::PhaseFunctionVPtrTable* phase_function = camera_ray.ray.current_medium->phase_function;
-                atcg::PhaseFunctionSamplingResult phase_result     = phase_function->samplePhaseFunction(mi, rng);
+                const atcg::PhaseFunctionVPtrTable* phase_function =
+                    camera_ray.ray.current_medium.getPhaseFunctionVPtrTable();
+                atcg::PhaseFunctionSamplingResult phase_result = phase_function->samplePhaseFunction(mi, rng);
                 if(phase_result.sampling_pdf == 0)
                 {
                     next_ray_valid = false;
@@ -287,7 +288,9 @@ extern "C" __global__ void __raygen__rg()
                 // Only change the medium if we have a transmission...
                 if(cos_theta_curr_ray * cos_theta_next_ray > 0)
                 {
-                    camera_ray.ray.current_medium = cos_theta_next_ray < 0 ? si.inside_medium : si.outside_medium;
+                    camera_ray.ray.current_medium.world_to_object = si.world_to_object;
+                    camera_ray.ray.current_medium.vptr_table =
+                        cos_theta_next_ray < 0 ? si.inside_medium : si.outside_medium;
                 }
             }
         }

@@ -44,6 +44,7 @@ struct SurfaceInteraction : public Interaction
     glm::vec2 uv;
     uint32_t primitive_idx;
     uint32_t entity_id;
+    glm::mat4 world_to_object;
 
     const BSDFVPtrTable *bsdf;
     const EmitterVPtrTable *emitter;

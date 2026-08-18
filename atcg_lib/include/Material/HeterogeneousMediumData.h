@@ -86,8 +86,6 @@ struct HeterogeneousMediumData
     float density_majorant;
     GridData<float, CUDATextureStorage<float>> density_grid;
     GridData<glm::vec3, CUDATextureStorage<glm::vec3>> emission_grid;
-
-    TextureSampler<float> density_sampler;
 };
 
 }    // namespace atcg

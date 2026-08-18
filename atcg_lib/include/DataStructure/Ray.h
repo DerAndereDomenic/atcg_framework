@@ -23,8 +23,8 @@ public:
 
     glm::vec3 origin;
     glm::vec3 direction;
-    float tmin                            = 0.001f;
-    float tmax                            = 1e16f;
-    const MediumVPtrTable* current_medium = nullptr;
+    float tmin = 0.001f;
+    float tmax = 1e16f;
+    MediumInstance current_medium;
 };
 }    // namespace atcg

@@ -60,7 +60,8 @@ extern "C" __global__ void __closesthit__mesh()
     si->bsdf    = _sbt_data.bsdf;
     si->emitter = _sbt_data.emitter;
 
-    si->entity_id      = _sbt_data.entity_id;
-    si->inside_medium  = _sbt_data.inside_medium;
-    si->outside_medium = _sbt_data.outside_medium;
+    si->entity_id       = _sbt_data.entity_id;
+    si->inside_medium   = _sbt_data.inside_medium;
+    si->outside_medium  = _sbt_data.outside_medium;
+    si->world_to_object = _sbt_data.world_to_object;
 }

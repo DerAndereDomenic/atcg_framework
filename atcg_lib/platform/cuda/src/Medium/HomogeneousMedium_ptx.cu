@@ -12,6 +12,7 @@
 extern "C" __device__ float __direct_callable__homogeneousMedium_evalTransmittance(const glm::vec3& origin,
                                                                                    const glm::vec3& direction,
                                                                                    float distance,
+                                                                                   const glm::mat4& world_to_object,
                                                                                    atcg::PCG32& unused_rng)
 {
     const atcg::HomogeneousMediumData* sbt_data =
@@ -29,6 +30,7 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
                                                        const glm::vec3& direction,
                                                        float max_distance,
                                                        const atcg::SampledWavelengths& wavelengths,
+                                                       const glm::mat4& world_to_object,
                                                        atcg::PCG32& rng)
 {
     const atcg::HomogeneousMediumData* sbt_data =
