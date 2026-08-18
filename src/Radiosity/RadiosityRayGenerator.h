@@ -22,8 +22,6 @@ public:
 
     virtual void reset() override;
 
-    virtual void onImGuiRender() override {}
-
 private:
     void initializePipeline();
     atcg::ref_ptr<atcg::TriMesh> _mesh;

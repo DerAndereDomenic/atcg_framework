@@ -51,6 +51,13 @@ public:
 
         trimesh = solve_radiosity(trimesh, emission);
         mesh    = atcg::Graph::createTriangleMesh(trimesh);
+
+        atcg::TextureSpecification spec;
+        spec.width  = 1;
+        spec.height = 1;
+        spec.format = atcg::TextureFormat::RGBA;
+        glm::u8vec4 diffuse_color(255, 255, 255, 255);
+        diffuse_texture = atcg::Texture2D::create(&diffuse_color, spec);
     }
 
     // This gets called each frame
@@ -65,7 +72,7 @@ public:
         atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
         atcg::GraphicsCommand::clear();
 
-        atcg::GraphicsCommand::bindTexture(0, diffuse_material.getDiffuseTexture());
+        atcg::GraphicsCommand::bindTexture(0, diffuse_texture);
 
         atcg::Renderer::drawVAO(mesh->getVerticesArray(),
                                 camera_controller->getCamera(),
@@ -105,7 +112,7 @@ private:
     atcg::ref_ptr<atcg::Graph> mesh;
     atcg::ref_ptr<atcg::TriMesh> trimesh;
 
-    atcg::OpaqueMaterial diffuse_material;
+    atcg::ref_ptr<atcg::Texture2D> diffuse_texture;
 
     bool show_render_settings = false;
 };
