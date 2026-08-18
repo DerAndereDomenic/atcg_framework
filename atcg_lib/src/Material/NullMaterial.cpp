@@ -70,7 +70,7 @@ void NullMaterial::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& p
 {
     updateData();
 
-    const std::string ptx_bsdf_filename = "./bin/NullBSDF_ptx.ptx";
+    const std::string ptx_bsdf_filename = "./bin/NullMaterial_ptx.ptx";
     auto sample_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_nullbsdf"});
     auto eval_prog_group   = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_nullbsdf"});
     uint32_t sample_idx    = sbt->addCallableEntry(sample_prog_group);

@@ -186,7 +186,7 @@ void OpaqueMaterial::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>&
 {
     updateData();
 
-    const std::string ptx_bsdf_filename = "./bin/PBRBSDF_ptx.ptx";
+    const std::string ptx_bsdf_filename = "./bin/OpaqueMaterial_ptx.ptx";
     auto sample_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_pbrbsdf"});
     auto eval_prog_group   = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_pbrbsdf"});
     uint32_t sample_idx    = sbt->addCallableEntry(sample_prog_group, impl->_material_data.get());

@@ -110,7 +110,7 @@ void DielectricMaterial::initializePipeline(const atcg::ref_ptr<RayTracingPipeli
 {
     updateData();
 
-    const std::string ptx_bsdf_filename = "./bin/DielectricBSDF_ptx.ptx";
+    const std::string ptx_bsdf_filename = "./bin/DielectricMaterial_ptx.ptx";
     auto sample_prog_group =
         pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_dielectricbsdf"});
     auto eval_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_dielectricbsdf"});
