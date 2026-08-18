@@ -83,24 +83,14 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
     {
         auto& component = entity.getComponent<MediumComponent>();
 
-        // TODO Phase
-        // Dictionary phase_dict;
-        // phase_dict.setValue("g", component.g);
-        // atcg::ref_ptr<HenyeyGreensteinPhaseFunction> phase =
-        // atcg::make_ref<HenyeyGreensteinPhaseFunction>(phase_dict); phase->initializePipeline(_pipeline, _sbt);
+        if(component.medium() && component.phase_function())
+        {
+            component.medium()->setPhaseFunction(component.phase_function());
+            component.phase_function()->initializePipeline(_pipeline, _sbt);
+            component.medium()->initializePipeline(_pipeline, _sbt);
 
-
-        // Dictionary med_dict;
-        // med_dict.setValue("density", component.density);
-        // med_dict.setValue("albedo", component.albedo);
-        // med_dict.setValue<atcg::ref_ptr<PhaseFunction>>("phase_func", phase);
-        // med_dict.setValue("Le", component.Le * component.Le_color);
-        // atcg::ref_ptr<HomogeneousMedium> medium = atcg::make_ref<HomogeneousMedium>(med_dict);
-        component.medium()->setPhaseFunction(component.phase_function());
-        component.phase_function()->initializePipeline(_pipeline, _sbt);
-        component.medium()->initializePipeline(_pipeline, _sbt);
-
-        new_entity.addComponent<MediumComponent>(component.medium());
+            new_entity.addComponent<MediumComponent>(component.medium());
+        }
         // new_entity.addComponent<PhaseFunctionComponent>(phase);
     }
 
