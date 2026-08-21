@@ -4,6 +4,17 @@
 namespace atcg
 {
 
+namespace detail
+{
+ATCG_INLINE glm::vec3 read_vec3(int index, const torch::Tensor& tensor)
+{
+    assert(tensor.dim() == 2);
+    assert(tensor.size(1) == 3);
+    assert(index < tensor.size(0));
+    return glm::vec3(tensor[index][0].item<float>(), tensor[index][1].item<float>(), tensor[index][2].item<float>());
+}
+}    // namespace detail
+
 void Tracing::prepareAccelerationStructure(Entity entity)
 {
     if(!entity.hasComponent<GeometryComponent>())
@@ -27,38 +38,16 @@ void Tracing::prepareAccelerationStructure(Entity entity)
         return;
     }
 
-    bool vertices_mapped = mesh->getVerticesBuffer()->isHostMapped();
-    bool faces_mapped    = mesh->getFaceIndexBuffer()->isHostMapped();
+    acc_component.vertices = mesh->getHostPositions().clone();
+    acc_component.normals  = mesh->getHostNormals().clone();
+    acc_component.uvs      = mesh->getHostUVs().clone();
+    acc_component.faces    = mesh->getHostFaces().clone();
 
-    Vertex* vertices    = mesh->getVerticesBuffer()->getHostPointer<Vertex>();
-    glm::u32vec3* faces = mesh->getFaceIndexBuffer()->getHostPointer<glm::u32vec3>();
-
-    acc_component.vertices = atcg::MemoryBuffer<glm::vec3>(mesh->n_vertices());
-    acc_component.faces    = atcg::MemoryBuffer<glm::u32vec3>(mesh->n_faces());
-
-    std::vector<glm::vec3> temp_vertices(mesh->n_vertices());
-    for(uint32_t i = 0; i < mesh->n_vertices(); ++i)
-    {
-        temp_vertices[i] = vertices[i].position;
-    }
-    acc_component.vertices.copy(temp_vertices.data());
-    acc_component.faces.copy(faces);
-
-    // Restore original mapping relation
-    if(!vertices_mapped)
-    {
-        mesh->getVerticesBuffer()->unmapHostPointers();
-    }
-    if(!faces_mapped)
-    {
-        mesh->getFaceIndexBuffer()->unmapHostPointers();
-    }
-
-    nanort::TriangleMesh<float> triangle_mesh(reinterpret_cast<const float*>(acc_component.vertices.get()),
-                                              reinterpret_cast<const uint32_t*>(acc_component.faces.get()),
+    nanort::TriangleMesh<float> triangle_mesh(reinterpret_cast<const float*>(acc_component.vertices.data_ptr()),
+                                              reinterpret_cast<const uint32_t*>(acc_component.faces.data_ptr()),
                                               sizeof(float) * 3);
-    nanort::TriangleSAHPred<float> triangle_pred(reinterpret_cast<const float*>(acc_component.vertices.get()),
-                                                 reinterpret_cast<const uint32_t*>(acc_component.faces.get()),
+    nanort::TriangleSAHPred<float> triangle_pred(reinterpret_cast<const float*>(acc_component.vertices.data_ptr()),
+                                                 reinterpret_cast<const uint32_t*>(acc_component.faces.data_ptr()),
                                                  sizeof(float) * 3);
     bool ret = acc_component.accel.Build(mesh->n_faces(), triangle_mesh, triangle_pred);
     assert(ret);
@@ -90,17 +79,35 @@ Tracing::traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& r
     ray.min_t = t_min;
     ray.max_t = t_max;
 
-    nanort::TriangleIntersector<> triangle_intersector(reinterpret_cast<const float*>(acc_component.vertices.get()),
-                                                       reinterpret_cast<const uint32_t*>(acc_component.faces.get()),
-                                                       sizeof(float) * 3);
+    nanort::TriangleIntersector<> triangle_intersector(
+        reinterpret_cast<const float*>(acc_component.vertices.data_ptr()),
+        reinterpret_cast<const uint32_t*>(acc_component.faces.data_ptr()),
+        sizeof(float) * 3);
     nanort::TriangleIntersection<> isect;
     bool hit = acc_component.accel.Traverse(ray, triangle_intersector, &isect);
 
     if(!hit) return result;
 
-    result.hit           = true;
-    result.p             = ray_origin + isect.t * ray_dir;
-    result.primitive_idx = isect.prim_id;
+    glm::u32vec3 face = glm::u32vec3(acc_component.faces[isect.prim_id][0].item<float>(),
+                                     acc_component.faces[isect.prim_id][1].item<float>(),
+                                     acc_component.faces[isect.prim_id][2].item<float>());
+
+    const glm::vec3& n0 = detail::read_vec3(face[0], acc_component.normals);
+    const glm::vec3& n1 = detail::read_vec3(face[1], acc_component.normals);
+    const glm::vec3& n2 = detail::read_vec3(face[2], acc_component.normals);
+
+    const glm::vec3& uv0 = detail::read_vec3(face[0], acc_component.uvs);
+    const glm::vec3& uv1 = detail::read_vec3(face[1], acc_component.uvs);
+    const glm::vec3& uv2 = detail::read_vec3(face[2], acc_component.uvs);
+
+
+    result.position           = ray_origin + isect.t * ray_dir;
+    result.incoming_direction = ray_dir;
+    result.incoming_distance  = isect.t;
+    result.normal             = glm::normalize(n0 * (1.0f - isect.u - isect.v) + n1 * isect.u + n2 * isect.v);
+    result.barys              = glm::vec2(isect.u, isect.v);
+    result.uv                 = glm::vec2(uv0 * (1.0f - isect.u - isect.v) + uv1 * isect.u + uv2 * isect.v);
+    result.primitive_idx      = isect.prim_id;
     return result;
 }
 }    // namespace atcg
