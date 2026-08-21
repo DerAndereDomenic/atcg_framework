@@ -10,8 +10,11 @@ struct ATCG_API AccelerationStructureComponent
     AccelerationStructureComponent() = default;
 
     // Don't retrieve this from opengl each time used
-    atcg::MemoryBuffer<glm::vec3> vertices;
-    atcg::MemoryBuffer<glm::u32vec3> faces;
+    torch::Tensor vertices;
+    torch::Tensor faces;
+    torch::Tensor normals;
+    torch::Tensor uvs;
+
     nanort::BVHAccel<float> accel;
 };
 

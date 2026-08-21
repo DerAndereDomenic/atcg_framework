@@ -1498,9 +1498,17 @@ inline void defineBindings(py::module_& m)
         .def("selectEntity", &atcg::GUI::SceneHierarchyPanel::selectEntity, "entity"_a)
         .def("getSelectedEntity", &atcg::GUI::SceneHierarchyPanel::getSelectedEntity);
 
-    m_hit_info.def_readonly("hit", &atcg::Tracing::HitInfo::hit)
-        .def_readonly("position", &atcg::Tracing::HitInfo::p)
-        .def_readonly("triangle_index", &atcg::Tracing::HitInfo::primitive_idx);
+    m_hit_info.def_readonly("position", &atcg::Tracing::HitInfo::position)
+        .def_readonly("incoming_direction", &atcg::Tracing::HitInfo::incoming_direction)
+        .def_readonly("incoming_distance", &atcg::Tracing::HitInfo::incoming_distance)
+        .def_readonly("normal", &atcg::Tracing::HitInfo::normal)
+        .def_readonly("barys", &atcg::Tracing::HitInfo::barys)
+        .def_readonly("uv", &atcg::Tracing::HitInfo::uv)
+        .def_readonly("primitive_idx", &atcg::Tracing::HitInfo::primitive_idx)
+        .def("isValid", &atcg::Tracing::HitInfo::isValid)
+        .def("setInvalid", &atcg::Tracing::HitInfo::setInvalid)
+        .def("isFinite", &atcg::Tracing::HitInfo::isFinite)
+        .def("setInfinite", &atcg::Tracing::HitInfo::setInfinite);
 
     m.def("prepareAccelerationStructure", &atcg::Tracing::prepareAccelerationStructure);
     m.def("traceRay", atcg::Tracing::traceRay);
@@ -1528,8 +1536,8 @@ inline void defineBindings(py::module_& m)
 
                   auto info = atcg::Tracing::traceRay(entity, o, d, t_min, t_max);
 
-                  result_hit_ptr[i] = info.hit;
-                  result_p_ptr[i]   = info.p;
+                  result_hit_ptr[i] = info.isValid();
+                  result_p_ptr[i]   = info.position;
                   result_idx_ptr[i] = info.primitive_idx;
               }
 
