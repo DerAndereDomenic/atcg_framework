@@ -29,6 +29,8 @@ struct HitInfo
     uint32_t primitive_idx;
     uint32_t entity_id;
 
+    glm::vec3 dx_du, dx_dv;
+
     ATCG_INLINE ATCG_HOST_DEVICE bool isValid() const { return !glm::isnan(incoming_distance); }
 
     ATCG_INLINE ATCG_HOST_DEVICE void setInvalid() { incoming_distance = std::numeric_limits<float>::signaling_NaN(); }

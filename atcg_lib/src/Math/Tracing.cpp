@@ -71,10 +71,20 @@ Tracing::traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& r
         return result;
     }
 
+    glm::mat4 model = glm::mat4(1.0f);
+
+    if(entity.hasComponent<TransformComponent>())
+    {
+        model = entity.getComponent<TransformComponent>().getModel();
+    }
+
+    glm::vec3 ray_origin_local = glm::vec3(glm::inverse(model) * glm::vec4(ray_origin, 1.0f));
+    glm::vec3 ray_dir_local    = glm::normalize(glm::vec3(glm::inverse(model) * glm::vec4(ray_dir, 0.0f)));
+
     auto& acc_component = entity.getComponent<AccelerationStructureComponent>();
     nanort::Ray<float> ray;
-    memcpy(ray.org, glm::value_ptr(ray_origin), sizeof(glm::vec3));
-    memcpy(ray.dir, glm::value_ptr(ray_dir), sizeof(glm::vec3));
+    memcpy(ray.org, glm::value_ptr(ray_origin_local), sizeof(glm::vec3));
+    memcpy(ray.dir, glm::value_ptr(ray_dir_local), sizeof(glm::vec3));
 
     ray.min_t = t_min;
     ray.max_t = t_max;
@@ -101,13 +111,27 @@ Tracing::traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& r
     const glm::vec3& uv2 = detail::read_vec3(face[2], acc_component.uvs);
 
 
-    result.position           = ray_origin + isect.t * ray_dir;
+    result.position           = model * glm::vec4(ray_origin_local + isect.t * ray_dir_local, 1.0f);
     result.incoming_direction = ray_dir;
-    result.incoming_distance  = isect.t;
+    result.incoming_distance  = glm::length(result.position - ray_origin);
     result.normal             = glm::normalize(n0 * (1.0f - isect.u - isect.v) + n1 * isect.u + n2 * isect.v);
     result.barys              = glm::vec2(isect.u, isect.v);
     result.uv                 = glm::vec2(uv0 * (1.0f - isect.u - isect.v) + uv1 * isect.u + uv2 * isect.v);
     result.primitive_idx      = isect.prim_id;
+
+    auto localZ = result.normal;
+    float x     = localZ.x;
+    float y     = localZ.y;
+    float z     = localZ.z;
+    float sz    = (z >= 0) ? 1 : -1;
+    float a     = 1 / (sz + z);
+    float ya    = y * a;
+    float b     = x * ya;
+    float c     = x * sz;
+
+    result.dx_du = glm::vec3(c * x * a - 1, sz * b, c);
+    result.dx_dv = glm::vec3(b, y * ya - sz, y);
+
     return result;
 }
 }    // namespace atcg
