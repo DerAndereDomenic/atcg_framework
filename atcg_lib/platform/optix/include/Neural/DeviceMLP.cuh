@@ -22,7 +22,7 @@ template<int num_hidden,
          int input_size,
          int hidden_size,
          int output_size,
-         enum class ActivationFunction activation_function = ActivationFunction::ReLU>
+         ActivationFunction activation_function = ActivationFunction::ReLU>
 struct DeviceMLP
 {
     CUdeviceptr _weights_buffer_ptr;

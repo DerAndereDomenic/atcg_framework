@@ -7,11 +7,7 @@ namespace atcg
 {
 #ifdef __CUDACC__
 
-template<int num_hidden,
-         int input_size,
-         int hidden_size,
-         int output_size,
-         enum class ActivationFunction activation_function>
+template<int num_hidden, int input_size, int hidden_size, int output_size, ActivationFunction activation_function>
 ATCG_DEVICE OptixCoopVec<half, output_size>
 DeviceMLP<num_hidden, input_size, hidden_size, output_size, activation_function>::forward(
     const OptixCoopVec<half, input_size>& input,
@@ -68,11 +64,7 @@ DeviceMLP<num_hidden, input_size, hidden_size, output_size, activation_function>
     return result;
 }
 
-template<int num_hidden,
-         int input_size,
-         int hidden_size,
-         int output_size,
-         enum class ActivationFunction activation_function>
+template<int num_hidden, int input_size, int hidden_size, int output_size, ActivationFunction activation_function>
 template<bool accumulate>
 ATCG_DEVICE OptixCoopVec<half, input_size>
 DeviceMLP<num_hidden, input_size, hidden_size, output_size, activation_function>::backward(

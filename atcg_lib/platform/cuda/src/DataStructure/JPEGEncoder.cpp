@@ -15,7 +15,6 @@ inline void check_nvjpeg(nvjpegStatus_t error, char const* const func, const cha
 {
     if(error != NVJPEG_STATUS_SUCCESS)
     {
-        ATCG_ERROR("NVJPEG error at {0}:{1} code=({3}) \"{4}\" \n", file, line, static_cast<unsigned int>(error), func);
         std::cout << "NVJPEG error at " << file << ":" << line << " code=(" << static_cast<unsigned int>(error)
                   << ") \"" << func << "\" \n";
     }

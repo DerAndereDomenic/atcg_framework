@@ -8,7 +8,7 @@ This repository contains a C++ 3D rendering framework for research applications 
 
 ## Building
 
-This framework is primarily tested on Windows using MSVC. For Linux, gcc is recommended. Additional dependencies needed for building the project are [CMake>=3.27](https://cmake.org), [Python>=3.9](https://www.python.org), [CUDA>=12.1](https://developer.nvidia.com/cuda-toolkit), and [pytorch2.4.0](https://pytorch.org) with the same CUDA version as your global CUDA installation.
+This framework is primarily tested on Windows using MSVC. For Linux, gcc is recommended. Additional dependencies needed for building the project are [CMake>=4.4.0](https://cmake.org), [Python>=3.10](https://www.python.org), [CUDA>=13.2](https://developer.nvidia.com/cuda-toolkit), and [pytorch2.12.0](https://pytorch.org) with the same CUDA version as your global CUDA installation (older versions and configurations might also work but at least CUDA 12.4, CMake 3.27.0 and pytorch 2.4.0 is required).
 
 After installing the dependencies, clone the repository recursively (to include submodules)
 

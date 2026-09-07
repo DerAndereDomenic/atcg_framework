@@ -1,3 +1,5 @@
+#include <torch/torch.h>
+
 namespace atcg
 {
 template<typename T, uint32_t L, uint32_t F>
