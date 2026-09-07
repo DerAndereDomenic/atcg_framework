@@ -157,4 +157,9 @@ void ForwardPass::execute(const RenderContext& ctx, const ResourceTable& resourc
     GraphicsCommand::endRenderPass();
 }
 
+void ForwardPass::registerRenderPass(RenderPassRegistry::Registry* registry)
+{
+    ATCG_REGISTER_RENDER_PASS(registry, "ForwardPass", ForwardPass);
+}
+
 }    // namespace atcg

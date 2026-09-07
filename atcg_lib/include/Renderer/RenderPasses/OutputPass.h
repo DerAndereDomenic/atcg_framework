@@ -2,6 +2,7 @@
 
 #include <Renderer/RenderPass.h>
 #include <Renderer/Texture.h>
+#include <Renderer/RenderPassRegistry.h>
 
 namespace atcg
 {
@@ -49,6 +50,8 @@ public:
      * @param fbo The output framebuffer
      */
     ATCG_INLINE void setOutputFBO(const atcg::ref_ptr<Framebuffer>& fbo) { _output_fbo = fbo; }
+
+    static void registerRenderPass(RenderPassRegistry::Registry* registry);
 
 private:
     atcg::ref_ptr<Framebuffer> _output_fbo;

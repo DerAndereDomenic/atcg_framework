@@ -1,7 +1,7 @@
 # Define the target
 charonload_add_torch_library(atcg_lib SHARED)
 
-target_compile_definitions(atcg_lib PRIVATE ATCG_EXPORT)
+target_compile_definitions(atcg_lib PRIVATE ATCG_EXPORT_DLL)
 
 # Link against cuda if requested
 if(ATCG_CUDA_BACKEND)

@@ -38,4 +38,10 @@ void OutputPass::execute(const RenderContext& ctx, const ResourceTable& resource
     _output_fbo->complete();
 }
 
+void OutputPass::registerRenderPass(RenderPassRegistry::Registry* registry)
+{
+    ATCG_REGISTER_RENDER_PASS(registry, "OutputPass", OutputPass);
+}
+
+
 }    // namespace atcg

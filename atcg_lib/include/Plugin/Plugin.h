@@ -8,6 +8,7 @@
 #include <Renderer/GraphicsAPI.h>
 #include <Plugin/PluginHandle.h>
 #include <Renderer/Material.h>
+#include <Renderer/RenderPassRegistry.h>
 #ifdef ATCG_CUDA_BACKEND
     #include <BSDF/BSDFRegistry.h>
     #include <Integrator/IntegratorRegistry.h>
@@ -60,6 +61,13 @@ public:
         ATCG_REGISTER_MATERIAL_PLUGIN(registry, _handle, type, MaterialT);
     }
 
+    template<typename RenderPassT>
+    void registerRenderPass(std::string_view type)
+    {
+        RenderPassRegistry::Registry* registry = RenderPassRegistry::getRegistry();
+        ATCG_REGISTER_RENDER_PASS_PLUGIN(registry, _handle, type, RenderPassT);
+    }
+
 #ifdef ATCG_CUDA_BACKEND
     template<typename BSDFT>
     void registerBSDF(std::string_view type)
@@ -99,7 +107,7 @@ ATCG_INLINE bool releaseAllPlugins()
 }    // namespace PluginManager
 
 #define ATCG_PLUGIN_LIBRARY()                                                                                          \
-    extern "C" __declspec(dllexport) void registerSystems(ImGuiContext* imgui_context)                                 \
+    extern "C" ATCG_EXPORT void registerSystems(ImGuiContext* imgui_context)                                           \
     {                                                                                                                  \
         ImGui::SetCurrentContext(imgui_context);                                                                       \
     }

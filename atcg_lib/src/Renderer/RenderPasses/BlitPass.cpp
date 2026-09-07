@@ -122,4 +122,10 @@ void BlitPass::execute(const RenderContext& ctx, const ResourceTable& resources)
 
     GraphicsCommand::endRenderPass();
 }
+
+void BlitPass::registerRenderPass(RenderPassRegistry::Registry* registry)
+{
+    ATCG_REGISTER_RENDER_PASS(registry, "BlitPass", BlitPass);
+}
+
 }    // namespace atcg

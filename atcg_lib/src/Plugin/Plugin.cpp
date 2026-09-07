@@ -1,9 +1,44 @@
 #include <Plugin/Plugin.h>
-#include <Windows.h>    // TODO
+#if ATCG_PLATFORM_WINDOWS
+    #include <Windows.h>    // TODO
+#else
+    #include <dlfcn.h>
+#endif
 #include <pybind11/pybind11.h>
 
 namespace atcg
 {
+
+namespace detail
+{
+PluginHandle loadLibrary(const std::filesystem::path& path)
+{
+#if ATCG_PLATFORM_WINDOWS
+    return (PluginHandle)LoadLibraryA(path.string().c_str());
+#else
+    return (PluginHandle)dlopen(path.string().c_str(), RTLD_NOW);
+#endif
+}
+
+template<typename Func>
+Func getFunction(PluginHandle handle, const char* name)
+{
+#if ATCG_PLATFORM_WINDOWS
+    return (Func)(GetProcAddress(static_cast<HMODULE>(handle), name));
+#else
+    return (Func)(dlsym((void*)handle, name));
+#endif
+}
+
+bool freeLibrary(PluginHandle handle)
+{
+#if ATCG_PLATFORM_WINDOWS
+    return FreeLibrary(static_cast<HMODULE>(handle));
+#else
+    return (bool)dlclose((void*)handle);
+#endif
+}
+}    // namespace detail
 
 PluginManagerSystem::~PluginManagerSystem()
 {
@@ -14,13 +49,13 @@ bool PluginManagerSystem::loadPlugin(const std::filesystem::path& path)
 {
     // Create temp copy of dll at path_temp to avoid file locking issues when reloading the plugin
     std::filesystem::path temp_path = path;
-    temp_path.replace_extension(".temp.dll");
+    temp_path.replace_extension(".temp");
     std::filesystem::copy(path, temp_path, std::filesystem::copy_options::overwrite_existing);
 
     // TODO Platform-specific implementation for loading plugin using LoadLibrary (Windows) or dlopen (Linux)
     // Implementation for loading plugin
 
-    auto handle = LoadLibraryA(temp_path.string().c_str());
+    auto handle = detail::loadLibrary(temp_path.string().c_str());
     if(!handle)
     {
         // Handle error
@@ -29,30 +64,27 @@ bool PluginManagerSystem::loadPlugin(const std::filesystem::path& path)
     }
 
     using RegisterPluginFunc = void (*)(PluginRegistry&);
-    auto registerPlugin =
-        reinterpret_cast<RegisterPluginFunc>(GetProcAddress(static_cast<HMODULE>(handle), "registerPlugin"));
+    auto registerPlugin      = detail::getFunction<RegisterPluginFunc>(handle, "registerPlugin");
     if(!registerPlugin)
     {
         // Handle error
         ATCG_ERROR("Failed to find registerPlugin function in plugin: {0}", path.string());
-        FreeLibrary(static_cast<HMODULE>(handle));
+        detail::freeLibrary(handle);
         return false;
     }
 
     using RegisterSystemsFunc = void (*)(ImGuiContext*);
-    auto registerSystems =
-        reinterpret_cast<RegisterSystemsFunc>(GetProcAddress(static_cast<HMODULE>(handle), "registerSystems"));
+    auto registerSystems      = detail::getFunction<RegisterSystemsFunc>(handle, "registerSystems");
     if(!registerSystems)
     {
         ATCG_ERROR("Failed to find registerSystems function in plugin: {0}", path.string());
-        FreeLibrary(static_cast<HMODULE>(handle));
+        detail::freeLibrary(handle);
         return false;
     }
     registerSystems(ImGui::GetCurrentContext());
 
     using RegisterPythonBindingsFunc = void (*)(pybind11::module&);
-    auto registerPythonBindings      = reinterpret_cast<RegisterPythonBindingsFunc>(
-        GetProcAddress(static_cast<HMODULE>(handle), "registerPythonBindings"));
+    auto registerPythonBindings = detail::getFunction<RegisterPythonBindingsFunc>(handle, "registerPythonBindings");
     if(registerPythonBindings)
     {
         try
@@ -97,11 +129,11 @@ bool PluginManagerSystem::releasePlugin(const std::filesystem::path& path)
 
 
         // TODO Platform-specific implementation for releasing plugin using FreeLibrary (Windows) or dlclose (Linux)
-        FreeLibrary(static_cast<HMODULE>(it->second));
+        detail::freeLibrary(it->second);
         _loaded_plugins.erase(it);
 
         std::filesystem::path temp_path = path;
-        temp_path.replace_extension(".temp.dll");
+        temp_path.replace_extension(".temp");
         std::filesystem::remove(temp_path);
 
         return true;
@@ -126,13 +158,13 @@ bool PluginManagerSystem::releaseAllPlugins()
 #endif
 
         // TODO Platform-specific implementation for releasing plugin using FreeLibrary (Windows) or dlclose (Linux)
-        if(!FreeLibrary(static_cast<HMODULE>(handle)))
+        if(!detail::freeLibrary(handle))
         {
             success = false;
         }
 
         std::filesystem::path temp_path = path;
-        temp_path.replace_extension(".temp.dll");
+        temp_path.replace_extension(".temp");
         std::filesystem::remove(temp_path);
     }
     _loaded_plugins.clear();

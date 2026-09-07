@@ -153,8 +153,11 @@ public:
 #endif
 
         createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
-
+#if ATCG_PLATFORM_WINDOWS
         atcg::PluginManager::loadPlugin("bin/Debug/TestPlugin.dll");
+#else
+        atcg::PluginManager::loadPlugin("lib/libTestPlugin.so");
+#endif
         atcg::SceneRenderer::setNumberMSAASamples(msaa_samples[current_msaa_selection_index]);
     }
 
