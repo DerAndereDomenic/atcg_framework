@@ -1,11 +1,12 @@
 #pragma once
 
-#include <Integrator/Integrator.h>
-#include <Shape/IAS.h>
-#include <Integrator/PathtracingData.cuh>
-#include <Emitter/EnvironmentEmitter.h>
-#include <Emitter/PointEmitter.h>
-#include <Scene/OptixScene.h>
+#ifdef ATCG_CUDA_BACKEND
+    #include <Integrator/Integrator.h>
+    #include <Shape/IAS.h>
+    #include <Integrator/PathtracingData.cuh>
+    #include <Emitter/EnvironmentEmitter.h>
+    #include <Emitter/PointEmitter.h>
+    #include <Scene/OptixScene.h>
 
 namespace atcg
 {
@@ -64,4 +65,5 @@ private:
     atcg::dref_ptr<PathtracingParams> _launch_params;
     uint32_t _frame_counter = 0;
 };
+#endif
 }    // namespace atcg
