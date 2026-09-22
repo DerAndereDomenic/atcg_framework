@@ -1,74 +1,93 @@
-#include <Scene/ComponentRegistry.h>
+#include <Scene/ComponentRegistry.h>    // !
 
 namespace atcg
 {
-
-void ComponentRegistrySystem::serializeAllComponents(const std::string& file_name,
-                                                     const atcg::ref_ptr<Scene>& scene,
-                                                     Entity entity,
-                                                     nlohmann::json& j) const
+namespace ComponentRegistry
 {
-    for(const auto& entry: getSerializationEntries())
+void registerComponent(Registry* registry, std::string_view type, ComponentFunctions functions)
+{
+    registry->registerType(type, std::move(functions));
+}
+
+void serializeAllComponents(Registry* registry,
+                            const std::string& file_path,
+                            const atcg::ref_ptr<Scene>& scene,
+                            Entity entity,
+                            nlohmann::json& j)
+{
+    const auto& entries = registry->getEntries();
+    for(const auto& [type, entry]: entries)
     {
-        if(entry.serialize) entry.serialize(file_name, scene, entity, j);
+        entry.desc.serialize(file_path, scene, entity, j);
     }
 }
 
-void ComponentRegistrySystem::deserializeAllComponents(const std::string& file_name,
-                                                       const atcg::ref_ptr<Scene>& scene,
-                                                       Entity entity,
-                                                       nlohmann::json& j) const
+
+void deserializeAllComponents(Registry* registry,
+                              const std::string& file_path,
+                              const atcg::ref_ptr<Scene>& scene,
+                              Entity entity,
+                              nlohmann::json& j)
 {
-    for(const auto& entry: getSerializationEntries())
+    const auto& entries = registry->getEntries();
+    for(const auto& [type, entry]: entries)
     {
-        if(entry.deserialize) entry.deserialize(file_name, scene, entity, j);
+        entry.desc.deserialize(file_path, scene, entity, j);
     }
 }
 
-void ComponentRegistrySystem::drawAllComponents(const atcg::ref_ptr<Scene>& scene, Entity entity) const
+void drawAllComponents(Registry* registry, const atcg::ref_ptr<Scene>& scene, Entity entity)
 {
-    for(const auto& entry: getDrawEntries())
+    const auto& entries = registry->getEntries();
+    for(const auto& [type, entry]: entries)
     {
-        if(entry.draw) entry.draw(scene, entity);
+        entry.desc.draw(scene, entity);
     }
 }
 
-void ComponentRegistrySystem::displayAddAllComponents(const atcg::ref_ptr<Scene>& scene, Entity entity) const
+void displayAddAllComponents(Registry* registry, const atcg::ref_ptr<Scene>& scene, Entity entity)
 {
-    for(const auto& entry: getDrawEntries())
+    const auto& entries = registry->getEntries();
+    for(const auto& [type, entry]: entries)
     {
-        if(entry.display_add) entry.display_add(scene, entity);
+        entry.desc.display_add(scene, entity);
     }
 }
 
-void ComponentRegistrySystem::storeAllComponents(
-    Entity entity,
-    std::unordered_map<entt::id_type, std::shared_ptr<void>>& components) const
+void storeAllComponents(Registry* registry,
+                        Entity entity,
+                        std::unordered_map<entt::id_type, std::shared_ptr<void>>& components)
 {
-    for(const auto& entry: getStoreEntries())
+    const auto& entries = registry->getEntries();
+    for(const auto& [type, entry]: entries)
     {
-        if(entry.store) entry.store(entity, components);
+        entry.desc.store(entity, components);
     }
 }
 
-void ComponentRegistrySystem::restoreAddAllComponents(Entity entity,
-                                                      const entt::id_type id,
-                                                      const std::shared_ptr<void>& component) const
+void restoreAddAllComponents(Registry* registry,
+                             Entity entity,
+                             const entt::id_type id,
+                             const std::shared_ptr<void>& component)
 {
-    for(const auto& entry: getStoreEntries())
+    const auto& entries = registry->getEntries();
+    for(const auto& [type, entry]: entries)
     {
-        if(entry.restore) entry.restore(entity, id, component);
+        entry.desc.restore(entity, id, component);
     }
 }
 
-void ComponentRegistrySystem::renderAllComponents(RendererSystem* renderer,
-                                                  Entity entity,
-                                                  const atcg::ref_ptr<Camera>& camera,
-                                                  atcg::Dictionary& auxiliary) const
+void renderAllComponents(Registry* registry,
+                         RendererSystem* renderer,
+                         Entity entity,
+                         const atcg::ref_ptr<Camera>& camera,
+                         atcg::Dictionary& auxiliary)
 {
-    for(const auto& entry: getRenderEntries())
+    const auto& entries = registry->getEntries();
+    for(const auto& [type, entry]: entries)
     {
-        if(entry.render) entry.render(renderer, entity, camera, auxiliary);
+        entry.desc.render(renderer, entity, camera, auxiliary);
     }
 }
+}    // namespace ComponentRegistry
 }    // namespace atcg

@@ -12,6 +12,7 @@
 #include <Renderer/VRSystem.h>
 #include <Renderer/RenderPassRegistry.h>
 #include <Scene/ComponentRegistry.h>
+#include <Scene/Components.h>
 #include <Scene/RevisionStack.h>
 #include <Scene/SceneRenderer.h>
 #include <Scripting/ScriptEngine.h>
@@ -42,6 +43,11 @@
     #include <Integrator/PathtracingIntegrator.h>
     #include <Integrator/VolPathtracingIntegrator.h>
     #include <Integrator/PhotonMapIntegrator.h>
+    #include <BSDF/BSDF.h>
+    #include <Medium/Medium.h>
+    #include <Medium/PhaseFunction.h>
+    #include <Shape/Shape.h>
+    #include <Emitter/Emitter.h>
 #endif
 
 namespace atcg
@@ -75,7 +81,7 @@ public:
     atcg::ref_ptr<ScriptEngine> _script_engine;
     atcg::ref_ptr<RevisionSystem> _revision_system;
     atcg::ref_ptr<GraphicsAPI> _graphics_api;
-    atcg::ref_ptr<ComponentRegistrySystem> _component_registry;
+    atcg::ref_ptr<ComponentRegistry::Registry> _component_registry_v2;
     atcg::ref_ptr<PluginManagerSystem> _plugin_manager;
 };
 
@@ -133,8 +139,30 @@ void SystemCollection::Impl::initSystems(const WindowProps& props, const Window:
     _revision_system = atcg::make_ref<RevisionSystem>();
     SystemRegistry::instance()->registerSystem(_revision_system.get());
 
-    _component_registry = atcg::make_ref<ComponentRegistrySystem>();
-    SystemRegistry::instance()->registerSystem(_component_registry.get());
+    _component_registry_v2 = atcg::make_ref<ComponentRegistry::Registry>();
+    CameraComponent::registerComponent(_component_registry_v2.get());
+    EdgeCylinderRenderComponent::registerComponent(_component_registry_v2.get());
+    EdgeRenderComponent::registerComponent(_component_registry_v2.get());
+    GeometryComponent::registerComponent(_component_registry_v2.get());
+    HeterogeneousMediumComponent::registerComponent(_component_registry_v2.get());
+    HomogeneousMediumComponent::registerComponent(_component_registry_v2.get());
+    IDComponent::registerComponent(_component_registry_v2.get());
+    InstanceRenderComponent::registerComponent(_component_registry_v2.get());
+    MeshLightComponent::registerComponent(_component_registry_v2.get());
+    MeshRenderComponent::registerComponent(_component_registry_v2.get());
+    NameComponent::registerComponent(_component_registry_v2.get());
+    PointLightComponent::registerComponent(_component_registry_v2.get());
+    PointRenderComponent::registerComponent(_component_registry_v2.get());
+    PointSphereRenderComponent::registerComponent(_component_registry_v2.get());
+    ScriptComponent::registerComponent(_component_registry_v2.get());
+    TransformComponent::registerComponent(_component_registry_v2.get());
+    TransparencyComponent::registerComponent(_component_registry_v2.get());
+    EmitterComponent::registerComponent(_component_registry_v2.get());
+    BSDFComponent::registerComponent(_component_registry_v2.get());
+    MediumComponent::registerComponent(_component_registry_v2.get());
+    PhaseFunctionComponent::registerComponent(_component_registry_v2.get());
+    ShapeComponent::registerComponent(_component_registry_v2.get());
+    SystemRegistry::instance()->registerSystem(_component_registry_v2.get());
 
     _script_engine = atcg::make_ref<PythonScriptEngine>();
     _script_engine->init();
