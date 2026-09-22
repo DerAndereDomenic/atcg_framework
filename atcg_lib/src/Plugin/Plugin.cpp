@@ -125,7 +125,7 @@ bool PluginManagerSystem::releasePlugin(const std::filesystem::path& path)
         ComponentRegistry::Registry* component_registry = ComponentRegistry::getRegistry();
         component_registry->unregisterPlugin(it->second);
 
-#ifndef ATCG_CUDA_BACKEND
+#ifdef ATCG_CUDA_BACKEND
         BSDFRegistry::Registry* bsdf_registry = BSDFRegistry::getRegistry();
         bsdf_registry->unregisterPlugin(it->second);
 
