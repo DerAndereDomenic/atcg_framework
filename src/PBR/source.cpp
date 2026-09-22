@@ -489,10 +489,12 @@ public:
         if(event->getKeyCode() == ATCG_KEY_P)
         {
             ATCG_DEBUG("Reloading Plugins");
+    #ifdef ATCG_CUDA_BACKEND
             if(integrator)
             {
                 integrator.reset();
             }
+    #endif
             atcg::PluginManager::releasePlugin("bin/Debug/TestPlugin.dll");
             atcg::PluginManager::loadPlugin("bin/Debug/TestPlugin.dll");
 
