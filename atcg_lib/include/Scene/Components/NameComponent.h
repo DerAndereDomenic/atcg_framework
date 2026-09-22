@@ -2,6 +2,7 @@
 
 #include <string>
 #include <Scene/ComponentSerializer.h>
+#include <Scene/ComponentRegistry.h>
 
 namespace atcg
 {
@@ -12,9 +13,26 @@ struct ATCG_API NameComponent
 
     ATCG_INLINE const std::string& name() const { return _name; }
 
+    static void registerComponent(ComponentRegistry::Registry* registry);
+
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Name"; }
+
 private:
     std::string _name;
 };
+
+namespace GUI
+{
+template<>
+struct is_gui_addable<NameComponent> : std::false_type
+{
+};
+
+template<>
+struct is_gui_renderable<NameComponent> : std::false_type
+{
+};
+}    // namespace GUI
 
 namespace Serialization
 {

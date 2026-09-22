@@ -5,6 +5,7 @@
 #include <Renderer/Camera.h>
 #include <Renderer/Framebuffer.h>
 #include <Renderer/PerspectiveCamera.h>
+#include <Scene/ComponentRegistry.h>
 #include <Scene/Components/TransformComponent.h>
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentRenderer.h>
@@ -31,6 +32,8 @@ struct ATCG_API CameraComponent
         auto image = AssetManager::getAsset<Texture2D>(image_handle);
         return image;
     }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Camera"; }
 

@@ -5,6 +5,7 @@
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentRenderer.h>
 #include <Scene/ComponentSerializer.h>
+#include <Scene/ComponentRegistry.h>
 
 namespace atcg
 {
@@ -44,6 +45,8 @@ struct ATCG_API MeshLightComponent
     }
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Mesh Light"; }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 
     AssetHandle emissive_handle;
 

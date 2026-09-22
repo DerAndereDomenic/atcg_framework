@@ -196,5 +196,8 @@ void ComponentGUIRenderer<MeshRenderComponent>::draw_component(const atcg::ref_p
 }
 }    // namespace GUI
 
-ATCG_REGISTER_COMPONENT(MeshRenderComponent);
+void MeshRenderComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "MeshRender", MeshRenderComponent);
+}
 }    // namespace atcg

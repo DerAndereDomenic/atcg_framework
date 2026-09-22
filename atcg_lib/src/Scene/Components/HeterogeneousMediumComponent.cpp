@@ -320,5 +320,9 @@ void ComponentGUIRenderer<HeterogeneousMediumComponent>::draw_component(const at
 }
 }    // namespace GUI
 
-ATCG_REGISTER_COMPONENT(HeterogeneousMediumComponent);
+void HeterogeneousMediumComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "HeterogeneousMedium", HeterogeneousMediumComponent);
+}
+
 }    // namespace atcg

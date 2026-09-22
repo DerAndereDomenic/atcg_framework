@@ -5,6 +5,7 @@
 #include <Core/OptixComponent.h>
 #include <DataStructure/Dictionary.h>
 #include <Medium/PhaseFunctionVPtrTable.cuh>
+#include <Scene/ComponentRegistry.h>
 
 #ifndef __CUDACC__
     #include <Scene/ComponentGUIHandler.h>
@@ -40,6 +41,8 @@ struct ATCG_API PhaseFunctionComponent
     atcg::ref_ptr<PhaseFunction> phase_function;
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "PhaseFunctionComponent"; }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 };
 
 #ifndef __CUDACC__

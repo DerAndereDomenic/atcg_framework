@@ -219,5 +219,8 @@ void ComponentGUIRenderer<InstanceRenderComponent>::draw_component(const atcg::r
 }
 }    // namespace GUI
 
-ATCG_REGISTER_COMPONENT(InstanceRenderComponent);
+void InstanceRenderComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "InstanceRender", InstanceRenderComponent);
+}
 }    // namespace atcg

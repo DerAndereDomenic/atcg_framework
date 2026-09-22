@@ -8,6 +8,7 @@
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentRenderer.h>
 #include <Scene/ComponentSerializer.h>
+#include <Scene/ComponentRegistry.h>
 
 namespace atcg
 {
@@ -42,6 +43,8 @@ struct ATCG_API PointSphereRenderComponent : public RenderComponent
     }
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Point Sphere Renderer"; }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 
     atcg::ref_ptr<Shader> default_shader = atcg::ShaderManager::getShader("base");
     float point_size                     = 0.1f;

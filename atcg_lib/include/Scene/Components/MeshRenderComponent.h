@@ -7,6 +7,7 @@
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentRenderer.h>
 #include <Scene/ComponentSerializer.h>
+#include <Scene/ComponentRegistry.h>
 
 namespace atcg
 {
@@ -38,6 +39,8 @@ struct ATCG_API MeshRenderComponent : public RenderComponent
     }
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Mesh Renderer"; }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 
     atcg::ref_ptr<Shader> default_shader = atcg::ShaderManager::getShader("base");
     bool receive_shadow                  = true;

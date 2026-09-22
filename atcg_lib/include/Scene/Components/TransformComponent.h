@@ -4,6 +4,8 @@
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
 
+#include <Scene/ComponentRegistry.h>
+
 namespace atcg
 {
 struct ATCG_API TransformComponent
@@ -113,6 +115,8 @@ struct ATCG_API TransformComponent
     ATCG_INLINE operator glm::mat4() const { return _model_matrix; }
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Transform"; }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 
 private:
     void calculateModelMatrix();

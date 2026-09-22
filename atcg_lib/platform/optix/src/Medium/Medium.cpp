@@ -13,6 +13,12 @@ void ComponentGUIRenderer<MediumComponent>::draw_component(const atcg::ref_ptr<S
 {
     component.medium->onImGuiRender();
 }
-ATCG_REGISTER_COMPONENT_DRAW(MediumComponent);
+
 }    // namespace GUI
+
+void MediumComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "Medium", MediumComponent);
+}
+
 }    // namespace atcg

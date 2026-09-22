@@ -4,6 +4,7 @@
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentRenderer.h>
 #include <Scene/ComponentSerializer.h>
+#include <Scene/ComponentRegistry.h>
 
 namespace atcg
 {
@@ -12,6 +13,8 @@ struct ATCG_API EdgeRenderComponent : public RenderComponent
     EdgeRenderComponent(const glm::vec3& color = glm::vec3(1)) : RenderComponent(), color(color) {}
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Edge Renderer"; }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 
     glm::vec3 color = glm::vec3(1);
     // TODO Edge radius?

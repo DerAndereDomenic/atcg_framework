@@ -222,5 +222,9 @@ void ComponentGUIRenderer<PointSphereRenderComponent>::draw_component(const atcg
 }
 }    // namespace GUI
 
-ATCG_REGISTER_COMPONENT(PointSphereRenderComponent);
+void PointSphereRenderComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "PointSphereRender", PointSphereRenderComponent);
+}
+
 }    // namespace atcg

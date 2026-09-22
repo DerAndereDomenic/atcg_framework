@@ -4,6 +4,7 @@
 #include <Renderer/Material.h>
 #include <Scene/Components/RenderComponent.h>
 #include <Scene/ComponentGUIHandler.h>
+#include <Scene/ComponentRegistry.h>
 #include <Scene/ComponentRenderer.h>
 #include <Scene/ComponentSerializer.h>
 
@@ -18,6 +19,8 @@ struct ATCG_API EdgeCylinderRenderComponent : public RenderComponent
         auto mat = AssetManager::getAsset<Material>(material_handle);
         return mat ? mat : default_material;
     }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Edge Cylinder Renderer"; }
 

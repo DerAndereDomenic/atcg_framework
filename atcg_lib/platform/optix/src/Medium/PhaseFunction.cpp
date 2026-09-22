@@ -13,6 +13,11 @@ void ComponentGUIRenderer<PhaseFunctionComponent>::draw_component(const atcg::re
     component.phase_function->onImGuiRender();
 }
 
-ATCG_REGISTER_COMPONENT_DRAW(PhaseFunctionComponent);
 }    // namespace GUI
+
+void PhaseFunctionComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "PhaseFunction", PhaseFunctionComponent);
+}
+
 }    // namespace atcg

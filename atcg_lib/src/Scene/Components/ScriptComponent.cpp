@@ -71,5 +71,9 @@ void ComponentGUIRenderer<ScriptComponent>::draw_component(const atcg::ref_ptr<S
 }
 }    // namespace GUI
 
-ATCG_REGISTER_COMPONENT(ScriptComponent);
+void ScriptComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "Script", ScriptComponent);
+}
+
 }    // namespace atcg

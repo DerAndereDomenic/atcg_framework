@@ -4,6 +4,7 @@
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
 #include <Scene/ComponentRenderer.h>
+#include <Scene/ComponentRegistry.h>
 
 namespace atcg
 {
@@ -18,6 +19,8 @@ struct ATCG_API HomogeneousMediumComponent
     glm::vec3 Le_color = glm::vec3(1);
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Homogeneous Medium"; }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 };
 
 ATCG_DECLARE_COMPONENT_RENDERER(HomogeneousMediumComponent);

@@ -93,5 +93,9 @@ void ComponentGUIRenderer<PointLightComponent>::draw_component(const atcg::ref_p
 }
 }    // namespace GUI
 
-ATCG_REGISTER_COMPONENT(PointLightComponent);
+void PointLightComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "PointLight", PointLightComponent);
+}
+
 }    // namespace atcg

@@ -8,6 +8,7 @@
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentRenderer.h>
 #include <Scene/ComponentSerializer.h>
+#include <Scene/ComponentRegistry.h>
 
 namespace atcg
 {
@@ -43,6 +44,8 @@ struct ATCG_API PointRenderComponent : public RenderComponent
     }
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Point Renderer"; }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 
     atcg::ref_ptr<Shader> default_shader = atcg::ShaderManager::getShader("base");
     glm::vec3 color                      = glm::vec3(1);

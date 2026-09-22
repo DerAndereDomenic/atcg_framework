@@ -50,6 +50,11 @@ struct is_gui_addable : std::true_type
 {
 };
 
+template<typename T>
+struct is_gui_renderable : std::true_type
+{
+};
+
 #define ATCG_DECLARE_COMPONENT_GUI_RENDERER(ComponentType)                                                             \
     template<>                                                                                                         \
     struct ComponentGUIRenderer<ComponentType>                                                                         \
@@ -65,6 +70,8 @@ ATCG_INLINE void drawComponent(const atcg::ref_ptr<Scene>& scene, Entity entity)
     const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
                                              ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap |
                                              ImGuiTreeNodeFlags_FramePadding;
+
+    if constexpr(!is_gui_renderable<T>::value) return;
 
     if(entity.hasComponent<T>())
     {

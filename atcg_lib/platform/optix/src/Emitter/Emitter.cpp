@@ -13,6 +13,12 @@ void ComponentGUIRenderer<EmitterComponent>::draw_component(const atcg::ref_ptr<
 {
     component.emitter->onImGuiRender();
 }
-ATCG_REGISTER_COMPONENT_DRAW(EmitterComponent);
+
 }    // namespace GUI
+
+void EmitterComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "Emitter", EmitterComponent);
+}
+
 }    // namespace atcg
