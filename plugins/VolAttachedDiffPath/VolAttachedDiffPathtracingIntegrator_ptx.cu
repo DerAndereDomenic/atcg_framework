@@ -24,6 +24,7 @@ extern "C"
 struct RayContext
 {
     bool valid;
+    int pixel_index;
     atcg::AnyInteraction ai0;
     atcg::AnyInteraction ai1;
     CuDiff::Dual<6, glm::vec3> last_normal;
@@ -126,7 +127,7 @@ ATCG_INLINE ATCG_DEVICE atcg::mat6x3 handleDirectIlluminationSurface(RayContext&
         float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
         float emitter_sampling_pdf =
             atcg::select(mis_valid, si1.emitter->evalLightSamplingPdf(ai0, ai1) * emitter_selection_pdf, 0.0f);
-        float mis_weight  = atcg::PowerHeuristic<1>::apply(ai0->pdf, emitter_sampling_pdf);
+        float mis_weight  = 1.0f;    // atcg::PowerHeuristic<1>::apply(ai0->pdf, emitter_sampling_pdf);
         auto light_result = si1.emitter->evalLightForward(dsi, wavelengths);
         glm::vec3 Le      = mis_weight * light_result.radiance_weight_at_receiver;
 
@@ -148,74 +149,74 @@ ATCG_INLINE ATCG_DEVICE atcg::mat6x3 handleDirectIlluminationSurface(RayContext&
     }
 
     // ── Next-event estimation ───────────────────────────────────────────────
-    do
-    {
-        if(params.num_emitters == 0) break;
-        if(!si1.bsdf) break;
+    // do
+    // {
+    //     if(params.num_emitters == 0) break;
+    //     if(!si1.bsdf) break;
 
-        uint32_t emitter_index                = rng.nextUint32() % params.num_emitters;
-        float emitter_selection_pdf           = 1.0f / ((float)params.num_emitters);
-        const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
+    //     uint32_t emitter_index                = rng.nextUint32() % params.num_emitters;
+    //     float emitter_selection_pdf           = 1.0f / ((float)params.num_emitters);
+    //     const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
 
-        if(si1.emitter == emitter) break;
+    //     if(si1.emitter == emitter) break;
 
-        atcg::EmitterDualSamplingResult emitter_sampling = emitter->sampleLightForward(dsi, wavelengths, rng);
+    //     atcg::EmitterDualSamplingResult emitter_sampling = emitter->sampleLightForward(dsi, wavelengths, rng);
 
-        if(emitter_sampling.sampling_pdf == 0) break;
+    //     if(emitter_sampling.sampling_pdf == 0) break;
 
-        emitter_sampling.sampling_pdf *= emitter_selection_pdf;
-        emitter_sampling.radiance_weight_at_receiver =
-            emitter_sampling.radiance_weight_at_receiver / emitter_selection_pdf;
-        emitter_sampling.dLe_dx0x1 = emitter_sampling.dLe_dx0x1 / emitter_selection_pdf;
+    //     emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+    //     emitter_sampling.radiance_weight_at_receiver =
+    //         emitter_sampling.radiance_weight_at_receiver / emitter_selection_pdf;
+    //     emitter_sampling.dLe_dx0x1 = emitter_sampling.dLe_dx0x1 / emitter_selection_pdf;
 
-        bool occluded = traceOcclusion(params.handle,
-                                       si1.position,
-                                       emitter_sampling.direction_to_light,
-                                       1e-3f,
-                                       emitter_sampling.distance_to_light - 1e-3f,
-                                       params.occlusion_trace_params);
-        if(occluded) break;
+    //     bool occluded = traceOcclusion(params.handle,
+    //                                    si1.position,
+    //                                    emitter_sampling.direction_to_light,
+    //                                    1e-3f,
+    //                                    emitter_sampling.distance_to_light - 1e-3f,
+    //                                    params.occlusion_trace_params);
+    //     if(occluded) break;
 
-        atcg::BSDFDualEvalResult bsdf_result =
-            si1.bsdf->evalBSDFForward(dsi, emitter_sampling.direction_to_light, wavelengths);
+    //     atcg::BSDFDualEvalResult bsdf_result =
+    //         si1.bsdf->evalBSDFForward(dsi, emitter_sampling.direction_to_light, wavelengths);
 
-        float bsdf_pdf   = atcg::select((int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0 ||
-                                            (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0,
-                                        0.0f,
-                                        bsdf_result.sample_probability);
-        float mis_weight = atcg::PowerHeuristic<1>::apply(emitter_sampling.sampling_pdf, bsdf_pdf);
+    //     float bsdf_pdf   = atcg::select((int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0 ||
+    //                                         (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0,
+    //                                     0.0f,
+    //                                     bsdf_result.sample_probability);
+    //     float mis_weight = atcg::PowerHeuristic<1>::apply(emitter_sampling.sampling_pdf, bsdf_pdf);
 
-        glm::vec3 throughput_nee = ray.throughput * bsdf_result.bsdf_value;
-        glm::vec3 radiance_nee   = mis_weight * throughput_nee * emitter_sampling.radiance_weight_at_receiver;
+    //     glm::vec3 throughput_nee = ray.throughput * bsdf_result.bsdf_value;
+    //     glm::vec3 radiance_nee   = mis_weight * throughput_nee * emitter_sampling.radiance_weight_at_receiver;
 
-        if(params.diff_mode == atcg::DiffMode::FORWARD)
-        {
-            ray.radiance += radiance_nee;
-        }
-        else
-        {
-            ray.radiance -= radiance_nee;
-        }
+    //     if(params.diff_mode == atcg::DiffMode::FORWARD)
+    //     {
+    //         ray.radiance += radiance_nee;
+    //     }
+    //     else
+    //     {
+    //         ray.radiance -= radiance_nee;
+    //     }
 
-        auto JLe_nee   = emitter_sampling.dLe_dx0x1 * Jray;
-        auto Jbsdf_nee = bsdf_result.dbsdf_dx0x1 * Jray;
+    //     auto JLe_nee   = emitter_sampling.dLe_dx0x1 * Jray;
+    //     auto Jbsdf_nee = bsdf_result.dbsdf_dx0x1 * Jray;
 
-        if(params.diff_mode == atcg::DiffMode::FORWARD)
-        {
-            atcg::mat6x3 Jb_nee = atcg::diag(bsdf_result.bsdf_value) * Jb + atcg::diag(ray.throughput) * Jbsdf_nee;
+    //     if(params.diff_mode == atcg::DiffMode::FORWARD)
+    //     {
+    //         atcg::mat6x3 Jb_nee = atcg::diag(bsdf_result.bsdf_value) * Jb + atcg::diag(ray.throughput) * Jbsdf_nee;
 
-            ray.JL += mis_weight * (atcg::diag(emitter_sampling.radiance_weight_at_receiver) * Jb_nee +
-                                    atcg::diag(throughput_nee) * JLe_nee);
-        }
-        else
-        {
-            ray.JL -= (atcg::diag((radiance_nee + 1e-5f) / (bsdf_result.bsdf_value + 1e-5f)) * Jbsdf_nee +
-                       mis_weight * atcg::diag(throughput_nee) * JLe_nee);
+    //         ray.JL += mis_weight * (atcg::diag(emitter_sampling.radiance_weight_at_receiver) * Jb_nee +
+    //                                 atcg::diag(throughput_nee) * JLe_nee);
+    //     }
+    //     else
+    //     {
+    //         ray.JL -= (atcg::diag((radiance_nee + 1e-5f) / (bsdf_result.bsdf_value + 1e-5f)) * Jbsdf_nee +
+    //                    mis_weight * atcg::diag(throughput_nee) * JLe_nee);
 
-            glm::vec3 grad_out = (ray.delta_y * (radiance_nee + 1e-4f)) / (glm::vec3(bsdf_result.bsdf_value) + 1e-4f);
-            si1.bsdf->evalBSDFBackward(si1, emitter_sampling.direction_to_light.val(), grad_out);
-        }
-    } while(false);
+    //         glm::vec3 grad_out = (ray.delta_y * (radiance_nee + 1e-4f)) / (glm::vec3(bsdf_result.bsdf_value) +
+    //         1e-4f); si1.bsdf->evalBSDFBackward(si1, emitter_sampling.direction_to_light.val(), grad_out);
+    //     }
+    // } while(false);
 
     return JLe;
 }
@@ -234,123 +235,123 @@ ATCG_INLINE ATCG_DEVICE void handleDirectIlluminationMedium(RayContext& ray,
     atcg::DualMediumInteraction& dmi = dai;
 
     // NEE
-    do
-    {
-        if(params.num_emitters == 0) break;
+    // do
+    // {
+    //     if(params.num_emitters == 0) break;
 
-        uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
+    //     uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
 
-        float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+    //     float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
 
-        const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
+    //     const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
 
-        atcg::EmitterDualSamplingResult emitter_sampling = emitter->sampleLightForward(dmi, wavelengths, rng);
+    //     atcg::EmitterDualSamplingResult emitter_sampling = emitter->sampleLightForward(dmi, wavelengths, rng);
 
-        if(emitter_sampling.sampling_pdf == 0)
-        {
-            break;
-        }
-        emitter_sampling.sampling_pdf *= emitter_selection_pdf;
-        emitter_sampling.radiance_weight_at_receiver /= emitter_selection_pdf;
-        emitter_sampling.dLe_dx0x1 = emitter_sampling.dLe_dx0x1 / emitter_selection_pdf;
+    //     if(emitter_sampling.sampling_pdf == 0)
+    //     {
+    //         break;
+    //     }
+    //     emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+    //     emitter_sampling.radiance_weight_at_receiver /= emitter_selection_pdf;
+    //     emitter_sampling.dLe_dx0x1 = emitter_sampling.dLe_dx0x1 / emitter_selection_pdf;
 
-        atcg::DualSurfaceInteraction dsi_dummy;
-        dsi_dummy.incoming_position  = dmi.position;
-        dsi_dummy.incoming_direction = emitter_sampling.direction_to_light;
+    //     atcg::DualSurfaceInteraction dsi_dummy;
+    //     dsi_dummy.incoming_position  = dmi.position;
+    //     dsi_dummy.incoming_direction = emitter_sampling.direction_to_light;
 
-        atcg::traceWithDataPointer<atcg::DualSurfaceInteraction>(params.handle,
-                                                                 mi.position,
-                                                                 emitter_sampling.direction_to_light.val(),
-                                                                 0.0f,
-                                                                 1e16f,
-                                                                 &dsi_dummy,
-                                                                 params.dual_trace_params);
+    //     atcg::traceWithDataPointer<atcg::DualSurfaceInteraction>(params.handle,
+    //                                                              mi.position,
+    //                                                              emitter_sampling.direction_to_light.val(),
+    //                                                              0.0f,
+    //                                                              1e16f,
+    //                                                              &dsi_dummy,
+    //                                                              params.dual_trace_params);
 
-        if(!dsi_dummy.isValid())
-        {
-            // Should not happen because we are inside the geometry
-            break;
-        }
+    //     if(!dsi_dummy.isValid())
+    //     {
+    //         // Should not happen because we are inside the geometry
+    //         break;
+    //     }
 
-        if(!dsi_dummy.bsdf || (int)(dsi_dummy.bsdf->flags & atcg::BSDFComponentType::NullTransmission) == 0)
-        {
-            break;
-        }
+    //     if(!dsi_dummy.bsdf || (int)(dsi_dummy.bsdf->flags & atcg::BSDFComponentType::NullTransmission) == 0)
+    //     {
+    //         break;
+    //     }
 
-        bool occluded = traceOcclusion(params.handle,
-                                       dsi_dummy.position.val(),
-                                       emitter_sampling.direction_to_light.val(),
-                                       1e-3f,
-                                       emitter_sampling.distance_to_light - dsi_dummy.incoming_distance.val() - 1e-3f,
-                                       params.occlusion_trace_params);
+    //     bool occluded = traceOcclusion(params.handle,
+    //                                    dsi_dummy.position.val(),
+    //                                    emitter_sampling.direction_to_light.val(),
+    //                                    1e-3f,
+    //                                    emitter_sampling.distance_to_light - dsi_dummy.incoming_distance.val() -
+    //                                    1e-3f, params.occlusion_trace_params);
 
-        if(occluded)
-        {
-            break;
-        }
+    //     if(occluded)
+    //     {
+    //         break;
+    //     }
 
-        atcg::PCG32 rng_copy = rng;
-        atcg::DualTransmittanceEvalResult transmittance_result =
-            ray.current_medium->evalTransmittanceForward(dmi.position,
-                                                         emitter_sampling.direction_to_light,
-                                                         dsi_dummy.incoming_distance,
-                                                         rng);
+    //     atcg::PCG32 rng_copy = rng;
+    //     atcg::DualTransmittanceEvalResult transmittance_result =
+    //         ray.current_medium->evalTransmittanceForward(dmi.position,
+    //                                                      emitter_sampling.direction_to_light,
+    //                                                      dsi_dummy.incoming_distance,
+    //                                                      rng);
 
-        auto phase_result =
-            ray.current_medium->phase_function->evalPhaseFunctionForward(dmi, emitter_sampling.direction_to_light);
-        float phase_pdf = phase_result.sampling_pdf;
-        float sampling_pdf =
-            atcg::select((int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0, 0.0f, phase_pdf);
+    //     auto phase_result =
+    //         ray.current_medium->phase_function->evalPhaseFunctionForward(dmi, emitter_sampling.direction_to_light);
+    //     float phase_pdf = phase_result.sampling_pdf;
+    //     float sampling_pdf =
+    //         atcg::select((int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0, 0.0f, phase_pdf);
 
-        float mis_weight = atcg::BalanceHeuristic::apply(emitter_sampling.sampling_pdf, sampling_pdf);
+    //     float mis_weight = atcg::BalanceHeuristic::apply(emitter_sampling.sampling_pdf, sampling_pdf);
 
-        float weight             = transmittance_result.transmittance * phase_result.phase_function_value;
-        glm::vec3 throughput_nee = ray.throughput * weight;
-        glm::vec3 radiance_nee   = mis_weight * throughput_nee * emitter_sampling.radiance_weight_at_receiver;
+    //     float weight             = transmittance_result.transmittance * phase_result.phase_function_value;
+    //     glm::vec3 throughput_nee = ray.throughput * weight;
+    //     glm::vec3 radiance_nee   = mis_weight * throughput_nee * emitter_sampling.radiance_weight_at_receiver;
 
-        if(params.diff_mode == atcg::DiffMode::FORWARD)
-        {
-            ray.radiance += radiance_nee;
-        }
-        else
-        {
-            ray.radiance -= radiance_nee;
-        }
+    //     if(params.diff_mode == atcg::DiffMode::FORWARD)
+    //     {
+    //         ray.radiance += radiance_nee;
+    //     }
+    //     else
+    //     {
+    //         ray.radiance -= radiance_nee;
+    //     }
 
-        auto JLe_nee        = emitter_sampling.dLe_dx0x1 * Jray;
-        auto Jphase         = phase_result.dphase_dx0x1 * Jray;
-        auto Jtransmittance = transmittance_result.dtransmittance_dx0x1 * Jray;
+    //     auto JLe_nee        = emitter_sampling.dLe_dx0x1 * Jray;
+    //     auto Jphase         = phase_result.dphase_dx0x1 * Jray;
+    //     auto Jtransmittance = transmittance_result.dtransmittance_dx0x1 * Jray;
 
-        auto Jweight_nee = atcg::diag(phase_result.phase_function_value) * Jtransmittance +
-                           atcg::diag(transmittance_result.transmittance) * Jphase;
+    //     auto Jweight_nee = atcg::diag(phase_result.phase_function_value) * Jtransmittance +
+    //                        atcg::diag(transmittance_result.transmittance) * Jphase;
 
-        if(params.diff_mode == atcg::DiffMode::FORWARD)
-        {
-            atcg::mat6x3 Jb_nee = atcg::diag(weight) * Jb + atcg::diag(ray.throughput) * Jweight_nee;
+    //     if(params.diff_mode == atcg::DiffMode::FORWARD)
+    //     {
+    //         atcg::mat6x3 Jb_nee = atcg::diag(weight) * Jb + atcg::diag(ray.throughput) * Jweight_nee;
 
-            ray.JL += mis_weight * (atcg::diag(emitter_sampling.radiance_weight_at_receiver) * Jb_nee +
-                                    atcg::diag(throughput_nee) * JLe_nee);
-        }
-        else
-        {
-            ray.JL -= (atcg::diag((radiance_nee + 1e-5f) / (weight + 1e-5f)) * Jweight_nee +
-                       mis_weight * atcg::diag(throughput_nee) * JLe_nee);
+    //         ray.JL += mis_weight * (atcg::diag(emitter_sampling.radiance_weight_at_receiver) * Jb_nee +
+    //                                 atcg::diag(throughput_nee) * JLe_nee);
+    //     }
+    //     else
+    //     {
+    //         ray.JL -= (atcg::diag((radiance_nee + 1e-5f) / (weight + 1e-5f)) * Jweight_nee +
+    //                    mis_weight * atcg::diag(throughput_nee) * JLe_nee);
 
-            glm::vec3 grad_out = ray.delta_y * radiance_nee;
+    //         glm::vec3 grad_out = ray.delta_y * radiance_nee;
 
-            ray.current_medium->evalTransmittanceBackward(mi.position,
-                                                          emitter_sampling.direction_to_light.val(),
-                                                          dsi_dummy.incoming_distance.val(),
-                                                          rng_copy,
-                                                          grad_out);
+    //         ray.current_medium->evalTransmittanceBackward(mi.position,
+    //                                                       emitter_sampling.direction_to_light.val(),
+    //                                                       dsi_dummy.incoming_distance.val(),
+    //                                                       rng_copy,
+    //                                                       grad_out);
 
-            ray.current_medium->phase_function->evalPhaseFunctionBackward(mi,
-                                                                          emitter_sampling.direction_to_light.val(),
-                                                                          grad_out);
-        }
+    //         ray.current_medium->phase_function->evalPhaseFunctionBackward(mi,
+    //                                                                       emitter_sampling.direction_to_light.val(),
+    //                                                                       grad_out);
+    //     }
 
 
-    } while(false);
+    // } while(false);
 }
 
 ATCG_INLINE ATCG_DEVICE DirectionSampleResult sampleDirection(RayContext& ray,
@@ -492,6 +493,7 @@ ATCG_INLINE ATCG_DEVICE void updateDerivatives(RayContext& ray,
                                                atcg::mat6& Jray,
                                                atcg::mat6x3& Jb,
                                                const atcg::SampledWavelengths& wavelengths,
+                                               atcg::PCG32& rng,
                                                atcg::PCG32& rng_direction,
                                                atcg::PCG32& rng_position)
 {
@@ -502,8 +504,9 @@ ATCG_INLINE ATCG_DEVICE void updateDerivatives(RayContext& ray,
     auto P = atcg::mat6(P0, glm::mat3(0.0f), glm::mat3(0.0f), P1);
     auto Q = atcg::mat6(P1, glm::mat3(0.0f), glm::mat3(0.0f), P2);
 
-    Jray = (Q * next.Jray_ * P) * Jray;
-    Jray += atcg::mat6(0.01f * glm::sign(rng_direction.nextFloat() - 0.5f));    // Regularization
+    // Jray = (Q * next.Jray_ * P) * Jray;
+    Jray = (next.Jray_) * Jray;
+    Jray += atcg::mat6(0.01f * glm::sign(rng.nextFloat() - 0.5f));    // Regularization
 
     if(params.diff_mode == atcg::DiffMode::FORWARD)
     {
@@ -529,7 +532,12 @@ ATCG_INLINE ATCG_DEVICE void updateDerivatives(RayContext& ray,
         auto dL_dx2 = JL_.m01;
         auto dL_dwo = ray.delta_y * dL_dx2 * next.dxdw;
 
-        si1.bsdf->sampleBSDFBackward(si1, rng_direction, dL_dbsdf, dL_dwo);
+        auto gradients = si1.bsdf->sampleBSDFBackward(si1, rng_direction, dL_dbsdf, dL_dwo);
+        for(int i = 0; i < gradients.num_payloads; ++i)
+        {
+            if(i >= params.num_aovs) break;
+            params.aov_buffers[i][ray.pixel_index] += gradients.payload[i];
+        }
     }
     else /*if (ai1.is_medium())*/
     {
@@ -550,13 +558,19 @@ ATCG_INLINE ATCG_DEVICE void updateDerivatives(RayContext& ray,
         glm::vec3 dLdw     = (ray.delta_y * (ray.radiance + 1e-4f)) / (next.transmittance_weight + 1e-4f);
 
         glm::vec3 dLdx2 = ray.delta_y * JL_.m01;
-        ray.current_medium->sampleMediumEventFullBackward(ai1->position,
-                                                          dir.out_dir.val(),
-                                                          max_distance,
-                                                          wavelengths,
-                                                          rng_position,
-                                                          dLdw,
-                                                          dLdx2);
+        auto gradients  = ray.current_medium->sampleMediumEventFullBackward(ai1->position,
+                                                                            dir.out_dir.val(),
+                                                                            max_distance,
+                                                                            wavelengths,
+                                                                            rng_position,
+                                                                            dLdw,
+                                                                            dLdx2);
+
+        for(int i = 0; i < gradients.num_payloads; ++i)
+        {
+            if(i >= params.num_aovs) break;
+            params.aov_buffers[i][ray.pixel_index] += gradients.payload[i];
+        }
     }
 }
 
@@ -577,6 +591,7 @@ extern "C" __global__ void __raygen__forward()
 
     glm::vec3 ray_origin    = cam_ray.ray.origin;
     glm::vec3 ray_direction = glm::normalize(cam_ray.ray.direction);
+    ray.pixel_index         = pixel_index;
     ray.radiance =
         atcg::select(params.diff_mode == atcg::DiffMode::FORWARD, glm::vec3(0), params.current_sample[pixel_index]);
     ray.throughput = glm::vec3(1);
@@ -618,20 +633,20 @@ extern "C" __global__ void __raygen__forward()
     ray.ai0->pdf = 1.0f;
     ray.ai1      = init_si1;
 
-    for(int n = 0; n < 512; ++n)
+    for(int n = 0; n < 4; ++n)
     {
         if(!ray.valid) break;
         ray.valid = false;
 
-        float rr_prob = glm::max(glm::max(ray.throughput.r, ray.throughput.g), ray.throughput.b);
-        if(rng.nextFloat() < rr_prob)
-        {
-            ray.throughput /= rr_prob;
-        }
-        else
-        {
-            break;
-        }
+        // float rr_prob = glm::max(glm::max(ray.throughput.r, ray.throughput.g), ray.throughput.b);
+        // if(rng.nextFloat() < rr_prob)
+        // {
+        //     ray.throughput /= rr_prob;
+        // }
+        // else
+        // {
+        //     break;
+        // }
 
         atcg::AnyInteraction ai0 = ray.ai0;
         atcg::AnyInteraction ai1 = ray.ai1;
@@ -679,6 +694,7 @@ extern "C" __global__ void __raygen__forward()
                           Jray,
                           Jb,
                           wavelengths,
+                          rng,
                           rng_direction,
                           rng_position);
 
@@ -706,6 +722,17 @@ extern "C" __global__ void __raygen__forward()
         //     }
         // }
     }
+
+    // if(dsi1.isValid())
+    // {
+    //     glm::mat3 dx0dx0 = glm::mat3(1.0f);
+    //     glm::mat3 dx1dx0 = glm::mat3(1.0f) - glm::outerProduct(ray_direction, dsi1.normal.val()) /
+    //                                              glm::dot(ray_direction, dsi1.normal.val());
+
+
+    //     auto J_total = ray.JL.m00 * dx0dx0 + ray.JL.m01 * dx1dx0;
+    //     ray.JL.m00   = J_total;
+    // }
 
     if(params.diff_mode == atcg::DiffMode::FORWARD)
     {

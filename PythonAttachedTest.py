@@ -20,7 +20,7 @@ if torch.cuda.is_available() and "Linux" in platform.platform():
 
 import pyatcg as atcg
 
-n = 512
+n = 128
 
 
 def render_scene(integrator, rng_index, n_samples):
@@ -43,6 +43,7 @@ def tonemap(hdr_image):
 def estimate_gradient_fd(camera, scene, context, width, height):
 
     original_pos = camera.getPosition().numpy()
+    original_target = camera.getLookAt().numpy()
 
     h = 0.001
     offsets = [
@@ -57,11 +58,12 @@ def estimate_gradient_fd(camera, scene, context, width, height):
     imgs = []
     for offset in offsets:
         camera.setPosition(atcg.vec3(original_pos + offset))
+        camera.setLookAt(atcg.vec3(original_target + offset))
         scene.setCamera(camera)
 
         dictionary = atcg.Dictionary()
         integrator = atcg.IntegratorRegistry.createIntegrator(
-            "AttachedDiffPathtracingIntegrator",
+            "VolAttachedDiffPathtracingIntegrator",
             context,
             scene,
             width,
@@ -75,11 +77,11 @@ def estimate_gradient_fd(camera, scene, context, width, height):
     camera.setPosition(atcg.vec3(original_pos))
     scene.setCamera(camera)
 
-    dLdx = (imgs[1] - imgs[0]) / (2 * h)
-    dLdy = (imgs[3] - imgs[2]) / (2 * h)
-    dLdz = (imgs[5] - imgs[4]) / (2 * h)
+    dLdx = -(imgs[1] - imgs[0]) / (2 * h)
+    dLdy = -(imgs[3] - imgs[2]) / (2 * h)
+    dLdz = -(imgs[5] - imgs[4]) / (2 * h)
 
-    return dLdx[..., 0], dLdy[..., 0], dLdz[..., 0]
+    return torch.sum(dLdx, dim=-1), torch.sum(dLdy, dim=-1), torch.sum(dLdz, dim=-1)
 
 
 def estimate_gradient_atprbp(integrator: atcg.Integrator):
@@ -109,10 +111,11 @@ def main():
 
     app = atcg.PythonApplication(props)
     atcg.PluginManager.loadPlugin("./bin/RelWithDebInfo/AttachedDiffPath.dll")
+    atcg.PluginManager.loadPlugin("./bin/RelWithDebInfo/VolAttachedDiffPath.dll")
 
     context = atcg.RaytracingContextManager.createContext(0)
 
-    atcg.Project.load("../DiffRendTestEdge/Project.json")
+    atcg.Project.load("../MediumEdge/Project.json")
     scene = atcg.Project.getActive().getActiveScene()
 
     extrinsics = atcg.CameraExtrinsics()
@@ -138,74 +141,86 @@ def main():
 
     dictionary = atcg.Dictionary()
     integrator_att = atcg.IntegratorRegistry.createIntegrator(
-        "AttachedDiffPathtracingIntegrator", context, scene, width, height, dictionary
+        "VolAttachedDiffPathtracingIntegrator",
+        context,
+        scene,
+        width,
+        height,
+        dictionary,
     )
 
     JL_at = estimate_gradient_atprbp(integrator_att)
 
     JL_at = JL_at.detach().cpu().flip(0).numpy()
-    JL_at = JL_at[..., ::3]
+    # JL_at = JL_at[..., ::3]
+    JL_at = JL_at[..., :9]
 
-    _, axs = plt.subplots(2, 3)
+    JL_at = np.reshape(JL_at, (height, width, 3, 3))
+    JL_at = np.transpose(JL_at, (0, 1, 3, 2))  # Transpose the last two dimensions
+    JL_at = JL_at.sum(
+        axis=2
+    )  # Sum over the 3x3 matrix to get a 3D vector for each pixel
 
-    v = 1
+    _, axs = plt.subplots(1, 3)
 
-    axs[0, 0].imshow(
+    v = 4
+
+    axs[0].imshow(
         JL_at[..., 0],
         cmap="RdBu_r",
         vmin=-v / 2,
         vmax=v / 2,
     )
-    axs[0, 0].set_title("dL/dx0.x")
-    axs[0, 0].axis("off")
+    axs[0].set_title("dL/dx0.x")
+    axs[0].axis("off")
 
-    axs[0, 1].imshow(
+    axs[1].imshow(
         JL_at[..., 1],
         cmap="RdBu_r",
         vmin=-v / 2,
         vmax=v / 2,
     )
-    axs[0, 1].set_title("dL/dx0.y")
-    axs[0, 1].axis("off")
+    axs[1].set_title("dL/dx0.y")
+    axs[1].axis("off")
 
-    axs[0, 2].imshow(
+    axs[2].imshow(
         JL_at[..., 2],
         cmap="RdBu_r",
         vmin=-v / 2,
         vmax=v / 2,
     )
-    axs[0, 2].set_title("dL/dx0.z")
-    axs[0, 2].axis("off")
+    axs[2].set_title("dL/dx0.z")
+    axs[2].axis("off")
 
-    axs[1, 0].imshow(
-        JL_at[..., 3],
-        cmap="RdBu_r",
-        vmin=-v,
-        vmax=v,
-    )
-    axs[1, 0].set_title("dL/dx1.x")
-    axs[1, 0].axis("off")
+    # axs[1, 0].imshow(
+    #     JL_at[..., 3],
+    #     cmap="RdBu_r",
+    #     vmin=-v / 2,
+    #     vmax=v / 2,
+    # )
+    # axs[1, 0].set_title("dL/dx1.x")
+    # axs[1, 0].axis("off")
 
-    axs[1, 1].imshow(
-        JL_at[..., 4],
-        cmap="RdBu_r",
-        vmin=-v,
-        vmax=v,
-    )
-    axs[1, 1].set_title("dL/dx1.y")
-    axs[1, 1].axis("off")
+    # axs[1, 1].imshow(
+    #     JL_at[..., 4],
+    #     cmap="RdBu_r",
+    #     vmin=-v / 2,
+    #     vmax=v / 2,
+    # )
+    # axs[1, 1].set_title("dL/dx1.y")
+    # axs[1, 1].axis("off")
 
-    axs[1, 2].imshow(
-        JL_at[..., 5],
-        cmap="RdBu_r",
-        vmin=-v,
-        vmax=v,
-    )
-    axs[1, 2].set_title("dL/dx1.z")
-    axs[1, 2].axis("off")
+    # axs[1, 2].imshow(
+    #     JL_at[..., 5],
+    #     cmap="RdBu_r",
+    #     vmin=-v / 2,
+    #     vmax=v / 2,
+    # )
+    # axs[1, 2].set_title("dL/dx1.z")
+    # axs[1, 2].axis("off")
 
     plt.show()
-    return
+    # return
     dLdx, dLdy, dLdz = estimate_gradient_fd(camera, scene, context, width, height)
 
     dLdx = dLdx.detach().cpu().flip(0).numpy()
@@ -213,8 +228,6 @@ def main():
     dLdz = dLdz.detach().cpu().flip(0).numpy()
 
     _, axs = plt.subplots(1, 3)
-
-    v = 1
 
     axs[0].imshow(
         dLdx,

@@ -33,7 +33,7 @@ torch::autograd::variable_list VolDiffPathNode::apply(torch::autograd::variable_
     dict.setValue("rng_index", rng_index);
 
     integrator->_optix_scene->zeroGrad();
-    integrator->_backwardTrace(dict);
+    integrator->backwardTrace(dict);
 
     return integrator->_optix_scene->getParameterGradients();
 }
@@ -68,10 +68,26 @@ void VolDiffPathtracingIntegrator::initializePipeline(const Dictionary& dict)
     _surface_miss_index   = _sbt->addMissEntry(miss_prog_group);
     _occlusion_miss_index = _sbt->addMissEntry(occl_prog_group);
 
-    _optix_scene = SceneAdapter(_context, _pipeline, _sbt)
-                       .apply(scene, dict.getValue<uint32_t>("width"), dict.getValue<uint32_t>("height"));
+    uint32_t width  = dict.getValue<uint32_t>("width");
+    uint32_t height = dict.getValue<uint32_t>("height");
+    _optix_scene    = SceneAdapter(_context, _pipeline, _sbt).apply(scene, width, height);
 
     _dict.setValue("optix_scene", _optix_scene);
+
+    uint32_t num_aovs = dict.getValueOr<uint32_t>("num_aovs", 0);
+
+    if(num_aovs > 0)
+    {
+        _aov_buffers.resize(num_aovs);
+        _aov_buffer_pointers = atcg::DeviceBuffer<float*>(num_aovs);
+        std::vector<float*> aov_buffer_pointers(num_aovs);
+        for(uint32_t i = 0; i < num_aovs; ++i)
+        {
+            _aov_buffers[i]        = torch::zeros({height, width}, atcg::TensorOptions::floatDeviceOptions());
+            aov_buffer_pointers[i] = reinterpret_cast<float*>(_aov_buffers[i].data_ptr());
+        }
+        _aov_buffer_pointers.upload(aov_buffer_pointers.data());
+    }
 
     _pipeline->createPipeline();
     _sbt->createSBT();
@@ -89,7 +105,7 @@ void VolDiffPathtracingIntegrator::reset()
     _optix_scene->getSensor()->getFilm()->clear();
 }
 
-torch::Tensor VolDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dictionary)
+torch::Tensor VolDiffPathtracingIntegrator::forwardTrace(Dictionary& in_out_dictionary)
 {
     uint32_t width     = _optix_scene->getSensor()->getFilm()->getWidth();
     uint32_t height    = _optix_scene->getSensor()->getFilm()->getHeight();
@@ -141,8 +157,13 @@ torch::Tensor VolDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dic
     return current_sample;
 }
 
-void VolDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictionary)
+void VolDiffPathtracingIntegrator::backwardTrace(Dictionary& in_out_dictionary)
 {
+    for(int i = 0; i < _aov_buffers.size(); ++i)
+    {
+        _aov_buffers[i].zero_();
+    }
+
     auto adjoint_y     = in_out_dictionary.getValue<torch::Tensor>("adjoint_y");
     auto sample        = in_out_dictionary.getValue<torch::Tensor>("current_sample");
     uint32_t width     = adjoint_y.size(1);
@@ -179,6 +200,9 @@ void VolDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictionary)
 
     params.diff_mode = DiffMode::BACKWARD;
 
+    params.aov_buffers = _aov_buffer_pointers.get();
+    params.num_aovs    = _aov_buffers.size();
+
     _launch_params.upload(&params);
 
     auto stream = at::cuda::getCurrentCUDAStream();
@@ -202,7 +226,7 @@ void VolDiffPathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
     torch::Tensor result;
     {
         torch::NoGradGuard no_grad;
-        result = _forwardTrace(in_out_dictionary);
+        result = forwardTrace(in_out_dictionary);
     }
 
     if(is_executable)

@@ -59,20 +59,20 @@ extern "C" __global__ void __raygen__forward()
     atcg::AnyInteraction last_ai;
     last_ai->pdf = 1.0f;
 
-    for(int n = 0; n < 512; ++n)
+    for(int n = 0; n < 4; ++n)
     {
         if(!ray.valid) break;
         ray.valid = false;
 
-        float rr_prob = glm::max(glm::max(ray.throughput.r, ray.throughput.g), ray.throughput.b);
-        if(rng.nextFloat() < rr_prob)
-        {
-            ray.throughput /= rr_prob;
-        }
-        else
-        {
-            break;
-        }
+        // float rr_prob = glm::max(glm::max(ray.throughput.r, ray.throughput.g), ray.throughput.b);
+        // if(rng.nextFloat() < rr_prob)
+        // {
+        //     ray.throughput /= rr_prob;
+        // }
+        // else
+        // {
+        //     break;
+        // }
 
         atcg::SurfaceInteraction si;
         atcg::traceWithDataPointer<atcg::SurfaceInteraction>(params.handle,
@@ -102,12 +102,18 @@ extern "C" __global__ void __raygen__forward()
                                                                             // done before or after gradient update
                 glm::vec3 grad_out = ray.delta_y * ray.radiance;            // / glm::vec3(result.transmittance_value);
 
-                ray.current_medium->sampleMediumEventBackward(ray.origin,
-                                                              ray.direction,
-                                                              max_distance,
-                                                              wavelengths,
-                                                              rng_copy,
-                                                              grad_out);
+                auto gradients = ray.current_medium->sampleMediumEventBackward(ray.origin,
+                                                                               ray.direction,
+                                                                               max_distance,
+                                                                               wavelengths,
+                                                                               rng_copy,
+                                                                               grad_out);
+
+                for(int i = 0; i < gradients.num_payloads; ++i)
+                {
+                    if(i >= params.num_aovs) break;
+                    params.aov_buffers[i][pixel_index] += gradients.payload[i];
+                }
             }
 
 
@@ -119,99 +125,107 @@ extern "C" __global__ void __raygen__forward()
                 atcg::MediumInteraction mi = result.interaction;
 
                 // NEE
-                do
-                {
-                    if(!si.bsdf || (int)(si.bsdf->flags & atcg::BSDFComponentType::NullTransmission) == 0)
-                    {
-                        break;
-                    }
-                    if(params.num_emitters == 0) break;
+                // do
+                // {
+                //     if(!si.bsdf || (int)(si.bsdf->flags & atcg::BSDFComponentType::NullTransmission) == 0)
+                //     {
+                //         break;
+                //     }
+                //     if(params.num_emitters == 0) break;
 
-                    uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
+                //     uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
 
-                    float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+                //     float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
 
-                    const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
+                //     const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
 
-                    atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(mi, wavelengths, rng);
+                //     atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(mi, wavelengths, rng);
 
-                    if(emitter_sampling.sampling_pdf == 0)
-                    {
-                        break;
-                    }
-                    emitter_sampling.sampling_pdf *= emitter_selection_pdf;
-                    emitter_sampling.radiance_weight_at_receiver /= emitter_selection_pdf;
+                //     if(emitter_sampling.sampling_pdf == 0)
+                //     {
+                //         break;
+                //     }
+                //     emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+                //     emitter_sampling.radiance_weight_at_receiver /= emitter_selection_pdf;
 
-                    atcg::SurfaceInteraction si_dummy;
-                    atcg::traceWithDataPointer<atcg::SurfaceInteraction>(params.handle,
-                                                                         mi.position,
-                                                                         emitter_sampling.direction_to_light,
-                                                                         0.0f,
-                                                                         1e16f,
-                                                                         &si_dummy,
-                                                                         params.surface_trace_params);
+                //     atcg::SurfaceInteraction si_dummy;
+                //     atcg::traceWithDataPointer<atcg::SurfaceInteraction>(params.handle,
+                //                                                          mi.position,
+                //                                                          emitter_sampling.direction_to_light,
+                //                                                          0.0f,
+                //                                                          1e16f,
+                //                                                          &si_dummy,
+                //                                                          params.surface_trace_params);
 
-                    if(!si_dummy.isValid())
-                    {
-                        // Should not happen because we are inside the geometry
-                        break;
-                    }
+                //     if(!si_dummy.isValid())
+                //     {
+                //         // Should not happen because we are inside the geometry
+                //         break;
+                //     }
 
-                    bool occluded =
-                        traceOcclusion(params.handle,
-                                       si_dummy.position,
-                                       emitter_sampling.direction_to_light,
-                                       1e-3f,
-                                       emitter_sampling.distance_to_light - si_dummy.incoming_distance - 1e-3f,
-                                       params.occlusion_trace_params);
+                //     bool occluded =
+                //         traceOcclusion(params.handle,
+                //                        si_dummy.position,
+                //                        emitter_sampling.direction_to_light,
+                //                        1e-3f,
+                //                        emitter_sampling.distance_to_light - si_dummy.incoming_distance - 1e-3f,
+                //                        params.occlusion_trace_params);
 
-                    if(occluded)
-                    {
-                        break;
-                    }
+                //     if(occluded)
+                //     {
+                //         break;
+                //     }
 
-                    float transmittance_to_light =
-                        ray.current_medium->evalTransmittance(mi.position,
-                                                              emitter_sampling.direction_to_light,
-                                                              si_dummy.incoming_distance,
-                                                              rng);
+                //     float transmittance_to_light =
+                //         ray.current_medium->evalTransmittance(mi.position,
+                //                                               emitter_sampling.direction_to_light,
+                //                                               si_dummy.incoming_distance,
+                //                                               rng);
 
-                    auto phase_result =
-                        ray.current_medium->phase_function->evalPhaseFunction(mi, emitter_sampling.direction_to_light);
-                    float phase_pdf = phase_result.sampling_pdf;
-                    float sampling_pdf =
-                        atcg::select((int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0,
-                                     0.0f,
-                                     phase_pdf);    // * transmittance_to_light;
+                //     auto phase_result =
+                //         ray.current_medium->phase_function->evalPhaseFunction(mi,
+                //         emitter_sampling.direction_to_light);
+                //     float phase_pdf = phase_result.sampling_pdf;
+                //     float sampling_pdf =
+                //         atcg::select((int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0,
+                //                      0.0f,
+                //                      phase_pdf);    // * transmittance_to_light;
 
-                    float mis_weight = atcg::BalanceHeuristic::apply(emitter_sampling.sampling_pdf, sampling_pdf);
+                //     float mis_weight = atcg::BalanceHeuristic::apply(emitter_sampling.sampling_pdf, sampling_pdf);
 
-                    glm::vec3 radiance_nee = mis_weight * ray.throughput * transmittance_to_light *
-                                             phase_result.phase_function_value *
-                                             emitter_sampling.radiance_weight_at_receiver;
+                //     glm::vec3 radiance_nee = mis_weight * ray.throughput * transmittance_to_light *
+                //                              phase_result.phase_function_value *
+                //                              emitter_sampling.radiance_weight_at_receiver;
 
-                    if(params.diff_mode == atcg::DiffMode::FORWARD)
-                    {
-                        ray.radiance += radiance_nee;
-                    }
-                    else
-                    {
-                        glm::vec3 grad_out = ray.delta_y * radiance_nee;
+                //     if(params.diff_mode == atcg::DiffMode::FORWARD)
+                //     {
+                //         ray.radiance += radiance_nee;
+                //     }
+                //     else
+                //     {
+                //         glm::vec3 grad_out = ray.delta_y * radiance_nee;
 
-                        ray.current_medium->evalTransmittanceBackward(mi.position,
-                                                                      emitter_sampling.direction_to_light,
-                                                                      si_dummy.incoming_distance,
-                                                                      rng_copy,
-                                                                      grad_out);
+                //         auto gradients =
+                //             ray.current_medium->evalTransmittanceBackward(mi.position,
+                //                                                           emitter_sampling.direction_to_light,
+                //                                                           si_dummy.incoming_distance,
+                //                                                           rng_copy,
+                //                                                           grad_out);
 
-                        ray.current_medium->phase_function->evalPhaseFunctionBackward(
-                            mi,
-                            emitter_sampling.direction_to_light,
-                            grad_out);
+                //         for(int i = 0; i < gradients.num_payloads; ++i)
+                //         {
+                //             if(i >= params.num_aovs) break;
+                //             params.aov_buffers[i][pixel_index] += gradients.payload[i];
+                //         }
 
-                        ray.radiance -= radiance_nee;
-                    }
-                } while(false);
+                //         ray.current_medium->phase_function->evalPhaseFunctionBackward(
+                //             mi,
+                //             emitter_sampling.direction_to_light,
+                //             grad_out);
+
+                //         ray.radiance -= radiance_nee;
+                //     }
+                // } while(false);
 
                 const atcg::PhaseFunctionVPtrTable* phase_function = ray.current_medium->phase_function;
                 atcg::PhaseFunctionSamplingResult phase_result     = phase_function->samplePhaseFunction(mi, rng);
@@ -250,7 +264,7 @@ extern "C" __global__ void __raygen__forward()
                     atcg::select(mis_valid,
                                  params.environment_emitter->evalLightSamplingPdf(last_ai, si) * emitter_selection_pdf,
                                  0.0f);
-                float mis_weight = atcg::BalanceHeuristic::apply(last_ai->pdf, emitter_sampling_pdf);
+                float mis_weight = 1.0f;    // atcg::BalanceHeuristic::apply(last_ai->pdf, emitter_sampling_pdf);
 
                 if(params.diff_mode == atcg::DiffMode::FORWARD)
                 {
@@ -274,7 +288,7 @@ extern "C" __global__ void __raygen__forward()
             float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
             float emitter_sampling_pdf =
                 atcg::select(mis_valid, si.emitter->evalLightSamplingPdf(last_ai, si) * emitter_selection_pdf, 0.0f);
-            float mis_weight = atcg::BalanceHeuristic::apply(last_ai->pdf, emitter_sampling_pdf);
+            float mis_weight = 1.0f;    // atcg::BalanceHeuristic::apply(last_ai->pdf, emitter_sampling_pdf);
 
             if(params.diff_mode == atcg::DiffMode::FORWARD)
             {

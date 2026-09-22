@@ -34,7 +34,7 @@ torch::autograd::variable_list VolAttachedDiffPathNode::apply(torch::autograd::v
     dict.setValue("rng_index", rng_index);
 
     integrator->_optix_scene->zeroGrad();
-    integrator->_backwardTrace(dict);
+    integrator->backwardTrace(dict);
 
     return integrator->_optix_scene->getParameterGradients();
 }
@@ -90,6 +90,22 @@ void VolAttachedDiffPathtracingIntegrator::initializePipeline(const Dictionary& 
     spec.height      = height;
     spec.format      = TextureFormat::RGFLOAT;
     _last_JL_texture = Texture2D::create(spec);
+
+    uint32_t num_aovs = dict.getValueOr<uint32_t>("num_aovs", 0);
+
+    if(num_aovs > 0)
+    {
+        _aov_buffers.resize(num_aovs);
+        _aov_buffer_pointers = atcg::DeviceBuffer<float*>(num_aovs);
+        std::vector<float*> aov_buffer_pointers(num_aovs);
+        for(uint32_t i = 0; i < num_aovs; ++i)
+        {
+            _aov_buffers[i]        = torch::zeros({height, width}, atcg::TensorOptions::floatDeviceOptions());
+            aov_buffer_pointers[i] = reinterpret_cast<float*>(_aov_buffers[i].data_ptr());
+        }
+        _aov_buffer_pointers.upload(aov_buffer_pointers.data());
+    }
+
 
     _pipeline->createPipeline();
     _sbt->createSBT();
@@ -155,7 +171,7 @@ void VolAttachedDiffPathtracingIntegrator::reset()
 }
 
 std::tuple<torch::Tensor, torch::Tensor>
-VolAttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dictionary)
+VolAttachedDiffPathtracingIntegrator::forwardTrace(Dictionary& in_out_dictionary)
 {
     uint32_t rng_index = in_out_dictionary.getValueOr<uint32_t>("rng_index", _frame_counter++);
 
@@ -204,8 +220,13 @@ VolAttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dictionar
     return {current_sample, current_JL};
 }
 
-void VolAttachedDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictionary)
+void VolAttachedDiffPathtracingIntegrator::backwardTrace(Dictionary& in_out_dictionary)
 {
+    for(int i = 0; i < _aov_buffers.size(); ++i)
+    {
+        _aov_buffers[i].zero_();
+    }
+
     auto adjoint_y     = in_out_dictionary.getValue<torch::Tensor>("adjoint_y");
     auto sample        = in_out_dictionary.getValue<torch::Tensor>("current_sample");
     auto JL            = in_out_dictionary.getValue<torch::Tensor>("JL_buffer");
@@ -240,6 +261,9 @@ void VolAttachedDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dic
     params.debug     = in_out_dictionary.getValueOr<bool>("debug", false);
     params.diff_mode = DiffMode::BACKWARD;
 
+    params.aov_buffers = _aov_buffer_pointers.get();
+    params.num_aovs    = _aov_buffers.size();
+
     _launch_params.upload(&params);
 
     auto stream = at::cuda::getCurrentCUDAStream();
@@ -262,7 +286,7 @@ void VolAttachedDiffPathtracingIntegrator::generateRays(Dictionary& in_out_dicti
     torch::Tensor result, JL;
     {
         torch::NoGradGuard no_grad;
-        std::tie(result, JL) = _forwardTrace(in_out_dictionary);
+        std::tie(result, JL) = forwardTrace(in_out_dictionary);
     }
 
     static int counter = 0;
