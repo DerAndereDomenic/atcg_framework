@@ -23,12 +23,16 @@ __direct_callable__sample_nullbsdf(const atcg::SurfaceInteraction& si,
     return result;
 }
 
-extern "C" __device__ void __direct_callable__sample_backward_nullbsdf(const atcg::SurfaceInteraction& si,
-                                                                       atcg::PCG32& rng,
-                                                                       const glm::vec3& dLdbsdf,
-                                                                       const glm::vec3& dLdwo_)
+extern "C" __device__ atcg::BSDFBackwardEvalResult
+__direct_callable__sample_backward_nullbsdf(const atcg::SurfaceInteraction& si,
+                                            atcg::PCG32& rng,
+                                            const glm::vec3& dLdbsdf,
+                                            const glm::vec3& dLdwo_)
 {
     // Nothing to do since the null BSDF does not have any learnable parameters
+    atcg::BSDFBackwardEvalResult result;
+    memset(&result, 0, sizeof(atcg::BSDFBackwardEvalResult));
+    return result;
 }
 
 extern "C" __device__ atcg::BSDFDualSamplingResult
@@ -76,9 +80,13 @@ __direct_callable__eval_forward_nullbsdf(const atcg::DualSurfaceInteraction& si,
     return result;
 }
 
-extern "C" __device__ void __direct_callable__eval_backward_nullbsdf(const atcg::SurfaceInteraction& si,
-                                                                     const glm::vec3& outgoing_dir,
-                                                                     const glm::vec3& out_grad)
+extern "C" __device__ atcg::BSDFBackwardEvalResult
+__direct_callable__eval_backward_nullbsdf(const atcg::SurfaceInteraction& si,
+                                          const glm::vec3& outgoing_dir,
+                                          const glm::vec3& out_grad)
 {
     // Nothing to do since the null BSDF does not have any learnable parameters
+    atcg::BSDFBackwardEvalResult result;
+    memset(&result, 0, sizeof(atcg::BSDFBackwardEvalResult));
+    return result;
 }
