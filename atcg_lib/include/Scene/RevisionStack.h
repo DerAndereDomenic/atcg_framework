@@ -7,8 +7,6 @@
 #include <Core/Assert.h>
 #include <Scene/Scene.h>
 #include <Scene/Entity.h>
-#include <Scene/Components/IDComponent.h>
-#include <Scene/Components/NameComponent.h>
 #include <Asset/AssetManagerSystem.h>
 
 #include <stack>
@@ -248,12 +246,7 @@ public:
      * @brief Function that is called at the start of a capture. This should store all relevant information before any
      * changes to the scene elements were made.
      */
-    virtual void record_start_state() override
-    {
-        atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
-        _uuid = entity.getComponent<IDComponent>().ID();
-        _name = entity.getComponent<NameComponent>().name();
-    }
+    virtual void record_start_state() override;
 
     /**
      * @brief Function that is called at the end of a capture. This should store all relevant information after the
@@ -304,14 +297,7 @@ public:
      * @brief Function that is called at the start of a capture. This should store all relevant information before any
      * changes to the scene elements were made.
      */
-    virtual void record_start_state() override
-    {
-        atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
-        _uuid = entity.getComponent<IDComponent>().ID();
-        _name = entity.getComponent<NameComponent>().name();
-
-        storeComponents(entity);
-    }
+    virtual void record_start_state() override;
 
     /**
      * @brief Function that is called at the end of a capture. This should store all relevant information after the

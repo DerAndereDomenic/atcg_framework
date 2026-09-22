@@ -1,6 +1,9 @@
 #include <Scene/RevisionStack.h>
 #include <Scene/ComponentRegistry.h>
 
+#include <Scene/Components/IDComponent.h>
+#include <Scene/Components/NameComponent.h>
+
 namespace atcg
 {
 
@@ -20,4 +23,21 @@ void EntityRemovedRevision::restoreComponents(atcg::Entity entity)
         ComponentRegistry::restoreAddAllComponents(entity, id, component);
     }
 }
+
+void EntityAddedRevision::record_start_state()
+{
+    atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
+    _uuid = entity.getComponent<IDComponent>().ID();
+    _name = entity.getComponent<NameComponent>().name();
+}
+
+void EntityRemovedRevision::record_start_state()
+{
+    atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
+    _uuid = entity.getComponent<IDComponent>().ID();
+    _name = entity.getComponent<NameComponent>().name();
+
+    storeComponents(entity);
+}
+
 }    // namespace atcg
