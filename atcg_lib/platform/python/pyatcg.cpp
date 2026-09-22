@@ -118,6 +118,7 @@ inline void defineBindings(py::module_& m)
     auto m_name                  = py::class_<atcg::NameComponent>(m, "NameComponent");
     auto m_point_light           = py::class_<atcg::PointLightComponent>(m, "PointLightComponent");
     auto m_script_component      = py::class_<atcg::ScriptComponent>(m, "ScriptComponent");
+    auto m_mesh_light_component  = py::class_<atcg::MeshLightComponent>(m, "MeshLightComponent");
     auto m_scene_hierarchy_panel = py::class_<atcg::GUI::SceneHierarchyPanel>(m, "SceneHierarchyPanel");
     auto m_hit_info              = py::class_<atcg::Tracing::HitInfo>(m, "HitInfo");
     auto m_utils                 = m.def_submodule("Utils");
@@ -1270,6 +1271,11 @@ inline void defineBindings(py::module_& m)
         .def("script", &atcg::ScriptComponent::script)
         .def_readwrite("script_handle", &atcg::ScriptComponent::script_handle);
 
+    m_mesh_light_component.def(py::init<>())
+        .def("setEmissiveColor", &atcg::MeshLightComponent::setEmissiveColor, "color"_a)
+        .def("getEmissiveTexture", &atcg::MeshLightComponent::getEmissiveTexture)
+        .def_readwrite("intensity", &atcg::MeshLightComponent::intensity);
+
     m_entity.def(py::init<>())
         .def(py::init<entt::entity, atcg::Scene*>(), "handle"_a, "scene"_a)
         .def(py::init<>([](entt::entity e, const atcg::ref_ptr<atcg::Scene>& scene)
@@ -1397,6 +1403,11 @@ inline void defineBindings(py::module_& m)
         .def("replaceScriptComponent",
              [](atcg::Entity& entity, atcg::ScriptComponent component)
              { return entity.replaceComponent<atcg::ScriptComponent>(component); })
+        .def("addMeshLightComponent",
+             [](atcg::Entity& entity) { return entity.addComponent<atcg::MeshLightComponent>(); })
+        .def("replaceMeshLightComponent",
+             [](atcg::Entity& entity, atcg::MeshLightComponent& component)
+             { return entity.replaceComponent<atcg::MeshLightComponent>(component); })
         .def("hasTransformComponent", &atcg::Entity::hasComponent<atcg::TransformComponent>)
         .def("hasGeometryComponent", &atcg::Entity::hasComponent<atcg::GeometryComponent>)
         .def("hasMeshRenderComponent", &atcg::Entity::hasComponent<atcg::MeshRenderComponent>)
@@ -1408,6 +1419,7 @@ inline void defineBindings(py::module_& m)
         .def("hasPointLightComponent", &atcg::Entity::hasComponent<atcg::PointLightComponent>)
         .def("hasNameComponent", &atcg::Entity::hasComponent<atcg::NameComponent>)
         .def("hasScriptComponent", &atcg::Entity::hasComponent<atcg::ScriptComponent>)
+        .def("hasMeshLightComponent", &atcg::Entity::hasComponent<atcg::MeshLightComponent>)
         .def("getTransformComponent", &atcg::Entity::getComponent<atcg::TransformComponent>)
         .def("getGeometryComponent", &atcg::Entity::getComponent<atcg::GeometryComponent>)
         .def("getMeshRenderComponent", &atcg::Entity::getComponent<atcg::MeshRenderComponent>)
@@ -1415,6 +1427,7 @@ inline void defineBindings(py::module_& m)
         .def("getPointSphereRenderComponent", &atcg::Entity::getComponent<atcg::PointSphereRenderComponent>)
         .def("getEdgeRenderComponent", &atcg::Entity::getComponent<atcg::EdgeRenderComponent>)
         .def("getPointLightComponent", &atcg::Entity::getComponent<atcg::PointLightComponent>)
+        .def("getMeshLightComponent", &atcg::Entity::getComponent<atcg::MeshLightComponent>)
         .def("getEdgeCylinderRenderComponent", &atcg::Entity::getComponent<atcg::EdgeCylinderRenderComponent>)
         .def("getInstanceRenderComponent", &atcg::Entity::getComponent<atcg::InstanceRenderComponent>)
         .def("getScriptComponent", &atcg::Entity::getComponent<atcg::ScriptComponent>)
