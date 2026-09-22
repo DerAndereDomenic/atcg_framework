@@ -10,6 +10,11 @@ class Registry
 {
 public:
     using Handle = PluginHandle;
+    struct Entry
+    {
+        Handle plugin;
+        Desc desc;
+    };
 
     bool registerType(Handle plugin, std::string_view type, Desc desc)
     {
@@ -53,13 +58,9 @@ public:
 
     const std::vector<std::string>& getRegisteredTypes() const { return _registered_types; }
 
-private:
-    struct Entry
-    {
-        Handle plugin;
-        Desc desc;
-    };
+    const std::unordered_map<std::string, Entry>& getEntries() const { return _entries; }
 
+private:
     std::unordered_map<std::string, Entry> _entries;
     std::vector<std::string> _registered_types;
 };
