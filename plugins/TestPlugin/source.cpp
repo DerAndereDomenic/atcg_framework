@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <Plugin/Plugin.h>
+
 #include "TestIntegrator.h"
 
 #include <ATCG.h>
-
-#include "TestIntegrator.h"
 
 #include <Core/Path.h>
 #include <Core/Assert.h>
@@ -26,6 +25,9 @@
 
 namespace atcg
 {
+
+#ifdef ATCG_CUDA_BACKEND
+
 TestIntegrator::TestIntegrator(const atcg::ref_ptr<RaytracingContext>& context, const Dictionary& dict)
     : Integrator(context, dict)
 {
@@ -58,14 +60,14 @@ void TestIntegrator::initializePipeline(const Dictionary& dict)
 
 void TestIntegrator::onImGuiRender()
 {
-#ifndef ATCG_HEADLESS
+    #ifndef ATCG_HEADLESS
     ImGui::Begin("TestIntegrator");
     for(auto shape: _optix_scene->getShapes())
     {
         shape->onImGuiRender();
     }
     ImGui::End();
-#endif
+    #endif
 }
 
 void TestIntegrator::reset()
@@ -116,6 +118,8 @@ void TestIntegrator::generateRays(Dictionary& in_out_dictionary)
     in_out_dictionary.setValue("output", output_tensor);
     in_out_dictionary.setValue("entity_ids", output_entities);
 }
+
+#endif
 
 DiffuseMaterial::DiffuseMaterial() : atcg::Material("Diffuse")
 {
@@ -206,7 +210,10 @@ ATCG_PLUGIN_LIBRARY();
 extern "C" ATCG_EXPORT void registerPlugin(atcg::PluginRegistry& registry)
 {
     registry.registerMaterial<atcg::DiffuseMaterial>("Diffuse");
+
+#ifdef ATCG_CUDA_BACKEND
     registry.registerIntegrator<atcg::TestIntegrator>("TestIntegrator");
+#endif
 }
 
 extern "C" ATCG_EXPORT void registerPythonBindings(pybind11::module& m)
