@@ -322,7 +322,7 @@ private:
  * @tparam Component The type of the component that was added
  */
 template<typename Component>
-class ATCG_API ComponentAddedRevision : public EntityRevision
+class ComponentAddedRevision : public EntityRevision
 {
 public:
     /**
@@ -378,7 +378,7 @@ private:
  * @tparam Component The type of the component that was removed
  */
 template<typename Component>
-class ATCG_API ComponentRemovedRevision : public EntityRevision
+class ComponentRemovedRevision : public EntityRevision
 {
 public:
     /**
@@ -435,7 +435,7 @@ private:
  * @tparam Component The type of the component that was edited
  */
 template<typename Component>
-class ATCG_API ComponentEditedRevision : public EntityRevision
+class ComponentEditedRevision : public EntityRevision
 {
 public:
     /**
@@ -503,7 +503,7 @@ private:
  * @tparam RevisionType2 The revision type of the second revision
  */
 template<typename RevisionType1, typename RevisionType2>
-class ATCG_API UnionRevision : public EntityRevision
+class UnionRevision : public EntityRevision
 {
 public:
     /**
