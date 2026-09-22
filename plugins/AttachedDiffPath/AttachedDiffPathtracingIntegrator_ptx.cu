@@ -427,6 +427,16 @@ extern "C" __global__ void __raygen__forward()
         // }
     }
 
+    // if(dsi1.isValid())
+    // {
+    //     glm::mat3 dx0dx0 = glm::mat3(1.0f);
+    //     glm::mat3 dx1dx0 = glm::mat3(1.0f) - glm::outerProduct(ray_direction, dsi1.normal.val()) /
+    //                                              glm::dot(ray_direction, dsi1.normal.val());
+
+    //     auto J_total = ray.JL.m00 * dx0dx0 + ray.JL.m01 * dx1dx0;
+    //     ray.JL.m00   = J_total;
+    // }
+
     if(params.diff_mode == atcg::DiffMode::FORWARD)
     {
         params.current_sample[pixel_index] = ray.radiance;
