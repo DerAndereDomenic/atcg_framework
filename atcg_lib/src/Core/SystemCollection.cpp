@@ -157,12 +157,15 @@ void SystemCollection::Impl::initSystems(const WindowProps& props, const Window:
     ScriptComponent::registerComponent(_component_registry_v2.get());
     TransformComponent::registerComponent(_component_registry_v2.get());
     TransparencyComponent::registerComponent(_component_registry_v2.get());
+
+#ifdef ATCG_CUDA_BACKEND
     EmitterComponent::registerComponent(_component_registry_v2.get());
     BSDFComponent::registerComponent(_component_registry_v2.get());
     MediumComponent::registerComponent(_component_registry_v2.get());
     PhaseFunctionComponent::registerComponent(_component_registry_v2.get());
     ShapeComponent::registerComponent(_component_registry_v2.get());
     SystemRegistry::instance()->registerSystem(_component_registry_v2.get());
+#endif
 
     _script_engine = atcg::make_ref<PythonScriptEngine>();
     _script_engine->init();
