@@ -9,6 +9,7 @@
 #include <Plugin/PluginHandle.h>
 #include <Renderer/Material.h>
 #include <Renderer/RenderPassRegistry.h>
+#include <Scene/ComponentRegistry.h>
 #ifdef ATCG_CUDA_BACKEND
     #include <BSDF/BSDFRegistry.h>
     #include <Integrator/IntegratorRegistry.h>
@@ -66,6 +67,13 @@ public:
     {
         RenderPassRegistry::Registry* registry = RenderPassRegistry::getRegistry();
         ATCG_REGISTER_RENDER_PASS_PLUGIN(registry, _handle, type, RenderPassT);
+    }
+
+    template<typename ComponentT>
+    void registerComponent(std::string_view type)
+    {
+        ComponentRegistry::Registry* registry = ComponentRegistry::getRegistry();
+        ATCG_REGISTER_COMPONENT_PLUGIN(registry, _handle, type, ComponentT);
     }
 
 #ifdef ATCG_CUDA_BACKEND

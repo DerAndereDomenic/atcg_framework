@@ -119,6 +119,12 @@ bool PluginManagerSystem::releasePlugin(const std::filesystem::path& path)
         MaterialRegistry::Registry* material_registry = MaterialRegistry::getRegistry();
         material_registry->unregisterPlugin(it->second);
 
+        RenderPassRegistry::Registry* render_pass_registry = RenderPassRegistry::getRegistry();
+        render_pass_registry->unregisterPlugin(it->second);
+
+        ComponentRegistry::Registry* component_registry = ComponentRegistry::getRegistry();
+        component_registry->unregisterPlugin(it->second);
+
 #ifndef ATCG_CUDA_BACKEND
         BSDFRegistry::Registry* bsdf_registry = BSDFRegistry::getRegistry();
         bsdf_registry->unregisterPlugin(it->second);
@@ -148,6 +154,12 @@ bool PluginManagerSystem::releaseAllPlugins()
     {
         MaterialRegistry::Registry* material_registry = MaterialRegistry::getRegistry();
         material_registry->unregisterPlugin(handle);
+
+        RenderPassRegistry::Registry* render_pass_registry = RenderPassRegistry::getRegistry();
+        render_pass_registry->unregisterPlugin(handle);
+
+        ComponentRegistry::Registry* component_registry = ComponentRegistry::getRegistry();
+        component_registry->unregisterPlugin(handle);
 
 #ifdef ATCG_CUDA_BACKEND
         BSDFRegistry::Registry* bsdf_registry = BSDFRegistry::getRegistry();
