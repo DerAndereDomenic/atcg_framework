@@ -181,7 +181,7 @@ __direct_callable__heterogeneousMedium_sampleMediumEvent(const glm::vec3& origin
 //     return result;
 // }
 
-extern "C" __device__ void
+extern "C" __device__ atcg::MediumBackwardEvalResult
 __direct_callable__heterogeneousMedium_sampleMediumEventBackward(const glm::vec3& origin,
                                                                  const glm::vec3& direction,
                                                                  float max_distance,
@@ -192,9 +192,12 @@ __direct_callable__heterogeneousMedium_sampleMediumEventBackward(const glm::vec3
     atcg::HeterogeneousMediumData* sbt_data =
         *reinterpret_cast<atcg::HeterogeneousMediumData**>(optixGetSbtDataPointer());
 
+    atcg::MediumBackwardEvalResult result;
+    memset(&result, 0, sizeof(result));
+
     if(!sbt_data->optimize_density && !sbt_data->optimize_albedo)
     {
-        return;
+        return result;
     }
     // Arbitrarily clamp max_distance.
     // If max_distance would be (close to) infinite, the loop below might not terminate.
@@ -257,9 +260,11 @@ __direct_callable__heterogeneousMedium_sampleMediumEventBackward(const glm::vec3
             }
         }
     }
+
+    return result;
 }
 
-extern "C" __device__ void
+extern "C" __device__ atcg::MediumBackwardEvalResult
 __direct_callable__heterogeneousMedium_evalTransmittanceBackward(const glm::vec3& origin,
                                                                  const glm::vec3& direction,
                                                                  float distance,
@@ -269,9 +274,12 @@ __direct_callable__heterogeneousMedium_evalTransmittanceBackward(const glm::vec3
     atcg::HeterogeneousMediumData* sbt_data =
         *reinterpret_cast<atcg::HeterogeneousMediumData**>(optixGetSbtDataPointer());
 
+    atcg::MediumBackwardEvalResult result;
+    memset(&result, 0, sizeof(result));
+
     if(!sbt_data->optimize_density)
     {
-        return;
+        return result;
     }
 
     float t = 0.0f;
@@ -295,4 +303,5 @@ __direct_callable__heterogeneousMedium_evalTransmittanceBackward(const glm::vec3
             }
         }
     }
+    return result;
 }

@@ -26,6 +26,12 @@ struct DualTransmittanceEvalResult
     atcg::mat6x3 dtransmittance_dx0x1 = atcg::mat6x3(0.0f);
 };
 
+struct MediumBackwardEvalResult
+{
+    float payload[16];
+    uint32_t num_payloads;
+};
+
 struct MediumVPtrTable
 {
     const PhaseFunctionVPtrTable* phase_function;
@@ -63,19 +69,23 @@ struct MediumVPtrTable
                                PCG32&>(evalTransmittanceForwardCallIndex, origin, direction, distance, rng);
     }
 
-    __device__ void evalTransmittanceBackward(const glm::vec3& origin,
-                                              const glm::vec3& direction,
-                                              float distance,
-                                              PCG32& rng,
-                                              const glm::vec3& out_grad) const
+    __device__ MediumBackwardEvalResult evalTransmittanceBackward(const glm::vec3& origin,
+                                                                  const glm::vec3& direction,
+                                                                  float distance,
+                                                                  PCG32& rng,
+                                                                  const glm::vec3& out_grad) const
     {
-        optixDirectCall<void, const glm::vec3&, const glm::vec3&, float, PCG32&, const glm::vec3&>(
-            evalTransmittanceBackwardCallIndex,
-            origin,
-            direction,
-            distance,
-            rng,
-            out_grad);
+        return optixDirectCall<MediumBackwardEvalResult,
+                               const glm::vec3&,
+                               const glm::vec3&,
+                               float,
+                               PCG32&,
+                               const glm::vec3&>(evalTransmittanceBackwardCallIndex,
+                                                 origin,
+                                                 direction,
+                                                 distance,
+                                                 rng,
+                                                 out_grad);
     }
 
     // Sample the position of a new medium event starting at the given (medium) interaction.
@@ -107,51 +117,51 @@ struct MediumVPtrTable
                                PCG32&>(sampleForwardCallIndex, origin, direction, max_distance, wavelengths, rng);
     }
 
-    __device__ void sampleMediumEventBackward(const glm::vec3& origin,
-                                              const glm::vec3& direction,
-                                              float max_distance,
-                                              const atcg::SampledWavelengths& wavelengths,
-                                              PCG32& rng,
-                                              const glm::vec3& out_grad) const
+    __device__ MediumBackwardEvalResult sampleMediumEventBackward(const glm::vec3& origin,
+                                                                  const glm::vec3& direction,
+                                                                  float max_distance,
+                                                                  const atcg::SampledWavelengths& wavelengths,
+                                                                  PCG32& rng,
+                                                                  const glm::vec3& out_grad) const
     {
-        optixDirectCall<void,
-                        const glm::vec3&,
-                        const glm::vec3&,
-                        float,
-                        const atcg::SampledWavelengths&,
-                        PCG32&,
-                        const glm::vec3&>(sampleBackwardCallIndex,
-                                          origin,
-                                          direction,
-                                          max_distance,
-                                          wavelengths,
-                                          rng,
-                                          out_grad);
+        return optixDirectCall<MediumBackwardEvalResult,
+                               const glm::vec3&,
+                               const glm::vec3&,
+                               float,
+                               const atcg::SampledWavelengths&,
+                               PCG32&,
+                               const glm::vec3&>(sampleBackwardCallIndex,
+                                                 origin,
+                                                 direction,
+                                                 max_distance,
+                                                 wavelengths,
+                                                 rng,
+                                                 out_grad);
     }
 
-    __device__ void sampleMediumEventFullBackward(const glm::vec3& origin,
-                                                  const glm::vec3& direction,
-                                                  float max_distance,
-                                                  const atcg::SampledWavelengths& wavelengths,
-                                                  PCG32& rng,
-                                                  const glm::vec3& dLdw,
-                                                  const glm::vec3& dLdx1x2) const
+    __device__ MediumBackwardEvalResult sampleMediumEventFullBackward(const glm::vec3& origin,
+                                                                      const glm::vec3& direction,
+                                                                      float max_distance,
+                                                                      const atcg::SampledWavelengths& wavelengths,
+                                                                      PCG32& rng,
+                                                                      const glm::vec3& dLdw,
+                                                                      const glm::vec3& dLdx1x2) const
     {
-        optixDirectCall<void,
-                        const glm::vec3&,
-                        const glm::vec3&,
-                        float,
-                        const atcg::SampledWavelengths&,
-                        PCG32&,
-                        const glm::vec3&,
-                        const glm::vec3&>(sampleFullBackwardCallIndex,
-                                          origin,
-                                          direction,
-                                          max_distance,
-                                          wavelengths,
-                                          rng,
-                                          dLdw,
-                                          dLdx1x2);
+        return optixDirectCall<MediumBackwardEvalResult,
+                               const glm::vec3&,
+                               const glm::vec3&,
+                               float,
+                               const atcg::SampledWavelengths&,
+                               PCG32&,
+                               const glm::vec3&,
+                               const glm::vec3&>(sampleFullBackwardCallIndex,
+                                                 origin,
+                                                 direction,
+                                                 max_distance,
+                                                 wavelengths,
+                                                 rng,
+                                                 dLdw,
+                                                 dLdx1x2);
     }
 
 #endif    // __CUDACC__

@@ -169,7 +169,7 @@ __direct_callable__homogeneousMedium_sampleMediumEventForward(const CuDiff::Dual
     return result;
 }
 
-extern "C" __device__ void
+extern "C" __device__ atcg::MediumBackwardEvalResult
 __direct_callable__homogeneousMedium_sampleMediumEventBackward(const glm::vec3& origin,
                                                                const glm::vec3& direction,
                                                                float max_distance,
@@ -177,13 +177,15 @@ __direct_callable__homogeneousMedium_sampleMediumEventBackward(const glm::vec3& 
                                                                atcg::PCG32& rng,
                                                                const glm::vec3& output_grad)
 {
+    atcg::MediumBackwardEvalResult result;
+    memset(&result, 0, sizeof(atcg::MediumBackwardEvalResult));
     const atcg::HomogeneousMediumData* sbt_data =
         *reinterpret_cast<const atcg::HomogeneousMediumData**>(optixGetSbtDataPointer());
 
     if(!sbt_data->optimize_albedo && !sbt_data->optimize_density)
     {
         // Nothing to do
-        return;
+        return result;
     }
 
     // Absorbtion, scattering and extinction coefficients...
@@ -199,6 +201,7 @@ __direct_callable__homogeneousMedium_sampleMediumEventBackward(const glm::vec3& 
     atcg::SamplingStrategy<atcg::SamplingStrategyType::EXPONENTIAL_SAMPLING> sampling_strategy(sigma_t_scalar);
     float sampled_distance = sampling_strategy.sample(rng.next1d());
 
+    int payload_index = 0;
     if(sampled_distance < max_distance)
     {
         // Medium event!
@@ -220,6 +223,11 @@ __direct_callable__homogeneousMedium_sampleMediumEventBackward(const glm::vec3& 
                 atcg::globalAtomicAdd(sbt_data->albedo_grad + 0, albedo_gradient.x);
                 atcg::globalAtomicAdd(sbt_data->albedo_grad + 1, albedo_gradient.y);
                 atcg::globalAtomicAdd(sbt_data->albedo_grad + 2, albedo_gradient.z);
+
+                result.payload[payload_index++] = albedo_gradient.x;
+                result.payload[payload_index++] = albedo_gradient.y;
+                result.payload[payload_index++] = albedo_gradient.z;
+                result.num_payloads             = payload_index;
             }
         }
 
@@ -228,6 +236,8 @@ __direct_callable__homogeneousMedium_sampleMediumEventBackward(const glm::vec3& 
             if(isfinite(density_gradient))
             {
                 atcg::globalAtomicAdd(sbt_data->density_grad, density_gradient);
+                result.payload[payload_index++] = density_gradient;
+                result.num_payloads             = payload_index;
             }
         }
     }
@@ -243,11 +253,15 @@ __direct_callable__homogeneousMedium_sampleMediumEventBackward(const glm::vec3& 
             float density_gradient = glm::dot(glm::vec3(-max_distance), output_grad);
 
             atcg::globalAtomicAdd(sbt_data->density_grad, density_gradient);
+            result.payload[payload_index++] = density_gradient;
+            result.num_payloads             = payload_index;
         }
     }
+
+    return result;
 }
 
-extern "C" __device__ void
+extern "C" __device__ atcg::MediumBackwardEvalResult
 __direct_callable__homogeneousMedium_sampleFullBackward(const glm::vec3& origin,
                                                         const glm::vec3& direction,
                                                         float max_distance,
@@ -259,10 +273,13 @@ __direct_callable__homogeneousMedium_sampleFullBackward(const glm::vec3& origin,
     const atcg::HomogeneousMediumData* sbt_data =
         *reinterpret_cast<const atcg::HomogeneousMediumData**>(optixGetSbtDataPointer());
 
+    atcg::MediumBackwardEvalResult result;
+    memset(&result, 0, sizeof(atcg::MediumBackwardEvalResult));
+
     if(!sbt_data->optimize_albedo && !sbt_data->optimize_density)
     {
         // Nothing to do
-        return;
+        return result;
     }
 
     // Absorbtion, scattering and extinction coefficients...
@@ -278,6 +295,7 @@ __direct_callable__homogeneousMedium_sampleFullBackward(const glm::vec3& origin,
     atcg::SamplingStrategy<atcg::SamplingStrategyType::EXPONENTIAL_SAMPLING> sampling_strategy(sigma_t_scalar);
     float sampled_distance = sampling_strategy.sample(rng.next1d());
 
+    int payload_index = 0;
     if(sampled_distance < max_distance)
     {
         // Medium event!
@@ -310,6 +328,11 @@ __direct_callable__homogeneousMedium_sampleFullBackward(const glm::vec3& origin,
                 atcg::globalAtomicAdd(sbt_data->albedo_grad + 0, albedo_gradient.x);
                 atcg::globalAtomicAdd(sbt_data->albedo_grad + 1, albedo_gradient.y);
                 atcg::globalAtomicAdd(sbt_data->albedo_grad + 2, albedo_gradient.z);
+
+                result.payload[payload_index++] = albedo_gradient.x;
+                result.payload[payload_index++] = albedo_gradient.y;
+                result.payload[payload_index++] = albedo_gradient.z;
+                result.num_payloads             = payload_index;
             }
         }
 
@@ -318,6 +341,8 @@ __direct_callable__homogeneousMedium_sampleFullBackward(const glm::vec3& origin,
             if(isfinite(density_gradient))
             {
                 atcg::globalAtomicAdd(sbt_data->density_grad, density_gradient);
+                result.payload[payload_index++] = density_gradient;
+                result.num_payloads             = payload_index;
             }
         }
     }
@@ -334,8 +359,18 @@ __direct_callable__homogeneousMedium_sampleFullBackward(const glm::vec3& origin,
             // float density_gradient = glm::dot(glm::vec3(-max_distance), output_grad);
 
             // atcg::globalAtomicAdd(sbt_data->density_grad, density_gradient);
+
+            float density_gradient = glm::dot(-max_distance * direction, dLdx2);
+            if(isfinite(density_gradient))
+            {
+                atcg::globalAtomicAdd(sbt_data->density_grad, density_gradient);
+                result.payload[payload_index++] = density_gradient;
+                result.num_payloads             = payload_index;
+            }
         }
     }
+
+    return result;
 }
 
 extern "C" __device__ atcg::DualTransmittanceEvalResult
@@ -365,19 +400,23 @@ __direct_callable__homogeneousMedium_evalTransmittanceForward(const CuDiff::Dual
     return result;
 }
 
-extern "C" __device__ void __direct_callable__homogeneousMedium_evalTransmittanceBackward(const glm::vec3& origin,
-                                                                                          const glm::vec3& direction,
-                                                                                          float distance,
-                                                                                          atcg::PCG32& rng,
-                                                                                          const glm::vec3& out_grad)
+extern "C" __device__ atcg::MediumBackwardEvalResult
+__direct_callable__homogeneousMedium_evalTransmittanceBackward(const glm::vec3& origin,
+                                                               const glm::vec3& direction,
+                                                               float distance,
+                                                               atcg::PCG32& rng,
+                                                               const glm::vec3& out_grad)
 {
     const atcg::HomogeneousMediumData* sbt_data =
         *reinterpret_cast<const atcg::HomogeneousMediumData**>(optixGetSbtDataPointer());
 
+    atcg::MediumBackwardEvalResult result;
+    memset(&result, 0, sizeof(atcg::MediumBackwardEvalResult));
+
     if(!sbt_data->optimize_density)
     {
         // Nothing to do
-        return;
+        return result;
     }
 
     // Evaluate the probability of the light *not* interacting with the medium.
@@ -399,5 +438,9 @@ extern "C" __device__ void __direct_callable__homogeneousMedium_evalTransmittanc
     if(isfinite(density_gradient))
     {
         atcg::globalAtomicAdd(sbt_data->density_grad, density_gradient);
+        result.payload[0]   = density_gradient;
+        result.num_payloads = 1;
     }
+
+    return result;
 }
