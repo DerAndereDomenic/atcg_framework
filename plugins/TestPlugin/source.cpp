@@ -2,6 +2,7 @@
 #include <Plugin/Plugin.h>
 
 #include "TestIntegrator.h"
+#include "TestMaterial.h"
 
 #include <ATCG.h>
 
@@ -11,13 +12,15 @@
 #include <Core/Common.h>
 #include <Scene/Components.h>
 #include <Scene/Entity.h>
-#include <Shape/Shape.h>
-#include <Shape/ShapeInstance.h>
-#include <Shape/MeshShape.h>
 #include <DataStructure/WorkerPool.h>
-#include <Emitter/MeshEmitter.h>
-#include <Scene/SceneAdapter.h>
-#include "TestMaterial.h"
+
+#ifdef ATCG_CUDA_BACKEND
+    #include <Shape/Shape.h>
+    #include <Shape/ShapeInstance.h>
+    #include <Shape/MeshShape.h>
+    #include <Emitter/MeshEmitter.h>
+    #include <Scene/SceneAdapter.h>
+#endif
 
 #ifndef ATCG_HEADLESS
     #include <imgui.h>
