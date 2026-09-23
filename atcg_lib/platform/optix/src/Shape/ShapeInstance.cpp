@@ -40,6 +40,7 @@ void ShapeInstance::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& 
     if(emitter) _emitter->ensureInitialized(pipeline, sbt);
     if(inside_medium) _inside_medium->ensureInitialized(pipeline, sbt);
     if(outside_medium) _outside_medium->ensureInitialized(pipeline, sbt);
+    if(sampler) _sampler->ensureInitialized(pipeline, sbt);
 
     ShapeInstanceData data;
     data.shape             = shape->getShapeData();

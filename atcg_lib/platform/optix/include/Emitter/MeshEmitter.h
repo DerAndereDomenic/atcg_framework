@@ -4,6 +4,7 @@
 #include <Emitter/Emitter.h>
 #include <Emitter/MeshEmitterData.cuh>
 #include <DataStructure/Dictionary.h>
+#include <Shape/ShapeSampler.h>
 
 namespace atcg
 {
@@ -47,8 +48,7 @@ public:
 private:
     atcg::ref_ptr<Texture2D> _emissive_texture;
 
-    torch::Tensor _mesh_cdf;
-
+    atcg::ref_ptr<ShapeSampler> _sampler;
     atcg::dref_ptr<MeshEmitterData> _mesh_emitter_data;
 };
 }    // namespace atcg

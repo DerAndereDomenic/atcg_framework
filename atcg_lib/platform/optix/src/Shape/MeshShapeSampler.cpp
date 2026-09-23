@@ -39,6 +39,10 @@ MeshShapeSampler::MeshShapeSampler(const atcg::Dictionary& dict) : ShapeSampler(
     data.world_to_local = glm::inverse(_transform);
 
     _data.upload(&data);
+
+    // Just to allocate the space before the pipeline is initialized
+    ShapeSamplerVPtrTable dummy_table;
+    _vptr_table.upload(&dummy_table);
 }
 
 MeshShapeSampler::~MeshShapeSampler() {}
