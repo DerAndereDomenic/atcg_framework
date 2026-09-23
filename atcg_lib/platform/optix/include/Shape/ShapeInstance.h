@@ -7,6 +7,7 @@
 #include <BSDF/BSDF.h>
 #include <Emitter/Emitter.h>
 #include <Medium/Medium.h>
+#include <Shape/ShapeSampler.h>
 #include <Shape/ShapeInstanceData.cuh>
 
 namespace atcg
@@ -62,6 +63,8 @@ public:
 
     ATCG_INLINE atcg::ref_ptr<Medium> getOutsideMedium() const { return _outside_medium; }
 
+    ATCG_INLINE atcg::ref_ptr<ShapeSampler> getSampler() const { return _sampler; }
+
     /**
      * @brief Get the transform
      *
@@ -80,6 +83,7 @@ private:
     atcg::ref_ptr<Emitter> _emitter;
     atcg::ref_ptr<Medium> _inside_medium;
     atcg::ref_ptr<Medium> _outside_medium;
+    atcg::ref_ptr<ShapeSampler> _sampler;
     uint32_t _entity_id;
     glm::vec3 _color;
 

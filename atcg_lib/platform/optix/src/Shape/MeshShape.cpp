@@ -1,6 +1,7 @@
 #include <Shape/MeshShape.h>
 
 #include <Core/Common.h>
+#include <Shape/MeshShapeSampler.h>
 
 #include <optix_stubs.h>
 
@@ -78,5 +79,14 @@ void MeshShape::prepareAccelerationStructure(const atcg::ref_ptr<RaytracingConte
                                 &_ast_handle,    // Output handle to the struct
                                 nullptr,         // emitted property list
                                 0));             // num emitted properties
+}
+
+atcg::ref_ptr<ShapeSampler> MeshShape::createSampler(const glm::mat4& transform)
+{
+    atcg::Dictionary dict;
+    dict.setValue("transform", transform);
+    atcg::ref_ptr<Shape> shape = shared_from_this();
+    dict.setValue("shape", shape);
+    return atcg::make_ref<MeshShapeSampler>(dict);
 }
 }    // namespace atcg

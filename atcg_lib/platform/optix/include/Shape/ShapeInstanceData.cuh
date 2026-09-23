@@ -4,6 +4,7 @@
 #include <BSDF/BSDFVPtrTable.cuh>
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <Medium/MediumVPtrTable.cuh>
+#include <Shape/ShapeSamplerVPtrTable.cuh>
 
 namespace atcg
 {
@@ -14,6 +15,7 @@ struct ShapeInstanceData
     const EmitterVPtrTable* emitter;
     const MediumVPtrTable* inside_medium;
     const MediumVPtrTable* outside_medium;
+    const ShapeSamplerVPtrTable* sampler;
     uint32_t entity_id;
     glm::vec3 color;
 };

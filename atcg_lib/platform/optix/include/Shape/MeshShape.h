@@ -10,7 +10,7 @@ namespace atcg
 /**
  * @brief A class to model a triangle mesh
  */
-class ATCG_API MeshShape : public Shape
+class ATCG_API MeshShape : public Shape, public std::enable_shared_from_this<MeshShape>
 {
 public:
     /**
@@ -46,6 +46,13 @@ public:
      */
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
+
+    /**
+     * @brief Create a shape sampler for this shape
+     * @param transform The transform of the shape sampler
+     * @return A shape sampler for this shape
+     */
+    virtual atcg::ref_ptr<ShapeSampler> createSampler(const glm::mat4& transform) override;
 
     /**
      * @brief Get the shape type
