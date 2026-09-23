@@ -5,12 +5,9 @@
 
 namespace atcg
 {
-void computeMeshTrianglePDFKernel(const torch::Tensor& positions,
-                                  const torch::Tensor& indices,
-                                  const glm::mat4& transform,
-                                  torch::Tensor& pdf);
+torch::Tensor
+computeMeshTriangleAreas(const torch::Tensor& positions, const torch::Tensor& indices, const glm::mat4& transform);
 
-void computeMeshTriangleCDFKernel(const torch::Tensor& cdf);
-
-void normalizeMeshTriangleCDFKernel(const torch::Tensor& cdf, float total_area);
+torch::Tensor
+computeMeshEdgeLengths(const torch::Tensor& positions, const torch::Tensor& edges, const glm::mat4& transform);
 }    // namespace atcg

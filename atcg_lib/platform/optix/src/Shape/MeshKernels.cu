@@ -44,39 +44,47 @@ computeMeshTrianglePDFKernel(const torch::PackedTensorAccessor32<float, 2, at::R
     }
 }
 
-__global__ void computeMeshTriangleCDFKernel(torch::PackedTensorAccessor32<float, 1, at::RestrictPtrTraits> cdf)
-{
-    float acc = 0;
-    for(uint32_t i = 0; i < cdf.size(0); ++i)
-    {
-        acc += cdf[i];
-        cdf[i] = acc;
-    }
-}
-
-__global__ void normalizeMeshTriangleCDFKernel(torch::PackedTensorAccessor32<float, 1, at::RestrictPtrTraits> cdf,
-                                               float total_value)
+__global__ void
+computeMeshEdgePDFKernel(const torch::PackedTensorAccessor32<float, 2, at::RestrictPtrTraits> positions,
+                         const torch::PackedTensorAccessor32<uint32_t, 2, at::RestrictPtrTraits> indices,
+                         const glm::mat4 transform,
+                         torch::PackedTensorAccessor32<float, 1, at::RestrictPtrTraits> pdf)
 {
     auto id = static_cast<int64_t>(blockIdx.x) * static_cast<int64_t>(blockDim.x) + static_cast<int64_t>(threadIdx.x);
     auto num_threads = static_cast<int64_t>(gridDim.x) * static_cast<int64_t>(blockDim.x);
-    for(auto tid = id; tid < cdf.size(0); tid += num_threads)
+    for(auto tid = id; tid < indices.size(0); tid += num_threads)
     {
-        if(tid >= cdf.size(0)) return;
+        if(tid >= indices.size(0)) return;
 
-        cdf[tid] /= total_value;
+        glm::u32vec2 triangle_indices = glm::u32vec2(indices[tid][0], indices[tid][1]);
+        glm::vec3 local_P0            = glm::vec3(positions[triangle_indices.x][0],
+                                                  positions[triangle_indices.x][1],
+                                                  positions[triangle_indices.x][2]);
+        glm::vec3 local_P1            = glm::vec3(positions[triangle_indices.y][0],
+                                                  positions[triangle_indices.y][1],
+                                                  positions[triangle_indices.y][2]);
+
+        glm::vec3 P0 = glm::vec3(transform * glm::vec4(local_P0, 1));
+        glm::vec3 P1 = glm::vec3(transform * glm::vec4(local_P1, 1));
+
+        // Compute triangle area
+        float edge_length = glm::length(P1 - P0);
+
+        // Write unnormalized pdf
+        pdf[tid] = edge_length;
     }
 }
 }    // namespace detail
 
 
-void computeMeshTrianglePDFKernel(const torch::Tensor& positions,
-                                  const torch::Tensor& indices,
-                                  const glm::mat4& transform,
-                                  torch::Tensor& pdf)
+torch::Tensor
+computeMeshTriangleAreas(const torch::Tensor& positions, const torch::Tensor& indices, const glm::mat4& transform)
 {
     auto device = positions.device();
 
     at::cuda::CUDAGuard device_guard {device};
+
+    torch::Tensor pdf = torch::zeros({indices.size(0)}, atcg::TensorOptions::floatDeviceOptions());
     const auto stream = at::cuda::getCurrentCUDAStream();
 
     const int threads_per_block = 128;
@@ -92,41 +100,35 @@ void computeMeshTrianglePDFKernel(const torch::Tensor& positions,
 
     AT_CUDA_CHECK(cudaGetLastError());
     AT_CUDA_CHECK(cudaStreamSynchronize(stream));
+
+    return pdf;
 }
 
-void computeMeshTriangleCDFKernel(const torch::Tensor& cdf)
+torch::Tensor
+computeMeshEdgeLengths(const torch::Tensor& positions, const torch::Tensor& edges, const glm::mat4& transform)
 {
-    auto device = cdf.device();
+    auto device = positions.device();
 
     at::cuda::CUDAGuard device_guard {device};
-    const auto stream = at::cuda::getCurrentCUDAStream();
 
-    detail::computeMeshTriangleCDFKernel<<<1, 1, 0, stream>>>(
-        cdf.packed_accessor32<float, 1, torch::RestrictPtrTraits>());
-
-    AT_CUDA_CHECK(cudaGetLastError());
-    AT_CUDA_CHECK(cudaStreamSynchronize(stream));
-}
-
-void normalizeMeshTriangleCDFKernel(const torch::Tensor& cdf, float total_area)
-{
-    auto device = cdf.device();
-
-    at::cuda::CUDAGuard device_guard {device};
+    torch::Tensor pdf = torch::zeros({edges.size(0)}, atcg::TensorOptions::floatDeviceOptions());
     const auto stream = at::cuda::getCurrentCUDAStream();
 
     const int threads_per_block = 128;
     dim3 grid;
-    at::cuda::getApplyGrid(cdf.size(0), grid, device.index(), threads_per_block);
+    at::cuda::getApplyGrid(edges.size(0), grid, device.index(), threads_per_block);
     dim3 threads = at::cuda::getApplyBlock(threads_per_block);
 
-    detail::normalizeMeshTriangleCDFKernel<<<grid, threads, 0, stream>>>(
-        cdf.packed_accessor32<float, 1, torch::RestrictPtrTraits>(),
-        total_area);
+    detail::computeMeshEdgePDFKernel<<<grid, threads, 0, stream>>>(
+        positions.packed_accessor32<float, 2, torch::RestrictPtrTraits>(),
+        edges.packed_accessor32<uint32_t, 2, torch::RestrictPtrTraits>(),
+        transform,
+        pdf.packed_accessor32<float, 1, torch::RestrictPtrTraits>());
 
     AT_CUDA_CHECK(cudaGetLastError());
     AT_CUDA_CHECK(cudaStreamSynchronize(stream));
-}
 
+    return pdf;
+}
 
 }    // namespace atcg

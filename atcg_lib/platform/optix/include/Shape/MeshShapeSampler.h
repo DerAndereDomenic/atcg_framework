@@ -27,7 +27,7 @@ public:
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
 private:
-    torch::Tensor _cdf;
+    torch::Tensor _mesh_cdf;
 
     atcg::dref_ptr<MeshSamplerData> _data;
 };

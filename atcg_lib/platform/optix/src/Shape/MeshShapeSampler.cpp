@@ -24,17 +24,13 @@ MeshShapeSampler::MeshShapeSampler(const atcg::Dictionary& dict) : ShapeSampler(
     data.faces     = (glm::u32vec3*)faces.data_ptr();
     data.num_faces = faces.size(0);
 
-    _cdf = torch::zeros({faces.size(0)}, atcg::TensorOptions::floatDeviceOptions());
+    auto mesh_areas = computeMeshTriangleAreas(positions, faces, _transform);
+    _mesh_cdf       = torch::cumsum(mesh_areas, 0);
 
-    auto device = _cdf.device();
+    data.total_area = _mesh_cdf.index({_mesh_cdf.size(0) - 1}).cpu().item<float>();
+    _mesh_cdf /= data.total_area;
+    data.mesh_cdf = (float*)_mesh_cdf.data_ptr();
 
-    computeMeshTrianglePDFKernel(positions, faces, _transform, _cdf);
-    computeMeshTriangleCDFKernel(_cdf);
-
-    data.total_area = _cdf.index({_cdf.size(0) - 1}).cpu().item<float>();
-    normalizeMeshTriangleCDFKernel(_cdf, data.total_area);
-
-    data.mesh_cdf       = (float*)_cdf.data_ptr();
     data.local_to_world = _transform;
     data.world_to_local = glm::inverse(_transform);
 

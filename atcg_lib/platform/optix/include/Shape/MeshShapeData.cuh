@@ -10,4 +10,4 @@ struct MeshShapeData
     glm::vec3* uvs;
     glm::u32vec3* faces;
 };
-}
+}    // namespace atcg
