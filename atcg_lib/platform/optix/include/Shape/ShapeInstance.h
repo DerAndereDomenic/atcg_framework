@@ -7,6 +7,7 @@
 #include <BSDF/BSDF.h>
 #include <Emitter/Emitter.h>
 #include <Medium/Medium.h>
+#include <Shape/ShapeInstanceData.cuh>
 
 namespace atcg
 {
@@ -81,5 +82,7 @@ private:
     atcg::ref_ptr<Medium> _outside_medium;
     uint32_t _entity_id;
     glm::vec3 _color;
+
+    atcg::dref_ptr<ShapeInstanceData> _data;
 };
 }    // namespace atcg

@@ -1,5 +1,4 @@
 #include <Shape/ShapeInstance.h>
-#include <Shape/ShapeInstanceData.cuh>
 
 namespace atcg
 {
@@ -49,8 +48,10 @@ void ShapeInstance::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& 
     data.color             = color();
     const auto& hit_groups = pipeline->getRayProgramGroups(shape->getShapeType());
 
+    _data.upload(&data);
+
     for(const auto& shape_hit_group: hit_groups)
-        sbt->addHitEntry(shape_hit_group, data);
+        sbt->addHitEntry(shape_hit_group, _data.get());
 
     markInitialized();
 }
