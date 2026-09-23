@@ -1,5 +1,5 @@
 #include <Emitter/MeshEmitter.h>
-#include <Emitter/MeshEmitterKernels.h>
+#include <Shape/MeshKernels.h>
 #include <ATen/cuda/ApplyGridUtils.cuh>
 #include <c10/cuda/CUDAGuard.h>
 #include <Shape/MeshShape.h>
