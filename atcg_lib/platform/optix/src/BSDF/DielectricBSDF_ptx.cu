@@ -226,6 +226,78 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
     return result;
 }
 
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalRefractivePDF(const atcg::SurfaceInteraction& si,
+                                                           const glm::vec3& outgoing_dir,
+                                                           const atcg::SampledSpectrum& reflectance_color,
+                                                           const float roughness,
+                                                           const float ior)
+{
+    glm::vec3 wo = outgoing_dir;
+    glm::vec3 wi = -si.incoming_direction;
+
+    bool outsidein = glm::dot(wi, si.normal) > 0;
+    float eta      = outsidein ? 1.0f / ior : ior;
+
+    bool outsideout = glm::dot(wo, si.normal) > 0;
+
+    bool same_side = outsidein == outsideout;
+
+    atcg::SampledSpectrum specular_bsdf = atcg::SampledSpectrum(0);
+
+    float F0 = (eta - 1) / (eta + 1);
+    F0       = F0 * F0;
+
+    glm::vec3 interface_normal = outsidein ? si.normal : -si.normal;
+    float light_dir_pdf        = 0.0f;
+    if(same_side)
+    {
+        glm::vec3 halfway = glm::normalize(wi + wo);
+        float NdotH       = glm::dot(halfway, interface_normal);
+        float LdotH       = glm::dot(halfway, wo);
+
+        float D = atcg::D_GGX(NdotH, roughness);
+
+        glm::vec3 refracted = glm::refract(-wi, halfway, eta);
+        float F             = 1.0f;
+        if(glm::length2(refracted) > 1e-6f)
+        {
+            F = atcg::fresnel_schlick(F0, LdotH);
+        }
+        float reflection_probability = F;
+
+        light_dir_pdf =
+            D * NdotH * reflection_probability *
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
+                wo,
+                halfway);
+    }
+    else
+    {
+        glm::vec3 halfway = -glm::normalize(eta * wi + wo);
+        // The halfway vector always points into the thinner medium
+        glm::vec3 thin_normal = ior > 1.0f ? si.normal : -si.normal;
+        float NdotH           = glm::dot(si.normal, halfway);
+
+        float LdotH = glm::dot(wo, halfway);
+        float VdotH = glm::dot(wi, halfway);
+
+        float D = atcg::D_GGX(NdotH, roughness);
+
+        float F                = atcg::fresnel_schlick(F0, glm::abs(VdotH));
+        float T                = 1.0f - F;
+        float transmission_pdf = T;
+
+        light_dir_pdf =
+            D * NdotH * transmission_pdf *
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_refracted_direction_pdf(
+                VdotH,
+                LdotH,
+                eta);
+    }
+    float pdf_dw = light_dir_pdf;
+    return pdf_dw;
+}
+
 }    // namespace detail
 
 extern "C" __device__ atcg::BSDFSamplingResult
@@ -262,4 +334,21 @@ __direct_callable__eval_dielectricbsdf(const atcg::SurfaceInteraction& si,
     float ior = sbt_data->ior_texture.read(si.uv);
 
     return detail::evalRefractive(si, outgoing_dir, reflectance_color, roughness, ior);
+}
+
+extern "C" __device__ float __direct_callable__evalpdf_dielectricbsdf(const atcg::SurfaceInteraction& si,
+                                                                      const glm::vec3& outgoing_dir,
+                                                                      const atcg::SampledWavelengths& wavelengths)
+{
+    const atcg::DielectricBSDFData* sbt_data =
+        *reinterpret_cast<const atcg::DielectricBSDFData**>(optixGetSbtDataPointer());
+
+    atcg::SampledSpectrum reflectance_color =
+        atcg::SampledSpectrum::fromRGB(sbt_data->diffuse_texture.read(si.uv), wavelengths);
+    float roughness = sbt_data->roughness_texture.read(si.uv);
+    roughness       = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
+
+    float ior = sbt_data->ior_texture.read(si.uv);
+
+    return detail::evalRefractivePDF(si, outgoing_dir, reflectance_color, roughness, ior);
 }

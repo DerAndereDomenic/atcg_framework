@@ -120,8 +120,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
         specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
     }
 
-    result.pdf_dw = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
-    result.bsdf_weight        = (specular_bsdf + kD * diffuse_bsdf) * NdotL / (result.pdf_dw + 1e-5f);
+    result.pdf_dw      = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
+    result.bsdf_weight = (specular_bsdf + kD * diffuse_bsdf) * NdotL / (result.pdf_dw + 1e-5f);
 
     return result;
 }
@@ -178,13 +178,60 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalPBR(const atcg::Surf
             H);    // 1 / (4*HdotV)
     float specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
 
-    result.bsdf_value         = (specular + kD * diffuse_color / glm::pi<float>()) * NdotL;
-    result.pdf_dw = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
+    result.bsdf_value = (specular + kD * diffuse_color / glm::pi<float>()) * NdotL;
+    result.pdf_dw     = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
     result.flags =
         (roughness < 0.01f ? atcg::BSDFComponentType::IdealReflection
                            : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::DiffuseReflection);
 
     return result;
+}
+
+/**
+ * @brief Evaluate a pbr bsdf
+ *
+ * @param si The surface interaction
+ * @param outgoing_dir The outgoing direction
+ * @param diffuse_color The diffuse color
+ * @param metallic_color The metallic color
+ * @param roughness The surface roughness
+ * @param metallic The metallic value
+ *
+ * @return The eval result
+ */
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalPBRPDF(const atcg::SurfaceInteraction& si,
+                                                    const glm::vec3& outgoing_dir,
+                                                    const atcg::SampledSpectrum& diffuse_color,
+                                                    const atcg::SampledSpectrum& metallic_color,
+                                                    const float roughness,
+                                                    const float metallic)
+{
+    glm::vec3 light_dir = outgoing_dir;
+    glm::vec3 view_dir  = -si.incoming_direction;
+    glm::vec3 normal    = atcg::faceForward(si.normal, view_dir);
+
+    glm::vec3 H = glm::normalize(light_dir + view_dir);
+
+    float NdotH = glm::max(glm::dot(normal, H), 0.0f);
+    float NdotV = glm::max(glm::dot(normal, view_dir), 0.0f);
+    float NdotL = glm::max(glm::dot(normal, light_dir), 0.0f);
+
+    if(NdotL <= 0.0f || NdotV <= 0.0f) return 0.0f;
+
+    float NDF = atcg::D_GGX(NdotH, roughness);
+
+    float diffuse_probability  = diffuse_color.sum() / (diffuse_color.sum() + metallic_color.sum() + 1e-5f);
+    float specular_probability = 1 - diffuse_probability;
+    float diffuse_pdf          = NdotL / glm::pi<float>();
+    float halfway_pdf          = NDF * NdotH;
+    float halfway_to_outgoing_pdf =
+        atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
+            outgoing_dir,
+            H);    // 1 / (4*HdotV)
+    float specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
+
+    float pdf_dw = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
+    return pdf_dw;
 }
 }    // namespace detail
 
@@ -224,4 +271,23 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_pbrbsdf(const
 
 
     return detail::evalPBR(si, outgoing_dir, diffuse_color, metallic_color, roughness, metallic);
+}
+
+extern "C" __device__ float __direct_callable__evalpdf_pbrbsdf(const atcg::SurfaceInteraction& si,
+                                                               const glm::vec3& outgoing_dir,
+                                                               const atcg::SampledWavelengths& wavelengths)
+{
+    const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
+
+    atcg::SampledSpectrum diffuse_color =
+        atcg::SampledSpectrum::fromRGB(sbt_data->diffuse_texture.read(si.uv), wavelengths);
+    float metallic  = sbt_data->metallic_texture.read(si.uv);
+    float roughness = sbt_data->roughness_texture.read(si.uv);
+    roughness       = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
+
+    atcg::SampledSpectrum metallic_color = (1.0f - metallic) * atcg::SampledSpectrum(0.04f) + metallic * diffuse_color;
+    diffuse_color = (1.0f - metallic) * diffuse_color * atcg::SampledSpectrum::fromRGB(si.color, wavelengths);
+
+
+    return detail::evalPBRPDF(si, outgoing_dir, diffuse_color, metallic_color, roughness, metallic);
 }
