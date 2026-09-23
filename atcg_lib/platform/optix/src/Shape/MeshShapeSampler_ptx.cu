@@ -23,6 +23,7 @@ extern "C" __device__ atcg::ShapeSampleResult __direct_callable__sample_point_me
 
     glm::u32vec3* faces      = sbt_data->faces;
     glm::vec3* positions     = sbt_data->positions;
+    glm::vec3* UVs           = sbt_data->uvs;
     glm::mat4 local_to_world = sbt_data->local_to_world;
     glm::mat4 world_to_local = sbt_data->world_to_local;
 
@@ -48,6 +49,14 @@ extern "C" __device__ atcg::ShapeSampleResult __direct_callable__sample_point_me
     glm::vec3 P1 = positions[vertex_indices.y];
     glm::vec3 P2 = positions[vertex_indices.z];
 
+    // Vertex UVs of selected triangle
+    glm::vec3 UV0 = UVs[vertex_indices.x];
+    glm::vec3 UV1 = UVs[vertex_indices.y];
+    glm::vec3 UV2 = UVs[vertex_indices.z];
+
+    glm::vec3 uvs =
+        (1.0f - triangle_barys.x - triangle_barys.y) * UV0 + triangle_barys.x * UV1 + triangle_barys.y * UV2;
+
     // Compute local position
     glm::vec3 local_position =
         (1.0f - triangle_barys.x - triangle_barys.y) * P0 + triangle_barys.x * P1 + triangle_barys.y * P2;
@@ -63,6 +72,7 @@ extern "C" __device__ atcg::ShapeSampleResult __direct_callable__sample_point_me
     result.position = position;
     result.normal   = normal;
     result.pdf_A    = 1.0f / sbt_data->total_area;
+    result.uvs      = uvs;
 
     return result;
 }
