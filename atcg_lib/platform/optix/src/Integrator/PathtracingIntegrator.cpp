@@ -115,4 +115,10 @@ void PathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
     in_out_dictionary.setValue("output", output_tensor);
     in_out_dictionary.setValue("entity_ids", output_entities);
 }
+
+void PathtracingIntegrator::registerIntegrator(IntegratorRegistry::Registry* registry)
+{
+    ATCG_REGISTER_INTEGRATOR(registry, "Pathtracing", PathtracingIntegrator);
+}
+
 }    // namespace atcg

@@ -52,9 +52,9 @@ void ComponentGUIRenderer<TransparencyComponent>::draw_component(const atcg::ref
 }
 }    // namespace GUI
 
-
-ATCG_REGISTER_COMPONENT_DRAW(TransparencyComponent);
-ATCG_REGISTER_COMPONENT_SERIALIZATION(TransparencyComponent);
-ATCG_REGISTER_COMPONENT_STORE(TransparencyComponent);
+void TransparencyComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "Transparency", TransparencyComponent);
+}
 
 }    // namespace atcg

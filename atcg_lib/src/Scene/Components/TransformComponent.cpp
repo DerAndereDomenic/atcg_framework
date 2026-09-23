@@ -1,5 +1,6 @@
 #include <Scene/Components/TransformComponent.h>
 #include <Scene/ComponentRegistry.h>
+#include <Scene/Components/IDComponent.h>
 
 #define TRANSFORM_KEY    "Transform"
 #define POSITION_KEY     "Position"
@@ -136,5 +137,9 @@ void ComponentGUIRenderer<TransformComponent>::draw_component(const atcg::ref_pt
 }
 }    // namespace GUI
 
-ATCG_REGISTER_COMPONENT(TransformComponent);
+void TransformComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "Transform", TransformComponent);
+}
+
 }    // namespace atcg

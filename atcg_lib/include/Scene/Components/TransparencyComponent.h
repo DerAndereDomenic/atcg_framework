@@ -2,6 +2,7 @@
 
 #include <Scene/ComponentSerializer.h>
 #include <Scene/ComponentGUIHandler.h>
+#include <Scene/ComponentRegistry.h>
 
 namespace atcg
 {
@@ -14,6 +15,8 @@ struct ATCG_API TransparencyComponent
     bool transparent = true;
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Transparency"; }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 };
 
 namespace Serialization

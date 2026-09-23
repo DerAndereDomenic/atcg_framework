@@ -228,6 +228,12 @@ endif()
 add_subdirectory(atcg_lib)
 
 #
+# PLUGINS
+#
+
+add_subdirectory(plugins)
+
+#
 # EXECUTABLES
 #
 

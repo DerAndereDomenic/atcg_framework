@@ -5,6 +5,7 @@
 #include <DataStructure/Dictionary.h>
 #include <Core/OptixComponent.h>
 #include <BSDF/BSDFVPtrTable.cuh>
+#include <Scene/ComponentRegistry.h>
 
 #ifndef __CUDACC__
     #include <Scene/ComponentGUIHandler.h>
@@ -67,6 +68,8 @@ struct ATCG_API BSDFComponent
     atcg::ref_ptr<BSDF> bsdf;
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "BSDFComponent"; }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 };
 
 #ifndef __CUDACC__

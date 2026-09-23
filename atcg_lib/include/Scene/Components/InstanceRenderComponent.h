@@ -5,6 +5,7 @@
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentRenderer.h>
 #include <Scene/ComponentSerializer.h>
+#include <Scene/ComponentRegistry.h>
 
 namespace atcg
 {
@@ -27,6 +28,8 @@ struct ATCG_API InstanceRenderComponent : public RenderComponent
     }
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Instance Renderer"; }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 
     std::vector<atcg::ref_ptr<VertexBuffer>> instance_vbos;
     atcg::ref_ptr<atcg::Shader> default_shader = nullptr;

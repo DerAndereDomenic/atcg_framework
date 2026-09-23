@@ -5,6 +5,7 @@
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
 #include <Scene/ComponentRenderer.h>
+#include <Scene/ComponentRegistry.h>
 
 namespace atcg
 {
@@ -31,6 +32,8 @@ struct ATCG_API GeometryComponent
     AssetHandle graph_handle;
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Geometry"; }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 };
 
 ATCG_DECLARE_COMPONENT_RENDERER(GeometryComponent);

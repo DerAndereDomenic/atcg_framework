@@ -109,5 +109,9 @@ void ComponentGUIRenderer<GeometryComponent>::draw_component(const atcg::ref_ptr
 }
 }    // namespace GUI
 
-ATCG_REGISTER_COMPONENT(GeometryComponent);
+void GeometryComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "Geometry", GeometryComponent);
+}
+
 }    // namespace atcg

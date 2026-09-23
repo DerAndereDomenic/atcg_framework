@@ -195,5 +195,8 @@ void ComponentGUIRenderer<MeshLightComponent>::draw_component(const atcg::ref_pt
 }
 }    // namespace GUI
 
-ATCG_REGISTER_COMPONENT(MeshLightComponent);
+void MeshLightComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "MeshLight", MeshLightComponent);
+}
 }    // namespace atcg

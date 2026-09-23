@@ -66,6 +66,8 @@ public:
     std::vector<Layer*>::const_reverse_iterator rbegin() const { return _layers.rbegin(); }
     std::vector<Layer*>::const_reverse_iterator rend() const { return _layers.rend(); }
 
+    ATCG_INLINE void clear() { _layers.clear(); }
+
 private:
     std::vector<Layer*> _layers;
     unsigned int _layer_insert_index = 0;

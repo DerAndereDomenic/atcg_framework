@@ -39,6 +39,20 @@ subroutine(sr_eval_brdf) vec3 eval_brdf_pbr(vec3 base_color,
     return brdf;
 }
 
+subroutine(sr_eval_brdf) vec3 eval_brdf_diffuse(vec3 base_color,
+                                                float metallic,
+                                                float roughness,
+                                                float ior,
+                                                vec3 normal,
+                                                vec3 light_dir,
+                                                vec3 view_dir)
+{
+    vec3 color_diffuse = base_color;
+
+    vec3 brdf = color_diffuse / PI;
+    return brdf;
+}
+
 subroutine(sr_eval_brdf) vec3 eval_brdf_glass(vec3 base_color,
                                               float metallic,
                                               float roughness,

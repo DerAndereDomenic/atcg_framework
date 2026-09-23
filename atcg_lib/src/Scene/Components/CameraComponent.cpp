@@ -394,5 +394,8 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
 }
 }    // namespace GUI
 
-ATCG_REGISTER_COMPONENT(CameraComponent);
+void CameraComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "Camera", CameraComponent);
+}
 }    // namespace atcg

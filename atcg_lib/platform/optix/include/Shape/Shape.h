@@ -6,6 +6,7 @@
 #include <DataStructure/Dictionary.h>
 #include <Core/RaytracingContext.h>
 #include <Shape/ShapeData.cuh>
+#include <Scene/ComponentRegistry.h>
 
 #ifndef __CUDACC__
     #include <Scene/ComponentGUIHandler.h>
@@ -84,6 +85,8 @@ struct ShapeComponent
     atcg::ref_ptr<Shape> shape;
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "ShapeComponent"; }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 };
 
 #ifndef __CUDACC__

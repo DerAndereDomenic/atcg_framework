@@ -1,30 +1,19 @@
 #pragma once
 
-#include <Core/API.h>
-#include <Core/Memory.h>
-#include <Core/LayerStack.h>
-#include <Core/Window.h>
-#include <Events/WindowEvent.h>
-#include <Events/KeyEvent.h>
-#include <Core/Platform.h>
-#include <Scene/RevisionStack.h>
-#include <Renderer/ShaderManager.h>
-#include <Renderer/Renderer.h>
-#include <Renderer/VRSystem.h>
-#include <Renderer/ContextManager.h>
-#include <Scripting/ScriptEngine.h>
 #include <Asset/AssetManagerSystem.h>
-#include <Scene/ComponentRegistry.h>
-#include <Renderer/GraphicsAPI.h>
-#include <Scene/SceneRenderer.h>
+#include <Core/API.h>
+#include <Core/LayerStack.h>
+#include <Core/Memory.h>
+#include <Core/Platform.h>
+#include <Core/SystemCollection.h>
+#include <Events/KeyEvent.h>
+#include <Events/WindowEvent.h>
+
 
 #ifndef ATCG_HEADLESS
     #include <ImGui/ImGuiLayer.h>
 #endif
 
-#ifdef ATCG_CUDA_BACKEND
-    #include <Core/RaytracingContextManager.h>
-#endif
 namespace atcg
 {
 class Application;
@@ -102,7 +91,7 @@ public:
      *
      * @return const atcg::scope_ptr<Window>& The window
      */
-    ATCG_INLINE const atcg::scope_ptr<Window>& getWindow() const { return _window; }
+    ATCG_INLINE const atcg::scope_ptr<Window>& getWindow() const { return _systems->getWindow(); }
 
     /**
      * @brief Get an instance of the application
@@ -110,6 +99,14 @@ public:
      * @return Application* The application instance
      */
     ATCG_INLINE static Application* get() { return s_instance; }
+
+    /**
+     * @brief Set the application instance. This should not be used by the client, it is used to initialize plugin
+     * libraries
+     *
+     * @param instance The application instance
+     */
+    ATCG_INLINE static void setApplicationInstance(Application* instance) { s_instance = instance; }
 
     /**
      * @brief Enable or disable Dock spaces
@@ -152,28 +149,14 @@ private:
 
 private:
     bool _running = false;
-    atcg::ref_ptr<ContextManagerSystem> _context_manager;
-#ifdef ATCG_CUDA_BACKEND
-    atcg::ref_ptr<RaytracingContextManagerSystem> _rt_context_manager;
-#endif
-    atcg::scope_ptr<Window> _window;
 #ifndef ATCG_HEADLESS
     ImGuiLayer* _imgui_layer;
 #endif
     LayerStack _layer_stack;
 
-    uint64_t _application_counter = 0;
+    atcg::scope_ptr<SystemCollection> _systems;
 
-    // Systems
-    atcg::ref_ptr<AssetManagerSystem> _asset_manager;
-    atcg::ref_ptr<ShaderManagerSystem> _shader_manager;
-    atcg::ref_ptr<SceneRendererSystem> _scene_renderer;
-    atcg::ref_ptr<RendererSystem> _renderer;
-    atcg::ref_ptr<VRSystem> _vr_system;
-    atcg::ref_ptr<ScriptEngine> _script_engine;
-    atcg::ref_ptr<RevisionSystem> _revision_system;
-    atcg::ref_ptr<GraphicsAPI> _graphics_api;
-    atcg::ref_ptr<ComponentRegistrySystem> _component_registry;
+    uint64_t _application_counter = 0;
 
     friend int atcg::atcg_main();
     static Application* s_instance;

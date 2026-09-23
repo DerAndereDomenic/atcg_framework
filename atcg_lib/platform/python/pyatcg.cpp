@@ -93,7 +93,6 @@ inline void defineBindings(py::module_& m)
     auto m_texture_cube  = py::class_<atcg::TextureCube, atcg::ref_ptr<atcg::TextureCube>>(m, "TextureCube");
     auto m_framebuffer   = py::class_<atcg::Framebuffer, atcg::ref_ptr<atcg::Framebuffer>>(m, "Framebuffer");
     auto m_entity_handle = py::class_<entt::entity>(m, "EntityHandle");
-    auto m_material_type = py::enum_<atcg::MaterialType>(m, "MaterialType");
     auto m_material      = py::class_<atcg::Material, atcg::Asset, atcg::ref_ptr<atcg::Material>>(m, "Material");
     auto m_opaque_material =
         py::class_<atcg::OpaqueMaterial, atcg::Material, atcg::ref_ptr<atcg::OpaqueMaterial>>(m, "OpaqueMaterial");
@@ -142,10 +141,12 @@ inline void defineBindings(py::module_& m)
     auto m_asset_data  = py::class_<atcg::AssetMetaData>(m, "AssetMetaData");
     auto m_asset_manager_system =
         py::class_<atcg::AssetManagerSystem, atcg::ref_ptr<atcg::AssetManagerSystem>>(m, "AssetManagerSystem");
-    auto m_asset_manager = m.def_submodule("AssetManager");
-    auto m_asset_panel   = py::class_<atcg::GUI::AssetPanel, atcg::ref_ptr<atcg::GUI::AssetPanel>>(m, "AssetPanel");
-    auto m_project       = py::class_<atcg::Project, atcg::ref_ptr<atcg::Project>>(m, "Project");
-    auto m_dictionary    = py::class_<atcg::Dictionary>(m, "Dictionary");
+    auto m_asset_manager     = m.def_submodule("AssetManager");
+    auto m_asset_panel       = py::class_<atcg::GUI::AssetPanel, atcg::ref_ptr<atcg::GUI::AssetPanel>>(m, "AssetPanel");
+    auto m_project           = py::class_<atcg::Project, atcg::ref_ptr<atcg::Project>>(m, "Project");
+    auto m_plugin_manager    = m.def_submodule("PluginManager");
+    auto m_material_registry = m.def_submodule("MaterialRegistry");
+    auto m_dictionary        = py::class_<atcg::Dictionary>(m, "Dictionary");
 
 #ifdef ATCG_CUDA_BACKEND
     auto m_raytracing_context_manager = m.def_submodule("RaytracingContextManager");
@@ -1127,10 +1128,6 @@ inline void defineBindings(py::module_& m)
     // ------------------- Scene ---------------------------------
     m_entity_handle.def(py::init<uint32_t>(), "handle"_a);
 
-    m_material_type.value("MATERIAL_TYPE_OPAQUE", atcg::MaterialType::MATERIAL_TYPE_OPAQUE)
-        .value("MATERIAL_TYPE_DIELECTRIC", atcg::MaterialType::MATERIAL_TYPE_DIELECTRIC)
-        .value("MATERIAL_TYPE_NULL", atcg::MaterialType::MATERIAL_TYPE_NULL);
-
     m_material
         .def("asOpaque",
              [](const atcg::ref_ptr<atcg::Material>& self)
@@ -1733,6 +1730,11 @@ inline void defineBindings(py::module_& m)
     m.def("handleScriptEvents", &atcg::Scripting::handleScriptEvents);
     m.def("handleScriptUpdates", &atcg::Scripting::handleScriptUpdates);
 
+    // ------------------- Plugins ---------------------------------
+    m_plugin_manager.def("loadPlugin", [](const std::string& path) { return atcg::PluginManager::loadPlugin(path); })
+        .def("releasePlugin", [](const std::string& path) { return atcg::PluginManager::releasePlugin(path); })
+        .def("releaseAllPlugins", &atcg::PluginManager::releaseAllPlugins);
+
 // ------------------- Pathtracing ---------------------------------
 #ifdef ATCG_CUDA_BACKEND
     m_raytracing_context_manager.def("createContext", &atcg::RaytracingContextManager::createContext)
@@ -1814,6 +1816,25 @@ inline void defineBindings(py::module_& m)
                  self->generateRays(dict);
                  return dict.getValue<torch::Tensor>("output");
              });
+
+    m_integrator_registry.def("createIntegrator",
+                              [](const std::string& integrator_type,
+                                 const atcg::ref_ptr<atcg::RaytracingContext>& context,
+                                 const atcg::ref_ptr<atcg::Scene>& scene,
+                                 const uint32_t width,
+                                 const uint32_t height)
+                              {
+                                  atcg::Dictionary dict;
+                                  dict.setValue("scene", scene);
+                                  dict.setValue("width", width);
+                                  dict.setValue("height", height);
+                                  return atcg::IntegratorRegistry::createIntegrator(integrator_type, context, dict);
+                              });
+
+    m_integrator_registry.def(
+        "createIntegrator",
+        [](const std::string& type, const atcg::ref_ptr<atcg::RaytracingContext>& context, const atcg::Dictionary& dict)
+        { return atcg::IntegratorRegistry::createIntegrator(type, context, dict); });
 #endif
     // IMGUI BINDINGS
 

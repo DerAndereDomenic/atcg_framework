@@ -1,5 +1,6 @@
 #include <Scene/Components/IDComponent.h>
 #include <Scene/ComponentRegistry.h>
+#include <Scene/ComponentGUIHandler.h>
 
 #define ID_KEY "ID"
 
@@ -33,5 +34,8 @@ void ComponentSerializer<IDComponent>::deserialize_component(const std::string& 
 }
 }    // namespace Serialization
 
-ATCG_REGISTER_COMPONENT_SERIALIZATION(IDComponent);
+void IDComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "ID", IDComponent);
+}
 }    // namespace atcg

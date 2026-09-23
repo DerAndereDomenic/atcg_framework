@@ -5,6 +5,7 @@
 #include <Core/OptixComponent.h>
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <DataStructure/Dictionary.h>
+#include <Scene/ComponentRegistry.h>
 
 #ifndef __CUDACC__
     #include <Scene/ComponentGUIHandler.h>
@@ -67,6 +68,8 @@ struct ATCG_API EmitterComponent
     atcg::ref_ptr<Emitter> emitter;
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "EmitterComponent"; }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 };
 
 #ifndef __CUDACC__

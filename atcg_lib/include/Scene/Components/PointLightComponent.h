@@ -4,6 +4,7 @@
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentRenderer.h>
 #include <Scene/ComponentSerializer.h>
+#include <Scene/ComponentRegistry.h>
 
 namespace atcg
 {
@@ -20,6 +21,8 @@ struct ATCG_API PointLightComponent
     bool cast_shadow = true;
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Point Light"; }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 };
 
 ATCG_DECLARE_COMPONENT_RENDERER(PointLightComponent);

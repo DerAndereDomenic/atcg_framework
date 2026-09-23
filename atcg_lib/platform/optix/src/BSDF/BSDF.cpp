@@ -13,6 +13,11 @@ void ComponentGUIRenderer<BSDFComponent>::draw_component(const atcg::ref_ptr<Sce
 {
     component.bsdf->onImGuiRender();
 }
-ATCG_REGISTER_COMPONENT_DRAW(BSDFComponent);
+
 }    // namespace GUI
+
+void BSDFComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "BSDF", BSDFComponent);
+}
 }    // namespace atcg

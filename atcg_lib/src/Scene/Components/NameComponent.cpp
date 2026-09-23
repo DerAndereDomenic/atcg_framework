@@ -32,5 +32,8 @@ void ComponentSerializer<NameComponent>::deserialize_component(const std::string
 
 }    // namespace Serialization
 
-ATCG_REGISTER_COMPONENT_SERIALIZATION(NameComponent);
+void NameComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "Name", NameComponent);
+}
 }    // namespace atcg

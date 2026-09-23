@@ -6,7 +6,9 @@
 #include <Renderer/Renderer.h>
 #include <Renderer/VRSystem.h>
 #include <Renderer/ShaderManager.h>
+#include <Scene/RevisionStack.h>
 #include <Asset/Project.h>
+
 
 namespace atcg
 {
@@ -24,9 +26,8 @@ Application::Application(const WindowProps& props)
 
 Application::~Application()
 {
-    _revision_system->clearChache();
-    if(_asset_manager) _asset_manager->destroy();
-    if(_script_engine) _script_engine->destroy();
+    _layer_stack.clear();
+    _systems->shutdownSystems();
 }
 
 void Application::init(const WindowProps& props)
@@ -34,51 +35,8 @@ void Application::init(const WindowProps& props)
     ATCG_ASSERT(!s_instance, "There can only be one application instance at a time.");
     ATCG_ASSERT(SystemRegistry::instance(), "SystemRegistry must be initialized before initializing the Application");
 
-    _asset_manager = atcg::make_ref<AssetManagerSystem>();
-    SystemRegistry::instance()->registerSystem(_asset_manager.get());
-
-    _context_manager = atcg::make_ref<ContextManagerSystem>();
-    SystemRegistry::instance()->registerSystem(_context_manager.get());
-
-#ifdef ATCG_CUDA_BACKEND
-    atcg::RaytracingContext::initRaytracingAPI();
-    _rt_context_manager = atcg::make_ref<RaytracingContextManagerSystem>();
-    SystemRegistry::instance()->registerSystem(_rt_context_manager.get());
-#endif
-
-    _shader_manager = atcg::make_ref<ShaderManagerSystem>();
-    SystemRegistry::instance()->registerSystem(_shader_manager.get());
-
-    _window = atcg::make_scope<Window>(props);
-    _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
-
-    _graphics_api = atcg::make_ref<GraphicsAPI>();
-    _graphics_api->init();
-    SystemRegistry::instance()->registerSystem(_graphics_api.get());
-
-    _renderer = atcg::make_ref<RendererSystem>();
-    _renderer->init(_window->getWidth(), _window->getHeight(), _window->getContext(), _shader_manager);
-    SystemRegistry::instance()->registerSystem(_renderer.get());
-
-    // Needs to be called after the renderer is initialized
-    _asset_manager->loadStandardAssets();
-
-    _vr_system = atcg::make_ref<VRSystem>();
-    _vr_system->init(ATCG_BIND_EVENT_FN(Application::onEvent));
-    SystemRegistry::instance()->registerSystem(_vr_system.get());
-
-    _revision_system = atcg::make_ref<RevisionSystem>();
-    SystemRegistry::instance()->registerSystem(_revision_system.get());
-
-    _component_registry = atcg::make_ref<ComponentRegistrySystem>();
-    SystemRegistry::instance()->registerSystem(_component_registry.get());
-
-    _script_engine = atcg::make_ref<PythonScriptEngine>();
-    _script_engine->init();
-    SystemRegistry::instance()->registerSystem(_script_engine.get());
-
-    _scene_renderer = atcg::make_ref<SceneRendererSystem>(_renderer.get());
-    SystemRegistry::instance()->registerSystem(_scene_renderer.get());
+    _systems = atcg::make_scope<SystemCollection>();
+    _systems->initSystems(props, ATCG_BIND_EVENT_FN(Application::onEvent));
 
     // Create an active project
     atcg::Project::create("./DefaultProject");
@@ -131,7 +89,7 @@ glm::ivec2 Application::getViewportSize() const
     }
 #endif
 
-    return glm::ivec2(_window->getWidth(), _window->getHeight());
+    return glm::ivec2(getWindow()->getWidth(), getWindow()->getHeight());
 }
 
 glm::ivec2 Application::getViewportPosition() const
@@ -188,7 +146,7 @@ void Application::run()
 
         VR::onUpdate(delta_time);
         VR::emitEvents();
-        _window->onUpdate();
+        getWindow()->onUpdate();
         ++_application_counter;
 
 #ifndef ATCG_HEADLESS
@@ -240,17 +198,17 @@ bool Application::onKeyPress(KeyPressedEvent* e)
 {
     if(e->getKeyCode() == ATCG_KEY_F11)
     {
-        _window->toggleFullscreen();
+        getWindow()->toggleFullscreen();
     }
 
     if(e->getKeyCode() == ATCG_KEY_Y && atcg::Input::isKeyPressed(ATCG_KEY_LEFT_CONTROL))
     {
-        _revision_system->rollback();
+        RevisionStack::rollback();
     }
 
     if(e->getKeyCode() == ATCG_KEY_Z && atcg::Input::isKeyPressed(ATCG_KEY_LEFT_CONTROL))
     {
-        _revision_system->apply();
+        RevisionStack::apply();
     }
 
     return false;

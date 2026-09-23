@@ -6,6 +6,8 @@
 #include <Scene/ComponentRegistry.h>
 #include <Scene/Components/ScriptComponent.h>
 
+#include <Scene/Components/IDComponent.h>
+
 namespace atcg
 {
 

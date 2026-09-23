@@ -124,4 +124,10 @@ void ShadowPass::execute(const RenderContext& ctx, const ResourceTable& resource
     GraphicsCommand::endRenderPass();
 }
 
+void ShadowPass::registerRenderPass(RenderPassRegistry::Registry* registry)
+{
+    ATCG_REGISTER_RENDER_PASS(registry, "ShadowPass", ShadowPass);
+}
+
+
 }    // namespace atcg

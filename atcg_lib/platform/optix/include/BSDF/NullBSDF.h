@@ -2,6 +2,7 @@
 
 #include <BSDF/BSDF.h>
 #include <Renderer/Material.h>
+#include <BSDF/BSDFRegistry.h>
 
 namespace atcg
 {
@@ -36,6 +37,8 @@ public:
      */
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
+
+    static void registerBSDF(BSDFRegistry::Registry* registry);
 
 private:
 };

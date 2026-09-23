@@ -5,6 +5,7 @@
 #include <Scripting/Script.h>
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
+#include <Scene/ComponentRegistry.h>
 
 namespace atcg
 {
@@ -49,6 +50,8 @@ struct ATCG_API ScriptComponent
     }
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Script"; }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 
     AssetHandle script_handle = 0;
 

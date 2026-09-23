@@ -5,6 +5,7 @@
 #include <DataStructure/Dictionary.h>
 #include <Medium/PhaseFunction.h>
 #include <Medium/MediumVPtrTable.cuh>
+#include <Scene/ComponentRegistry.h>
 
 #ifndef __CUDACC__
     #include <Scene/ComponentGUIHandler.h>
@@ -67,6 +68,8 @@ struct ATCG_API MediumComponent
     atcg::ref_ptr<Medium> medium;
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "MediumComponent"; }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 };
 
 #ifndef __CUDACC__

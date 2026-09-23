@@ -12,6 +12,11 @@ void ComponentGUIRenderer<ShapeComponent>::draw_component(const atcg::ref_ptr<Sc
 {
     component.shape->onImGuiRender();
 }
-ATCG_REGISTER_COMPONENT_DRAW(ShapeComponent);
 }    // namespace GUI
+
+void ShapeComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "Shape", ShapeComponent);
+}
+
 }    // namespace atcg

@@ -208,5 +208,8 @@ void ComponentGUIRenderer<EdgeCylinderRenderComponent>::draw_component(const atc
 }
 }    // namespace GUI
 
-ATCG_REGISTER_COMPONENT(EdgeCylinderRenderComponent);
+void EdgeCylinderRenderComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "EdgeCylinderRender", EdgeCylinderRenderComponent);
+}
 }    // namespace atcg

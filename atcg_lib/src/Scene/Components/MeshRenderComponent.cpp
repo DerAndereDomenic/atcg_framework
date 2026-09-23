@@ -51,7 +51,7 @@ void ComponentRenderer<MeshRenderComponent>::renderComponent(atcg::RendererSyste
     // Actual rendering of component
     MeshRenderComponent renderer = entity.getComponent<MeshRenderComponent>();
 
-    if(renderer.material()->getMaterialType() == MaterialType::MATERIAL_TYPE_NULL)
+    if(renderer.material()->getMaterialType() == "Null")    // TODO Flags
     {
         return;
     }
@@ -196,5 +196,8 @@ void ComponentGUIRenderer<MeshRenderComponent>::draw_component(const atcg::ref_p
 }
 }    // namespace GUI
 
-ATCG_REGISTER_COMPONENT(MeshRenderComponent);
+void MeshRenderComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "MeshRender", MeshRenderComponent);
+}
 }    // namespace atcg

@@ -202,5 +202,9 @@ void ComponentGUIRenderer<PointRenderComponent>::draw_component(const atcg::ref_
 }
 }    // namespace GUI
 
-ATCG_REGISTER_COMPONENT(PointRenderComponent);
+void PointRenderComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "PointRender", PointRenderComponent);
+}
+
 }    // namespace atcg

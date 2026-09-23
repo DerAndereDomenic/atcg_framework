@@ -6,6 +6,7 @@
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
 #include <Scene/ComponentRenderer.h>
+#include <Scene/ComponentRegistry.h>
 
 namespace atcg
 {
@@ -57,6 +58,8 @@ struct ATCG_API HeterogeneousMediumComponent
     float g = 0.0f;
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Heterogeneous Medium"; }
+
+    static void registerComponent(ComponentRegistry::Registry* registry);
 
 private:
     atcg::ref_ptr<Texture3D> _default_emission_texture;

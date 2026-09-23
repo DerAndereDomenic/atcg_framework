@@ -53,7 +53,7 @@ void ComponentRenderer<HomogeneousMediumComponent>::renderComponent(atcg::Render
     HomogeneousMediumComponent& medium = entity.getComponent<HomogeneousMediumComponent>();
     MeshRenderComponent& mesh_renderer = entity.getComponent<MeshRenderComponent>();
 
-    if(mesh_renderer.material()->getMaterialType() != MaterialType::MATERIAL_TYPE_NULL)
+    if(mesh_renderer.material()->getMaterialType() != "Null")    // TODO Flags
     {
         return;
     }
@@ -183,5 +183,8 @@ void ComponentGUIRenderer<HomogeneousMediumComponent>::draw_component(const atcg
 }
 }    // namespace GUI
 
-ATCG_REGISTER_COMPONENT(HomogeneousMediumComponent);
+void HomogeneousMediumComponent::registerComponent(ComponentRegistry::Registry* registry)
+{
+    ATCG_REGISTER_COMPONENT(registry, "HomogeneousMedium", HomogeneousMediumComponent);
+}
 }    // namespace atcg

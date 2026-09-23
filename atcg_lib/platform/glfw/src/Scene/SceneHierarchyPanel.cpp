@@ -3,6 +3,9 @@
 #include <Core/Application.h>
 #include <Scene/RevisionStack.h>
 
+#include <Scene/Components/NameComponent.h>
+#include <Scene/Components/IDComponent.h>
+
 #include <imgui.h>
 #include <portable-file-dialogs.h>
 
