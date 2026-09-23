@@ -71,7 +71,7 @@ extern "C" __device__ atcg::ShapeSampleResult __direct_callable__sample_point_me
     // Assemble sampling result
     result.position = position;
     result.normal   = normal;
-    result.pdf_A    = 1.0f / sbt_data->total_area;
+    result.pdf_dA   = 1.0f / sbt_data->total_area;
     result.uvs      = uvs;
 
     return result;

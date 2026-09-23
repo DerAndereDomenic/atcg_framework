@@ -72,7 +72,7 @@ sampleEnvironmentEmitter(const atcg::EnvironmentEmitterData* sbt_data, const atc
 
     result.distance_to_light = std::numeric_limits<float>::infinity();
     result.uvs               = glm::vec3(u, v, 0);
-    result.sampling_pdf      = direction_pdf;
+    result.pdf_dw            = direction_pdf;
     result.direction_to_light =
         glm::vec3(std::sin(theta) * std::cos(phi), std::cos(theta), std::sin(theta) * std::sin(phi));
 
@@ -80,7 +80,7 @@ sampleEnvironmentEmitter(const atcg::EnvironmentEmitterData* sbt_data, const atc
     {
         if(glm::dot(result.direction_to_light, ai.si.normal) < 0)
         {
-            result.sampling_pdf = 0.0f;    // Invalid
+            result.pdf_dw = 0.0f;    // Invalid
         }
     }
 
@@ -198,7 +198,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::PhotonSamplingResult samplePhoton(const
     result.direction = photon_direction;
     result.normal    = -direction_to_light;    // disk faces into the scene
     result.uvs       = glm::vec3(u, v, 0);
-    result.pdf       = pdf;
+    result.pdf_dA_dw = pdf;
     // No cosine term here (unlike the Lambertian mesh case): the disk is constructed
     // to be perpendicular to the propagation direction by definition, so cos = 1.
     result.radiance_weight = atcg::SampledSpectrum::fromRGB(color, wavelengths) / pdf;
@@ -220,7 +220,7 @@ __direct_callable__sample_environmentemitter(const atcg::AnyInteraction& si,
 
     glm::vec3 color = sbt_data->environment_texture.read(glm::vec2(result.uvs.x, 1.0f - result.uvs.y));
 
-    result.radiance_weight_at_receiver = atcg::SampledSpectrum::fromRGB(color, wavelengths) / result.sampling_pdf;
+    result.radiance_weight_at_receiver = atcg::SampledSpectrum::fromRGB(color, wavelengths) / result.pdf_dw;
 
     return result;
 }

@@ -18,7 +18,7 @@ __direct_callable__sample_nullbsdf(const atcg::SurfaceInteraction& si,
     result.bsdf_weight        = atcg::SampledSpectrum(1.0f);
     result.flags              = atcg::BSDFComponentType::NullTransmission;
     result.out_dir            = si.incoming_direction;
-    result.sample_probability = 1.0f;
+    result.pdf_dw = 1.0f;
 
     return result;
 }
@@ -30,7 +30,7 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_nullbsdf(cons
     atcg::BSDFEvalResult result;
 
     result.bsdf_value         = atcg::SampledSpectrum(0.0f);
-    result.sample_probability = 0.0f;
+    result.pdf_dw = 0.0f;
     result.flags              = atcg::BSDFComponentType::NullTransmission;
 
     return result;

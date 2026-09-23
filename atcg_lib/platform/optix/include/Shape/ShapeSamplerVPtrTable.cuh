@@ -14,7 +14,7 @@ struct ShapeSampleResult
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec3 uvs;
-    float pdf_A;
+    float pdf_dA;
 };
 
 struct EdgeSampleResult
@@ -23,7 +23,7 @@ struct EdgeSampleResult
     glm::vec3 normal_left;
     glm::vec3 normal_right;
     glm::vec3 tangent;
-    float pdf_A;
+    float pdf_dA;
 };
 
 /**

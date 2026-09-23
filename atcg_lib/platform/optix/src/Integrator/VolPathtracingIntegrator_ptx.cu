@@ -99,11 +99,11 @@ extern "C" __global__ void __raygen__rg()
 
                     atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(mi, wavelengths, rng);
 
-                    if(emitter_sampling.sampling_pdf == 0)
+                    if(emitter_sampling.pdf_dw == 0)
                     {
                         break;
                     }
-                    emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+                    emitter_sampling.pdf_dw *= emitter_selection_pdf;
                     emitter_sampling.radiance_weight_at_receiver /= emitter_selection_pdf;
 
                     atcg::SurfaceInteraction si_dummy;
@@ -143,12 +143,12 @@ extern "C" __global__ void __raygen__rg()
                     auto phase_result = camera_ray.ray.current_medium->phase_function->evalPhaseFunction(
                         mi,
                         emitter_sampling.direction_to_light);
-                    float phase_pdf    = phase_result.sampling_pdf;
+                    float phase_pdf    = phase_result.pdf_dw;
                     float sampling_pdf = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
                                              ? 0.0f
                                              : phase_pdf;    // * transmittance_to_light;
 
-                    float mis_weight = atcg::BalanceHeuristic::apply(emitter_sampling.sampling_pdf, sampling_pdf);
+                    float mis_weight = atcg::BalanceHeuristic::apply(emitter_sampling.pdf_dw, sampling_pdf);
 
                     radiance += mis_weight * camera_ray.importance * transmittance_to_light *
                                 phase_result.phase_function_value * emitter_sampling.radiance_weight_at_receiver;
@@ -156,7 +156,7 @@ extern "C" __global__ void __raygen__rg()
 
                 const atcg::PhaseFunctionVPtrTable* phase_function = camera_ray.ray.current_medium->phase_function;
                 atcg::PhaseFunctionSamplingResult phase_result     = phase_function->samplePhaseFunction(mi, rng);
-                if(phase_result.sampling_pdf == 0)
+                if(phase_result.pdf_dw == 0)
                 {
                     next_ray_valid = false;
                     last_ai->setInvalid();
@@ -169,7 +169,7 @@ extern "C" __global__ void __raygen__rg()
                 next_ray_valid = true;
 
                 last_ai      = mi;
-                last_ai->pdf = phase_result.sampling_pdf;
+                last_ai->pdf = phase_result.pdf_dw;
 
                 continue;
             }
@@ -228,9 +228,9 @@ extern "C" __global__ void __raygen__rg()
 
                 atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, wavelengths, rng);
 
-                if(emitter_sampling.sampling_pdf == 0) break;
+                if(emitter_sampling.pdf_dw == 0) break;
 
-                emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+                emitter_sampling.pdf_dw *= emitter_selection_pdf;
                 emitter_sampling.radiance_weight_at_receiver /= emitter_selection_pdf;
 
                 bool occluded = traceOcclusion(params.handle,
@@ -251,8 +251,8 @@ extern "C" __global__ void __raygen__rg()
                 float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0 ||
                                            (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0
                                        ? 0.0f
-                                       : bsdf_result.sample_probability;
-                float mis_weight = atcg::BalanceHeuristic::apply(emitter_sampling.sampling_pdf, bsdf_pdf);
+                                       : bsdf_result.pdf_dw;
+                float mis_weight = atcg::BalanceHeuristic::apply(emitter_sampling.pdf_dw, bsdf_pdf);
 
                 radiance += mis_weight * camera_ray.importance * emitter_sampling.radiance_weight_at_receiver *
                             bsdf_result.bsdf_value;
@@ -260,7 +260,7 @@ extern "C" __global__ void __raygen__rg()
 
             auto result = si.bsdf->sampleBSDF(si, wavelengths, rng);
 
-            if(result.sample_probability > 0.0f)
+            if(result.pdf_dw > 0.0f)
             {
                 camera_ray.ray.origin    = si.position;
                 camera_ray.ray.direction = result.out_dir;
@@ -272,7 +272,7 @@ extern "C" __global__ void __raygen__rg()
                     // If the sampled component is a null transmission, we don't want to count it because for NEE we
                     // need the last non-null-transportation interaction. This is a bit hacky but it works for now.
                     last_ai      = si;
-                    last_ai->pdf = result.sample_probability;
+                    last_ai->pdf = result.pdf_dw;
 
                     if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
                     {

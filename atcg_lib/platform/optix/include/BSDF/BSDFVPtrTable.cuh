@@ -14,14 +14,14 @@ struct BSDFSamplingResult
 {
     glm::vec3 out_dir;
     SampledSpectrum bsdf_weight;
-    float sample_probability = 0.0f;
-    BSDFComponentType flags  = BSDFComponentType::Any;
+    float pdf_dw            = 0.0f;
+    BSDFComponentType flags = BSDFComponentType::Any;
 };
 
 struct BSDFEvalResult
 {
     SampledSpectrum bsdf_value = SampledSpectrum(0);
-    float sample_probability   = 0.0f;
+    float pdf_dw               = 0.0f;
     BSDFComponentType flags    = BSDFComponentType::Any;
 };
 

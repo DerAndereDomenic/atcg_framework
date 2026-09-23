@@ -82,7 +82,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
     float NdotL = glm::dot(normal, result.out_dir);
     if(NdotL <= 0)
     {
-        result.sample_probability = 0;
+        result.pdf_dw = 0;
         return result;
     }
 
@@ -120,8 +120,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
         specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
     }
 
-    result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
-    result.bsdf_weight        = (specular_bsdf + kD * diffuse_bsdf) * NdotL / (result.sample_probability + 1e-5f);
+    result.pdf_dw = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
+    result.bsdf_weight        = (specular_bsdf + kD * diffuse_bsdf) * NdotL / (result.pdf_dw + 1e-5f);
 
     return result;
 }
@@ -179,7 +179,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalPBR(const atcg::Surf
     float specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
 
     result.bsdf_value         = (specular + kD * diffuse_color / glm::pi<float>()) * NdotL;
-    result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
+    result.pdf_dw = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
     result.flags =
         (roughness < 0.01f ? atcg::BSDFComponentType::IdealReflection
                            : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::DiffuseReflection);

@@ -28,7 +28,7 @@ __direct_callable__sample_pointemitter(const atcg::AnyInteraction& si,
     result.distance_to_light  = distance;
     result.radiance_weight_at_receiver =
         atcg::SampledSpectrum::fromRGB(sbt_data->color, wavelengths) * sbt_data->intensity / (distance * distance);
-    result.sampling_pdf = 1.0f;
+    result.pdf_dw = 1.0f;
 
     return result;
 }
@@ -66,7 +66,7 @@ __direct_callable__sample_photon_pointemitter(const atcg::SampledWavelengths& wa
     result.normal          = result.direction;
     result.radiance_weight = atcg::SampledSpectrum::fromRGB(sbt_data->color, wavelengths) * sbt_data->intensity *
                              glm::two_pi<float>() * 2.0f;
-    result.pdf             = sampling_strategy.pdf(result.direction);
+    result.pdf_dA_dw       = sampling_strategy.pdf(result.direction);
     result.uvs             = glm::vec3(0.0f);
 
     return result;

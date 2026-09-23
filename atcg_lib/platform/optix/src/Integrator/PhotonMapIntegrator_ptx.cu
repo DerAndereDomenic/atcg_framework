@@ -29,7 +29,7 @@ ATCG_DEVICE ATCG_INLINE atcg::PhotonSamplingResult samplePhoton(const atcg::Samp
 
     auto result = emitter->samplePhoton(wavelengths, rng);
 
-    result.pdf /= static_cast<float>(params.num_emitters);
+    result.pdf_dA_dw /= static_cast<float>(params.num_emitters);
     result.radiance_weight *= static_cast<float>(params.num_emitters);
 
     return result;
@@ -113,7 +113,7 @@ extern "C" __global__ void __raygen__sample_photons()
 
         auto result = si.bsdf->sampleBSDF(si, wavelengths, rng);
 
-        if(result.sample_probability > 0.0f)
+        if(result.pdf_dw > 0.0f)
         {
             origin    = si.position;
             direction = result.out_dir;
@@ -239,7 +239,7 @@ extern "C" __global__ void __raygen__rg()
                 }
 
 
-                if(result.sample_probability > 0.0f)
+                if(result.pdf_dw > 0.0f)
                 {
                     camera_ray.ray.origin    = si.position;
                     camera_ray.ray.direction = result.out_dir;

@@ -70,7 +70,7 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
 
     // Compute sampling result
     atcg::BSDFSamplingResult result;
-    result.sample_probability = 0;
+    result.pdf_dw = 0;
 
     // Stochastically select a reflection or transmission via russian roulette
     glm::vec3 wo;
@@ -86,9 +86,9 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
                 halfway) *
             reflection_probability;
 
-        result.sample_probability = light_dir_pdf;
-        NdotL                     = glm::dot(interface_normal, wo);
-        HdotL                     = glm::dot(halfway, wo);
+        result.pdf_dw = light_dir_pdf;
+        NdotL         = glm::dot(interface_normal, wo);
+        HdotL         = glm::dot(halfway, wo);
 
         result.flags =
             roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection;
@@ -105,8 +105,8 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
                 eta) *
             transmission_probability;
 
-        result.sample_probability = light_dir_pdf;
-        NdotL                     = -glm::dot(interface_normal, wo);
+        result.pdf_dw = light_dir_pdf;
+        NdotL         = -glm::dot(interface_normal, wo);
 
         result.flags =
             roughness < 0.1f ? atcg::BSDFComponentType::IdealTransmission : atcg::BSDFComponentType::GlossyTransmission;
@@ -114,7 +114,7 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
 
     if(NdotL <= 0)
     {
-        result.sample_probability = 0;
+        result.pdf_dw = 0;
         return result;
     }
 
@@ -221,8 +221,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
             roughness < 0.1f ? atcg::BSDFComponentType::IdealTransmission : atcg::BSDFComponentType::GlossyTransmission;
     }
 
-    result.bsdf_value         = specular_bsdf * glm::abs(glm::dot(si.normal, wo));
-    result.sample_probability = light_dir_pdf;
+    result.bsdf_value = specular_bsdf * glm::abs(glm::dot(si.normal, wo));
+    result.pdf_dw     = light_dir_pdf;
     return result;
 }
 

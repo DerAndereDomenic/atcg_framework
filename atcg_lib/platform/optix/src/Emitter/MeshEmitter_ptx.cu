@@ -45,10 +45,10 @@ sampleMeshEmitter(const atcg::AnyInteraction& si, const atcg::ShapeSamplerVPtrTa
 
     glm::vec3 light_position = shape_sample_result.position;
     glm::vec3 light_normal   = shape_sample_result.normal;
-    float total_area         = 1.0f / shape_sample_result.pdf_A;
+    float total_area         = 1.0f / shape_sample_result.pdf_dA;
 
     // Assemble sampling result
-    result.sampling_pdf = 0;    // initialize with invalid sample
+    result.pdf_dw = 0;    // initialize with invalid sample
 
     // light source sampling
     result.direction_to_light       = glm::normalize(light_position - si->position);
@@ -63,7 +63,7 @@ sampleMeshEmitter(const atcg::AnyInteraction& si, const atcg::ShapeSamplerVPtrTa
 
 
     // Probability of sampling this direction via light source sampling
-    result.sampling_pdf = 1 / (one_over_light_direction_pdf + 1e-5f);
+    result.pdf_dw = 1 / (one_over_light_direction_pdf + 1e-5f);
 
     return result;
 }
@@ -121,7 +121,7 @@ samplePhoton(const atcg::MeshEmitterData* sbt_data, const atcg::SampledWavelengt
     result.position        = light_position;
     result.direction       = world_dir;
     result.normal          = light_normal;
-    result.pdf             = pdf;
+    result.pdf_dA_dw       = pdf;
     result.radiance_weight = atcg::SampledSpectrum::fromRGB(sbt_data->emitter_scaling *
                                                                 sbt_data->emissive_texture.read(glm::vec2(result.uvs)),
                                                             wavelengths) *
@@ -144,7 +144,7 @@ __direct_callable__sample_meshemitter(const atcg::AnyInteraction& si,
     glm::vec3 emissive_color = sbt_data->emissive_texture.read(glm::vec2(result.uvs));
 
     result.radiance_weight_at_receiver =
-        atcg::SampledSpectrum::fromRGB(sbt_data->emitter_scaling * emissive_color, wavelengths) / result.sampling_pdf;
+        atcg::SampledSpectrum::fromRGB(sbt_data->emitter_scaling * emissive_color, wavelengths) / result.pdf_dw;
 
     return result;
 }
