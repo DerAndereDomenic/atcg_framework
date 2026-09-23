@@ -21,9 +21,13 @@ struct EdgeSampleResult
     glm::vec3 position;
     glm::vec3 normal_left;
     glm::vec3 normal_right;
+    glm::vec3 tangent;
     float pdf_A;
 };
 
+/**
+ * @brief A function to sample a shape and it's edges uniformly. Because of this each point has the same pdf
+ */
 struct ShapeSamplerVPtrTable
 {
     uint32_t sampleShapeCallIndex;
@@ -41,6 +45,12 @@ struct ShapeSamplerVPtrTable
     {
         return optixDirectCall<EdgeSampleResult, PCG32&>(sampleEdgeCallIndex, rng);
     }
+
+    // Pdf in area domain. Because of uniform sampling, this is the same for all points on the shape
+    __device__ float evalShapePdf() const { return optixDirectCall<float>(evalShapePdfCallIndex); }
+
+    // Pdf in area domain. Because of uniform sampling, this is the same for all edge points
+    __device__ float evalEdgePdf() const { return optixDirectCall<float>(evalEdgePdfCallIndex); }
 #endif
 };
 }    // namespace atcg

@@ -46,15 +46,25 @@ MeshShapeSampler::~MeshShapeSampler() {}
 void MeshShapeSampler::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                           const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    const std::string ptx_bsdf_filename = "./bin/MeshSampler_ptx.ptx";
-    auto sample_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_point_mesh"});
-    auto eval_prog_group   = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_edge_mesh"});
-    uint32_t sample_point_idx = sbt->addCallableEntry(sample_prog_group, _data.get());
-    uint32_t sample_edge_idx  = sbt->addCallableEntry(eval_prog_group, _data.get());
+    const std::string ptx_bsdf_filename = "./bin/MeshShapeSampler_ptx.ptx";
+    auto sample_point_prog_group =
+        pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_point_mesh"});
+    auto sample_edge_prog_group =
+        pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_edge_mesh"});
+    auto eval_pdf_point_prog_group =
+        pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__evalpdf_point_mesh"});
+    auto eval_pdf_edge_prog_group =
+        pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__evalpdf_edge_mesh"});
+    uint32_t sample_point_idx   = sbt->addCallableEntry(sample_point_prog_group, _data.get());
+    uint32_t sample_edge_idx    = sbt->addCallableEntry(sample_edge_prog_group, _data.get());
+    uint32_t eval_pdf_point_idx = sbt->addCallableEntry(eval_pdf_point_prog_group, _data.get());
+    uint32_t eval_pdf_edge_idx  = sbt->addCallableEntry(eval_pdf_edge_prog_group, _data.get());
 
     ShapeSamplerVPtrTable table;
-    table.sampleShapeCallIndex = sample_point_idx;
-    table.sampleEdgeCallIndex  = sample_edge_idx;
+    table.sampleShapeCallIndex  = sample_point_idx;
+    table.sampleEdgeCallIndex   = sample_edge_idx;
+    table.evalShapePdfCallIndex = eval_pdf_point_idx;
+    table.evalEdgePdfCallIndex  = eval_pdf_edge_idx;
 
     _vptr_table.upload(&table);
 

@@ -75,3 +75,19 @@ extern "C" __device__ atcg::EdgeSampleResult __direct_callable__sample_edge_mesh
 
     return atcg::EdgeSampleResult();
 }
+
+extern "C" __device__ float __direct_callable__evalpdf_point_mesh(const glm::vec3& position)
+{
+    const atcg::MeshSamplerData* sbt_data = *reinterpret_cast<const atcg::MeshSamplerData**>(optixGetSbtDataPointer());
+
+    return 1.0f / sbt_data->total_area;
+}
+
+extern "C" __device__ float __direct_callable__evalpdf_edge_mesh(const glm::vec3& position)
+{
+    const atcg::MeshSamplerData* sbt_data = *reinterpret_cast<const atcg::MeshSamplerData**>(optixGetSbtDataPointer());
+
+    // TODO
+
+    return 0.0f;
+}
