@@ -17,14 +17,16 @@ MeshShapeSampler::MeshShapeSampler(const atcg::Dictionary& dict) : ShapeSampler(
 
     torch::Tensor positions = mesh_shape->getPositions();
     torch::Tensor uvs       = mesh_shape->getUVs();
-    torch::Tensor faces     = mesh_shape->getFaces();
+    torch::Tensor faces_3d  = mesh_shape->get3DFaces();
+    torch::Tensor faces_uv  = mesh_shape->getUVFaces();
 
     data.positions = (glm::vec3*)positions.data_ptr();
     data.uvs       = (glm::vec3*)uvs.data_ptr();
-    data.faces     = (glm::u32vec3*)faces.data_ptr();
-    data.num_faces = faces.size(0);
+    data.faces_3d  = (glm::u32vec3*)faces_3d.data_ptr();
+    data.faces_uv  = (glm::u32vec3*)faces_uv.data_ptr();
+    data.num_faces = faces_3d.size(0);
 
-    auto mesh_areas = computeMeshTriangleAreas(positions, faces, _transform);
+    auto mesh_areas = computeMeshTriangleAreas(positions, faces_3d, _transform);
     _mesh_cdf       = torch::cumsum(mesh_areas, 0);
 
     data.total_area = _mesh_cdf.index({_mesh_cdf.size(0) - 1}).cpu().item<float>();

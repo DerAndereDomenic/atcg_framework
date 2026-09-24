@@ -22,8 +22,10 @@ struct EdgeSampleResult
     glm::vec3 position;
     glm::vec3 normal_left;
     glm::vec3 normal_right;
+    bool valid_left;
+    bool valid_right;
     glm::vec3 tangent;
-    float pdf_dA;
+    float pdf_dl;
 };
 
 /**

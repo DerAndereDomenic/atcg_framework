@@ -21,7 +21,8 @@ extern "C" __device__ atcg::ShapeSampleResult __direct_callable__sample_point_me
     float* mesh_cdf    = sbt_data->mesh_cdf;
     uint32_t num_faces = sbt_data->num_faces;
 
-    glm::u32vec3* faces      = sbt_data->faces;
+    glm::u32vec3* faces_3d   = sbt_data->faces_3d;
+    glm::u32vec3* faces_uv   = sbt_data->faces_uv;
     glm::vec3* positions     = sbt_data->positions;
     glm::vec3* UVs           = sbt_data->uvs;
     glm::mat4 local_to_world = sbt_data->local_to_world;
@@ -42,7 +43,8 @@ extern "C" __device__ atcg::ShapeSampleResult __direct_callable__sample_point_me
     // Compute the `light_position` using the triangle_index and the triangle_barys on the mesh:
 
     // Indices of triangle vertices in the mesh
-    glm::u32vec3 vertex_indices = faces[triangle_index];
+    glm::u32vec3 vertex_indices = faces_3d[triangle_index];
+    glm::u32vec3 uv_indices     = faces_uv[triangle_index];
 
     // Vertex positions of selected triangle
     glm::vec3 P0 = positions[vertex_indices.x];
@@ -50,9 +52,9 @@ extern "C" __device__ atcg::ShapeSampleResult __direct_callable__sample_point_me
     glm::vec3 P2 = positions[vertex_indices.z];
 
     // Vertex UVs of selected triangle
-    glm::vec3 UV0 = UVs[vertex_indices.x];
-    glm::vec3 UV1 = UVs[vertex_indices.y];
-    glm::vec3 UV2 = UVs[vertex_indices.z];
+    glm::vec3 UV0 = UVs[uv_indices.x];
+    glm::vec3 UV1 = UVs[uv_indices.y];
+    glm::vec3 UV2 = UVs[uv_indices.z];
 
     glm::vec3 uvs =
         (1.0f - triangle_barys.x - triangle_barys.y) * UV0 + triangle_barys.x * UV1 + triangle_barys.y * UV2;
@@ -81,9 +83,50 @@ extern "C" __device__ atcg::EdgeSampleResult __direct_callable__sample_edge_mesh
 {
     const atcg::MeshSamplerData* sbt_data = *reinterpret_cast<const atcg::MeshSamplerData**>(optixGetSbtDataPointer());
 
-    // TODO
+    atcg::EdgeSampleResult result;
 
-    return atcg::EdgeSampleResult();
+    // float* edge_cdf    = sbt_data->edge_cdf;
+    // uint32_t num_edges = sbt_data->num_edges;
+
+    // glm::u32vec2* edges      = sbt_data->edges;
+    // glm::vec3* positions     = sbt_data->positions;
+    // glm::mat4 local_to_world = sbt_data->local_to_world;
+
+    // // Select the edge to sample a direction from uniformly at random, proportional to its length
+    // uint32_t edge_index = 0;
+    // // Sample the barycentric coordinates on the edge uniformly.
+    // float edge_barys = rng.next1d();
+
+    // edge_index = atcg::Math::binary_search(edge_cdf, rng.next1d(), num_edges);
+
+    // // Compute the `light_position` using the triangle_index and the triangle_barys on the mesh:
+
+    // // Indices of triangle vertices in the mesh
+    // glm::u32vec2 vertex_indices = edges[edge_index];
+
+    // // Vertex positions of selected triangle
+    // glm::vec3 P0 = positions[vertex_indices.x];
+    // glm::vec3 P1 = positions[vertex_indices.y];
+
+    // // Compute local position
+    // glm::vec3 local_position = (1.0f - edge_barys) * P0 + edge_barys * P1;
+
+    // glm::vec3 local_tangent = glm::normalize(P1 - P0);
+
+    // // Transform local position to world position
+    // glm::vec3 position = glm::vec3(local_to_world * glm::vec4(local_position, 1));
+
+    // // Transform local tangent to world tangent
+    // glm::vec3 tangent = glm::normalize(glm::vec3(local_to_world * glm::vec4(local_tangent, 0)));
+
+    // // Assemble sampling result
+    // result.position     = position;
+    // result.tangent      = tangent;
+    // result.pdf_dl       = 1.0f / sbt_data->total_edge_length;
+    // result.normal_left  = glm::vec3(0);    // TODO
+    // result.normal_right = glm::vec3(0);    // TODO
+
+    return result;
 }
 
 extern "C" __device__ float __direct_callable__evalpdf_point_mesh(const glm::vec3& position)
@@ -97,7 +140,5 @@ extern "C" __device__ float __direct_callable__evalpdf_edge_mesh(const glm::vec3
 {
     const atcg::MeshSamplerData* sbt_data = *reinterpret_cast<const atcg::MeshSamplerData**>(optixGetSbtDataPointer());
 
-    // TODO
-
-    return 0.0f;
+    return 0.0f;    // 1.0f / sbt_data->total_edge_length;
 }

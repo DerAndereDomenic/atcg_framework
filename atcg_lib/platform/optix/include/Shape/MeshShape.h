@@ -64,7 +64,10 @@ public:
     ATCG_INLINE torch::Tensor getNormals() const { return _normals; }
     ATCG_INLINE torch::Tensor getColors() const { return _colors; }
     ATCG_INLINE torch::Tensor getUVs() const { return _uvs; }
-    ATCG_INLINE torch::Tensor getFaces() const { return _faces; }
+    ATCG_INLINE torch::Tensor get3DFaces() const { return _faces_3d; }
+    ATCG_INLINE torch::Tensor getUVFaces() const { return _faces_uv; }
+    ATCG_INLINE torch::Tensor getNormalFaces() const { return _faces_normals; }
+    ATCG_INLINE torch::Tensor getColorFaces() const { return _faces_color; }
     ATCG_INLINE atcg::dref_ptr<MeshShapeData> getMeshShapeData() const { return _data; }
 
 private:
@@ -72,7 +75,10 @@ private:
     torch::Tensor _normals;
     torch::Tensor _colors;
     torch::Tensor _uvs;
-    torch::Tensor _faces;
+    torch::Tensor _faces_3d;
+    torch::Tensor _faces_uv;
+    torch::Tensor _faces_normals;
+    torch::Tensor _faces_color;
 
     atcg::dref_ptr<MeshShapeData> _data;
 };
