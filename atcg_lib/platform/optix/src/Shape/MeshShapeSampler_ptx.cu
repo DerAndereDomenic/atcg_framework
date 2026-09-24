@@ -85,46 +85,73 @@ extern "C" __device__ atcg::EdgeSampleResult __direct_callable__sample_edge_mesh
 
     atcg::EdgeSampleResult result;
 
-    // float* edge_cdf    = sbt_data->edge_cdf;
-    // uint32_t num_edges = sbt_data->num_edges;
+    float* edge_cdf    = sbt_data->edge_cdf;
+    uint32_t num_edges = sbt_data->num_edges;
 
-    // glm::u32vec2* edges      = sbt_data->edges;
-    // glm::vec3* positions     = sbt_data->positions;
-    // glm::mat4 local_to_world = sbt_data->local_to_world;
+    glm::u32vec2* edges      = sbt_data->edges;
+    glm::vec3* positions     = sbt_data->positions;
+    glm::mat4 local_to_world = sbt_data->local_to_world;
 
-    // // Select the edge to sample a direction from uniformly at random, proportional to its length
-    // uint32_t edge_index = 0;
-    // // Sample the barycentric coordinates on the edge uniformly.
-    // float edge_barys = rng.next1d();
+    // Select the edge to sample a direction from uniformly at random, proportional to its length
+    uint32_t edge_index = 0;
+    // Sample the barycentric coordinates on the edge uniformly.
+    float edge_barys = rng.next1d();
 
-    // edge_index = atcg::Math::binary_search(edge_cdf, rng.next1d(), num_edges);
+    edge_index = atcg::Math::binary_search(edge_cdf, rng.next1d(), num_edges);
 
-    // // Compute the `light_position` using the triangle_index and the triangle_barys on the mesh:
+    // Compute the `light_position` using the triangle_index and the triangle_barys on the mesh:
 
-    // // Indices of triangle vertices in the mesh
-    // glm::u32vec2 vertex_indices = edges[edge_index];
+    // Indices of triangle vertices in the mesh
+    glm::u32vec2 vertex_indices = edges[edge_index];
 
-    // // Vertex positions of selected triangle
-    // glm::vec3 P0 = positions[vertex_indices.x];
-    // glm::vec3 P1 = positions[vertex_indices.y];
+    // Vertex positions of selected triangle
+    glm::vec3 P0 = positions[vertex_indices.x];
+    glm::vec3 P1 = positions[vertex_indices.y];
 
-    // // Compute local position
-    // glm::vec3 local_position = (1.0f - edge_barys) * P0 + edge_barys * P1;
+    // Compute local position
+    glm::vec3 local_position = (1.0f - edge_barys) * P0 + edge_barys * P1;
 
-    // glm::vec3 local_tangent = glm::normalize(P1 - P0);
+    glm::vec3 local_tangent = glm::normalize(P1 - P0);
 
-    // // Transform local position to world position
-    // glm::vec3 position = glm::vec3(local_to_world * glm::vec4(local_position, 1));
+    // Transform local position to world position
+    glm::vec3 position = glm::vec3(local_to_world * glm::vec4(local_position, 1));
 
-    // // Transform local tangent to world tangent
-    // glm::vec3 tangent = glm::normalize(glm::vec3(local_to_world * glm::vec4(local_tangent, 0)));
+    // Transform local tangent to world tangent
+    glm::vec3 tangent = glm::normalize(glm::vec3(local_to_world * glm::vec4(local_tangent, 0)));
 
-    // // Assemble sampling result
-    // result.position     = position;
-    // result.tangent      = tangent;
-    // result.pdf_dl       = 1.0f / sbt_data->total_edge_length;
-    // result.normal_left  = glm::vec3(0);    // TODO
-    // result.normal_right = glm::vec3(0);    // TODO
+    glm::i32vec2 face_indices = sbt_data->edge_faces[edge_index];
+
+    if(face_indices.x != -1)
+    {
+        result.valid_left = true;
+
+        glm::u32vec3 face_vertex_indices = sbt_data->faces_3d[face_indices.x];
+
+        glm::vec3 p0 = positions[face_vertex_indices.x];
+        glm::vec3 p1 = positions[face_vertex_indices.y];
+        glm::vec3 p2 = positions[face_vertex_indices.z];
+
+        glm::vec3 local_normal = glm::cross(p1 - p0, p2 - p0);
+        result.normal_left     = glm::normalize(glm::transpose(glm::mat3(sbt_data->world_to_local)) * local_normal);
+    }
+
+    if(face_indices.y != -1)
+    {
+        result.valid_right = true;
+
+        glm::u32vec3 face_vertex_indices = sbt_data->faces_3d[face_indices.y];
+        glm::vec3 p0                     = positions[face_vertex_indices.x];
+        glm::vec3 p1                     = positions[face_vertex_indices.y];
+        glm::vec3 p2                     = positions[face_vertex_indices.z];
+
+        glm::vec3 local_normal = glm::cross(p1 - p0, p2 - p0);
+        result.normal_right    = glm::normalize(glm::transpose(glm::mat3(sbt_data->world_to_local)) * local_normal);
+    }
+
+    // Assemble sampling result
+    result.position = position;
+    result.tangent  = tangent;
+    result.pdf_dl   = 1.0f / sbt_data->total_edge_length;
 
     return result;
 }
@@ -140,5 +167,5 @@ extern "C" __device__ float __direct_callable__evalpdf_edge_mesh(const glm::vec3
 {
     const atcg::MeshSamplerData* sbt_data = *reinterpret_cast<const atcg::MeshSamplerData**>(optixGetSbtDataPointer());
 
-    return 0.0f;    // 1.0f / sbt_data->total_edge_length;
+    return 1.0f / sbt_data->total_edge_length;
 }

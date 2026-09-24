@@ -22,10 +22,12 @@ struct EdgeSampleResult
     glm::vec3 position;
     glm::vec3 normal_left;
     glm::vec3 normal_right;
-    bool valid_left;
-    bool valid_right;
+    bool valid_left  = false;
+    bool valid_right = false;
     glm::vec3 tangent;
     float pdf_dl;
+
+    ATCG_DEVICE ATCG_INLINE bool isBoundaryEdge() const { return !valid_left || !valid_right; }
 };
 
 /**

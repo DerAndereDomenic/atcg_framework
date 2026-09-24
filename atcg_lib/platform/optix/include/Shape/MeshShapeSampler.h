@@ -28,6 +28,7 @@ public:
 
 private:
     torch::Tensor _mesh_cdf;
+    torch::Tensor _edge_cdf;
 
     atcg::dref_ptr<MeshSamplerData> _data;
 };

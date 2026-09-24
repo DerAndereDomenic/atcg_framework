@@ -56,13 +56,11 @@ computeMeshEdgePDFKernel(const torch::PackedTensorAccessor32<float, 2, at::Restr
     {
         if(tid >= indices.size(0)) return;
 
-        glm::u32vec2 triangle_indices = glm::u32vec2(indices[tid][0], indices[tid][1]);
-        glm::vec3 local_P0            = glm::vec3(positions[triangle_indices.x][0],
-                                                  positions[triangle_indices.x][1],
-                                                  positions[triangle_indices.x][2]);
-        glm::vec3 local_P1            = glm::vec3(positions[triangle_indices.y][0],
-                                                  positions[triangle_indices.y][1],
-                                                  positions[triangle_indices.y][2]);
+        glm::u32vec2 edge_indices = glm::u32vec2(indices[tid][0], indices[tid][1]);
+        glm::vec3 local_P0 =
+            glm::vec3(positions[edge_indices.x][0], positions[edge_indices.x][1], positions[edge_indices.x][2]);
+        glm::vec3 local_P1 =
+            glm::vec3(positions[edge_indices.y][0], positions[edge_indices.y][1], positions[edge_indices.y][2]);
 
         glm::vec3 P0 = glm::vec3(transform * glm::vec4(local_P0, 1));
         glm::vec3 P1 = glm::vec3(transform * glm::vec4(local_P1, 1));
@@ -77,7 +75,7 @@ computeMeshEdgePDFKernel(const torch::PackedTensorAccessor32<float, 2, at::Restr
 
 __global__ void computeAdjacencyList(const torch::PackedTensorAccessor32<uint32_t, 2, at::RestrictPtrTraits> faces,
                                      const torch::PackedTensorAccessor32<uint32_t, 2, at::RestrictPtrTraits> edges,
-                                     torch::PackedTensorAccessor32<uint32_t, 2, at::RestrictPtrTraits> edge_faces)
+                                     torch::PackedTensorAccessor32<int32_t, 2, at::RestrictPtrTraits> edge_faces)
 {
     auto id = static_cast<int64_t>(blockIdx.x) * static_cast<int64_t>(blockDim.x) + static_cast<int64_t>(threadIdx.x);
     auto num_threads = static_cast<int64_t>(gridDim.x) * static_cast<int64_t>(blockDim.x);
@@ -206,7 +204,7 @@ std::tuple<torch::Tensor, torch::Tensor> computeMeshEdges(const torch::Tensor& i
     const auto F = indices.size(0);
     const auto E = edges.size(0);
 
-    auto edge_faces = torch::full({E, 2}, -1, atcg::TensorOptions::uint32DeviceOptions());
+    auto edge_faces = torch::full({E, 2}, -1, atcg::TensorOptions::int32DeviceOptions());
 
     const auto stream = at::cuda::getCurrentCUDAStream();
 
@@ -218,7 +216,7 @@ std::tuple<torch::Tensor, torch::Tensor> computeMeshEdges(const torch::Tensor& i
     detail::computeAdjacencyList<<<grid, threads, 0, stream>>>(
         indices.packed_accessor32<uint32_t, 2, torch::RestrictPtrTraits>(),
         edges.packed_accessor32<uint32_t, 2, torch::RestrictPtrTraits>(),
-        edge_faces.packed_accessor32<uint32_t, 2, torch::RestrictPtrTraits>());
+        edge_faces.packed_accessor32<int32_t, 2, torch::RestrictPtrTraits>());
 
     AT_CUDA_CHECK(cudaGetLastError());
     AT_CUDA_CHECK(cudaStreamSynchronize(stream));

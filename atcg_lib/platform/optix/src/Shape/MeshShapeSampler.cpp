@@ -15,16 +15,21 @@ MeshShapeSampler::MeshShapeSampler(const atcg::Dictionary& dict) : ShapeSampler(
         return;
     }
 
-    torch::Tensor positions = mesh_shape->getPositions();
-    torch::Tensor uvs       = mesh_shape->getUVs();
-    torch::Tensor faces_3d  = mesh_shape->get3DFaces();
-    torch::Tensor faces_uv  = mesh_shape->getUVFaces();
+    torch::Tensor positions  = mesh_shape->getPositions();
+    torch::Tensor uvs        = mesh_shape->getUVs();
+    torch::Tensor faces_3d   = mesh_shape->get3DFaces();
+    torch::Tensor faces_uv   = mesh_shape->getUVFaces();
+    torch::Tensor edges      = mesh_shape->getEdges();
+    torch::Tensor edge_faces = mesh_shape->getEdgeFaces();
 
-    data.positions = (glm::vec3*)positions.data_ptr();
-    data.uvs       = (glm::vec3*)uvs.data_ptr();
-    data.faces_3d  = (glm::u32vec3*)faces_3d.data_ptr();
-    data.faces_uv  = (glm::u32vec3*)faces_uv.data_ptr();
-    data.num_faces = faces_3d.size(0);
+    data.positions  = (glm::vec3*)positions.data_ptr();
+    data.uvs        = (glm::vec3*)uvs.data_ptr();
+    data.faces_3d   = (glm::u32vec3*)faces_3d.data_ptr();
+    data.faces_uv   = (glm::u32vec3*)faces_uv.data_ptr();
+    data.edges      = (glm::u32vec2*)edges.data_ptr();
+    data.edge_faces = (glm::i32vec2*)edge_faces.data_ptr();
+    data.num_faces  = faces_3d.size(0);
+    data.num_edges  = edges.size(0);
 
     auto mesh_areas = computeMeshTriangleAreas(positions, faces_3d, _transform);
     _mesh_cdf       = torch::cumsum(mesh_areas, 0);
@@ -32,6 +37,13 @@ MeshShapeSampler::MeshShapeSampler(const atcg::Dictionary& dict) : ShapeSampler(
     data.total_area = _mesh_cdf.index({_mesh_cdf.size(0) - 1}).cpu().item<float>();
     _mesh_cdf /= data.total_area;
     data.mesh_cdf = (float*)_mesh_cdf.data_ptr();
+
+    auto edge_lengths = computeMeshEdgeLengths(positions, edges, _transform);
+    _edge_cdf         = torch::cumsum(edge_lengths, 0);
+
+    data.total_edge_length = _edge_cdf.index({_edge_cdf.size(0) - 1}).cpu().item<float>();
+    _edge_cdf /= data.total_edge_length;
+    data.edge_cdf = (float*)_edge_cdf.data_ptr();
 
     data.local_to_world = _transform;
     data.world_to_local = glm::inverse(_transform);
