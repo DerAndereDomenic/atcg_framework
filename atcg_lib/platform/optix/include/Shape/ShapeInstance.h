@@ -76,6 +76,8 @@ public:
 
     ATCG_INLINE glm::vec3 color() const { return _color; }
 
+    ATCG_INLINE const ShapeInstanceData* getShapeInstanceData() const { return _data.get(); }
+
 private:
     glm::mat4 _transform;
     atcg::ref_ptr<Shape> _shape;
