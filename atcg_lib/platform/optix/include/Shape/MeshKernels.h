@@ -10,4 +10,6 @@ computeMeshTriangleAreas(const torch::Tensor& positions, const torch::Tensor& in
 
 torch::Tensor
 computeMeshEdgeLengths(const torch::Tensor& positions, const torch::Tensor& edges, const glm::mat4& transform);
+
+std::tuple<torch::Tensor, torch::Tensor> computeMeshEdges(const torch::Tensor& indices);
 }    // namespace atcg

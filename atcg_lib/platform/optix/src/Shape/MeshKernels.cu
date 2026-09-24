@@ -74,6 +74,64 @@ computeMeshEdgePDFKernel(const torch::PackedTensorAccessor32<float, 2, at::Restr
         pdf[tid] = edge_length;
     }
 }
+
+__global__ void computeAdjacencyList(const torch::PackedTensorAccessor32<uint32_t, 2, at::RestrictPtrTraits> faces,
+                                     const torch::PackedTensorAccessor32<uint32_t, 2, at::RestrictPtrTraits> edges,
+                                     torch::PackedTensorAccessor32<uint32_t, 2, at::RestrictPtrTraits> edge_faces)
+{
+    auto id = static_cast<int64_t>(blockIdx.x) * static_cast<int64_t>(blockDim.x) + static_cast<int64_t>(threadIdx.x);
+    auto num_threads = static_cast<int64_t>(gridDim.x) * static_cast<int64_t>(blockDim.x);
+    const int64_t F  = faces.size(0);
+    const int64_t E  = edges.size(0);
+    for(auto tid = id; tid < F; tid += num_threads)
+    {
+        if(tid >= F) return;
+
+        const int64_t a = faces[tid][0];
+        const int64_t b = faces[tid][1];
+        const int64_t c = faces[tid][2];
+
+        const int64_t v[3][2] = {{a, b}, {b, c}, {c, a}};
+
+        for(int k = 0; k < 3; ++k)
+        {
+            int64_t x = v[k][0];
+            int64_t y = v[k][1];
+
+            if(x > y)
+            {
+                std::swap(x, y);
+            }
+
+            int64_t lo = 0;
+            int64_t hi = E;
+
+            while(lo < hi)
+            {
+                const int64_t mid = (lo + hi) / 2;
+
+                const int64_t ex = edges[mid][0];
+                const int64_t ey = edges[mid][1];
+
+                if(ex < x || (ex == x && ey < y))
+                {
+                    lo = mid + 1;
+                }
+                else
+                {
+                    hi = mid;
+                }
+            }
+
+            const int64_t edge_id = lo;
+
+            if(atomicCAS(&edge_faces[edge_id][0], -1, tid) != -1)
+            {
+                atomicCAS(&edge_faces[edge_id][1], -1, tid);
+            }
+        }
+    }
+}
 }    // namespace detail
 
 
@@ -129,6 +187,43 @@ computeMeshEdgeLengths(const torch::Tensor& positions, const torch::Tensor& edge
     AT_CUDA_CHECK(cudaStreamSynchronize(stream));
 
     return pdf;
+}
+
+std::tuple<torch::Tensor, torch::Tensor> computeMeshEdges(const torch::Tensor& indices)
+{
+    auto device = indices.device();
+
+    at::cuda::CUDAGuard device_guard {device};
+
+    torch::Tensor e1 = indices.index({torch::indexing::Slice(), torch::indexing::Slice(0, 2)});
+    torch::Tensor e2 = indices.index({torch::indexing::Slice(), torch::indexing::Slice(1, 3)});
+    torch::Tensor e3 = indices.index({torch::indexing::Slice(), torch::indexing::Slice(0, 3, 2)});
+
+    torch::Tensor edges = torch::vstack({e1, e2, e3});
+    edges               = std::get<0>(torch::sort(edges.cpu(), 1)).cuda();
+    edges               = std::get<0>(torch::unique_dim(edges, 0, true, false, false));
+
+    const auto F = indices.size(0);
+    const auto E = edges.size(0);
+
+    auto edge_faces = torch::full({E, 2}, -1, atcg::TensorOptions::uint32DeviceOptions());
+
+    const auto stream = at::cuda::getCurrentCUDAStream();
+
+    const int threads_per_block = 128;
+    dim3 grid;
+    at::cuda::getApplyGrid(F, grid, device.index(), threads_per_block);
+    dim3 threads = at::cuda::getApplyBlock(threads_per_block);
+
+    detail::computeAdjacencyList<<<grid, threads, 0, stream>>>(
+        indices.packed_accessor32<uint32_t, 2, torch::RestrictPtrTraits>(),
+        edges.packed_accessor32<uint32_t, 2, torch::RestrictPtrTraits>(),
+        edge_faces.packed_accessor32<uint32_t, 2, torch::RestrictPtrTraits>());
+
+    AT_CUDA_CHECK(cudaGetLastError());
+    AT_CUDA_CHECK(cudaStreamSynchronize(stream));
+
+    return std::make_tuple(edges, edge_faces);
 }
 
 }    // namespace atcg

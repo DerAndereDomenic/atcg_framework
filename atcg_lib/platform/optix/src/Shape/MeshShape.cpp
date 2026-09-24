@@ -2,6 +2,7 @@
 
 #include <Core/Common.h>
 #include <Shape/MeshShapeSampler.h>
+#include <Shape/MeshKernels.h>
 
 #include <optix_stubs.h>
 
@@ -39,6 +40,8 @@ MeshShape::MeshShape(const Dictionary& dict)
     std::tie(_normals, _faces_normals) = detail::makeIndexedAttribute(normals, faces);
     std::tie(_colors, _faces_color)    = detail::makeIndexedAttribute(colors, faces);
     std::tie(_uvs, _faces_uv)          = detail::makeIndexedAttribute(uvs, faces);
+
+    std::tie(_edges, _edge_faces) = computeMeshEdges(_faces_3d);
 
     mesh->unmapAllPointers();
 

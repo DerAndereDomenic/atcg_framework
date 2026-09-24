@@ -68,6 +68,8 @@ public:
     ATCG_INLINE torch::Tensor getUVFaces() const { return _faces_uv; }
     ATCG_INLINE torch::Tensor getNormalFaces() const { return _faces_normals; }
     ATCG_INLINE torch::Tensor getColorFaces() const { return _faces_color; }
+    ATCG_INLINE torch::Tensor getEdges() const { return _edges; }
+    ATCG_INLINE torch::Tensor getEdgeFaces() const { return _edge_faces; }
     ATCG_INLINE atcg::dref_ptr<MeshShapeData> getMeshShapeData() const { return _data; }
 
 private:
@@ -79,6 +81,8 @@ private:
     torch::Tensor _faces_uv;
     torch::Tensor _faces_normals;
     torch::Tensor _faces_color;
+    torch::Tensor _edges;
+    torch::Tensor _edge_faces;
 
     atcg::dref_ptr<MeshShapeData> _data;
 };
