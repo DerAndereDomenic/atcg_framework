@@ -11,13 +11,13 @@ struct PhaseFunctionSamplingResult
 {
     glm::vec3 outgoing_ray_dir;
     float phase_function_weight;
-    float sampling_pdf;
+    float pdf_dw;
 };
 
 struct PhaseFunctionEvalResult
 {
     float phase_function_value;
-    float sampling_pdf;
+    float pdf_dw;
 };
 
 struct PhaseFunctionVPtrTable

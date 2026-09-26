@@ -78,10 +78,22 @@ public:
      */
     ATCG_INLINE void setSensor(const atcg::ref_ptr<Sensor>& sensor) { _sensor = sensor; }
 
+    /**
+     * @brief Get the shape instance data
+     *
+     * @return The shape instance data
+     */
+    ATCG_INLINE const atcg::DeviceBuffer<const ShapeInstanceData*>& getShapeInstanceData() const
+    {
+        return _shape_instance_data;
+    }
+
 private:
     friend class SceneAdapter;
 
     std::vector<atcg::ref_ptr<ShapeInstance>> _shapes;
+
+    atcg::DeviceBuffer<const ShapeInstanceData*> _shape_instance_data;
 
     atcg::DeviceBuffer<const EmitterVPtrTable*> _emitter_vptr_tables;
     atcg::ref_ptr<EnvironmentEmitter> _environment_emitter = nullptr;

@@ -91,9 +91,9 @@ extern "C" __global__ void __raygen__rg()
 
                     atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, wavelengths, rng);
 
-                    if(emitter_sampling.sampling_pdf == 0) break;
+                    if(emitter_sampling.pdf_dw == 0) break;
 
-                    emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+                    emitter_sampling.pdf_dw *= emitter_selection_pdf;
                     emitter_sampling.radiance_weight_at_receiver /= emitter_selection_pdf;
 
                     bool occluded = traceOcclusion(params.handle,
@@ -114,8 +114,8 @@ extern "C" __global__ void __raygen__rg()
                     float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0 ||
                                                (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0
                                            ? 0.0f
-                                           : bsdf_result.sample_probability;
-                    float mis_weight = atcg::BalanceHeuristic::apply(emitter_sampling.sampling_pdf, bsdf_pdf);
+                                           : bsdf_result.pdf_dw;
+                    float mis_weight = atcg::BalanceHeuristic::apply(emitter_sampling.pdf_dw, bsdf_pdf);
 
                     radiance += mis_weight * camera_ray.importance * emitter_sampling.radiance_weight_at_receiver *
                                 bsdf_result.bsdf_value;
@@ -123,7 +123,7 @@ extern "C" __global__ void __raygen__rg()
 
                 auto result = si.bsdf->sampleBSDF(si, wavelengths, rng);
 
-                if(result.sample_probability > 0.0f)
+                if(result.pdf_dw > 0.0f)
                 {
                     camera_ray.ray.origin    = si.position;
                     camera_ray.ray.direction = result.out_dir;
@@ -131,7 +131,7 @@ extern "C" __global__ void __raygen__rg()
                     next_ray_valid = true;
 
                     last_si     = si;
-                    last_si.pdf = result.sample_probability;
+                    last_si.pdf = result.pdf_dw;
 
                     if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
                     {

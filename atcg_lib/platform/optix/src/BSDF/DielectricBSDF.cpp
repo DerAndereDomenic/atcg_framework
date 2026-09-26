@@ -43,13 +43,17 @@ void DielectricBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>&
     auto sample_prog_group =
         pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_dielectricbsdf"});
     auto eval_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_dielectricbsdf"});
-    uint32_t sample_idx  = sbt->addCallableEntry(sample_prog_group, _bsdf_data_buffer.get());
-    uint32_t eval_idx    = sbt->addCallableEntry(eval_prog_group, _bsdf_data_buffer.get());
+    auto eval_pdf_prog_group =
+        pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__evalpdf_dielectricbsdf"});
+    uint32_t sample_idx   = sbt->addCallableEntry(sample_prog_group, _bsdf_data_buffer.get());
+    uint32_t eval_idx     = sbt->addCallableEntry(eval_prog_group, _bsdf_data_buffer.get());
+    uint32_t eval_pdf_idx = sbt->addCallableEntry(eval_pdf_prog_group, _bsdf_data_buffer.get());
 
     BSDFVPtrTable table;
-    table.sampleCallIndex = sample_idx;
-    table.evalCallIndex   = eval_idx;
-    table.flags           = _flags;
+    table.sampleCallIndex  = sample_idx;
+    table.evalCallIndex    = eval_idx;
+    table.evalPDFCallIndex = eval_pdf_idx;
+    table.flags            = _flags;
 
     _vptr_table.upload(&table);
 

@@ -16,7 +16,7 @@ struct EmitterSamplingResult
     float distance_to_light;
     glm::vec3 normal_at_light;
     SampledSpectrum radiance_weight_at_receiver;
-    float sampling_pdf;
+    float pdf_dw;
     glm::vec3 uvs;
 };
 
@@ -26,7 +26,7 @@ struct PhotonSamplingResult
     glm::vec3 direction;
     glm::vec3 normal;
     SampledSpectrum radiance_weight;
-    float pdf;
+    float pdf_dA_dw;    // per area (emitted position) and per solid angle (emitted direction)
     glm::vec3 uvs;
 };
 

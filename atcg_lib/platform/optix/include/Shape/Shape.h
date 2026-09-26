@@ -17,6 +17,8 @@
 namespace atcg
 {
 class ShapeInstance;
+class ShapeSampler;
+
 /**
  * @brief Class to model a shape
  */
@@ -58,6 +60,13 @@ public:
      * @return The shape type
      */
     virtual std::string getShapeType() const = 0;
+
+    /**
+     * @brief Create a shape sampler for this shape
+     * @param transform The transform of the shape sampler
+     * @return A shape sampler for this shape
+     */
+    virtual atcg::ref_ptr<ShapeSampler> createSampler(const glm::mat4& transform) = 0;
 
     /**
      * @brief Get the AST handle

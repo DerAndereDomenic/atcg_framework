@@ -1,5 +1,4 @@
 #include <Emitter/MeshEmitter.h>
-#include <Emitter/MeshEmitterKernels.h>
 #include <ATen/cuda/ApplyGridUtils.cuh>
 #include <c10/cuda/CUDAGuard.h>
 #include <Shape/MeshShape.h>
@@ -22,28 +21,8 @@ MeshEmitter::MeshEmitter(const Dictionary& dict)
 
     data.emitter_scaling = emission_scaling;
 
-    torch::Tensor positions = shape->getPositions();
-    torch::Tensor uvs       = shape->getUVs();
-    torch::Tensor faces     = shape->getFaces();
-
-    data.positions = (glm::vec3*)positions.data_ptr();
-    data.uvs       = (glm::vec3*)uvs.data_ptr();
-    data.faces     = (glm::u32vec3*)faces.data_ptr();
-    data.num_faces = faces.size(0);
-
-    _mesh_cdf = torch::zeros({faces.size(0)}, atcg::TensorOptions::floatDeviceOptions());
-
-    auto device = _mesh_cdf.device();
-
-    computeMeshTrianglePDFKernel(positions, faces, transform, _mesh_cdf);
-    computeMeshTriangleCDFKernel(_mesh_cdf);
-
-    data.total_area = _mesh_cdf.index({_mesh_cdf.size(0) - 1}).cpu().item<float>();
-    normalizeMeshTriangleCDFKernel(_mesh_cdf, data.total_area);
-
-    data.mesh_cdf       = (float*)_mesh_cdf.data_ptr();
-    data.local_to_world = transform;
-    data.world_to_local = glm::inverse(transform);
+    _sampler     = shape->createSampler(transform);
+    data.sampler = _sampler->getVPtrTable();
 
     _mesh_emitter_data.upload(&data);
 }
@@ -56,6 +35,8 @@ MeshEmitter::~MeshEmitter()
 void MeshEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                      const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
+    _sampler->ensureInitialized(pipeline, sbt);
+
     const std::string ptx_emitter_filename = "./bin/MeshEmitter_ptx.ptx";
     auto sample_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_meshemitter"});

@@ -40,15 +40,18 @@ void PBRBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeli
                                  const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
     const std::string ptx_bsdf_filename = "./bin/PBRBSDF_ptx.ptx";
-    auto sample_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_pbrbsdf"});
-    auto eval_prog_group   = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_pbrbsdf"});
-    uint32_t sample_idx    = sbt->addCallableEntry(sample_prog_group, _bsdf_data_buffer.get());
-    uint32_t eval_idx      = sbt->addCallableEntry(eval_prog_group, _bsdf_data_buffer.get());
+    auto sample_prog_group   = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_pbrbsdf"});
+    auto eval_prog_group     = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_pbrbsdf"});
+    auto eval_pdf_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__evalpdf_pbrbsdf"});
+    uint32_t sample_idx      = sbt->addCallableEntry(sample_prog_group, _bsdf_data_buffer.get());
+    uint32_t eval_idx        = sbt->addCallableEntry(eval_prog_group, _bsdf_data_buffer.get());
+    uint32_t eval_pdf_idx    = sbt->addCallableEntry(eval_pdf_prog_group, _bsdf_data_buffer.get());
 
     BSDFVPtrTable table;
-    table.sampleCallIndex = sample_idx;
-    table.evalCallIndex   = eval_idx;
-    table.flags           = _flags;
+    table.sampleCallIndex  = sample_idx;
+    table.evalCallIndex    = eval_idx;
+    table.evalPDFCallIndex = eval_pdf_idx;
+    table.flags            = _flags;
 
     _vptr_table.upload(&table);
 

@@ -1,5 +1,4 @@
 #include <Shape/ShapeInstance.h>
-#include <Shape/ShapeInstanceData.cuh>
 
 namespace atcg
 {
@@ -13,6 +12,8 @@ ShapeInstance::ShapeInstance(const Dictionary& shape_data)
     _transform      = shape_data.getValueOr<glm::mat4>("transform", glm::mat4(1));
     _entity_id      = shape_data.getValueOr<int32_t>("entity_id", -1);
     _color          = shape_data.getValueOr<glm::vec3>("color", glm::vec3(1));
+
+    _sampler = _shape ? _shape->createSampler(_transform) : nullptr;
 }
 
 void ShapeInstance::onImGuiRender()
@@ -32,12 +33,14 @@ void ShapeInstance::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& 
     auto emitter        = getEmitter();
     auto inside_medium  = getInsideMedium();
     auto outside_medium = getOutsideMedium();
+    auto sampler        = getSampler();
     if(!shape) return;
 
     _shape->ensureInitialized(pipeline, sbt);
     if(emitter) _emitter->ensureInitialized(pipeline, sbt);
     if(inside_medium) _inside_medium->ensureInitialized(pipeline, sbt);
     if(outside_medium) _outside_medium->ensureInitialized(pipeline, sbt);
+    if(sampler) _sampler->ensureInitialized(pipeline, sbt);
 
     ShapeInstanceData data;
     data.shape             = shape->getShapeData();
@@ -45,12 +48,15 @@ void ShapeInstance::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& 
     data.emitter           = emitter ? emitter->getVPtrTable() : nullptr;
     data.inside_medium     = inside_medium ? inside_medium->getVPtrTable() : nullptr;
     data.outside_medium    = outside_medium ? outside_medium->getVPtrTable() : nullptr;
+    data.sampler           = sampler ? sampler->getVPtrTable() : nullptr;
     data.entity_id         = entity_id();
     data.color             = color();
     const auto& hit_groups = pipeline->getRayProgramGroups(shape->getShapeType());
 
+    _data.upload(&data);
+
     for(const auto& shape_hit_group: hit_groups)
-        sbt->addHitEntry(shape_hit_group, data);
+        sbt->addHitEntry(shape_hit_group, _data.get());
 
     markInitialized();
 }

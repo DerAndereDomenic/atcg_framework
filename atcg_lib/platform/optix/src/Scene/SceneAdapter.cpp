@@ -486,6 +486,7 @@ SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene, const uint32_t width, con
     result->_emitter_vptr_tables.upload(tables.data(), tables.size());
 
     auto shape_view = result->getAllEntitiesWith<int32_t>();
+    std::vector<const ShapeInstanceData*> shape_instance_data;
     for(auto e: shape_view)
     {
         atcg::Entity entity(e, result.get());
@@ -530,7 +531,10 @@ SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene, const uint32_t width, con
         shape->initializePipeline(_pipeline, _sbt);
 
         result->_shapes.push_back(shape);
+        shape_instance_data.push_back(shape->getShapeInstanceData());
     }
+
+    result->_shape_instance_data.upload(shape_instance_data.data(), shape_instance_data.size());
 
 
     result->_ias = atcg::make_ref<InstanceAccelerationStructure>(_context, result->_shapes, _pipeline->numRays());

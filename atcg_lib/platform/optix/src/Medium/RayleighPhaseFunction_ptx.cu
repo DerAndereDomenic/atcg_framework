@@ -15,8 +15,8 @@ __direct_callable__eval_rayleighphase(const atcg::MediumInteraction& interaction
     atcg::PhaseFunctionEvalResult result;
 
     atcg::SamplingStrategy<atcg::SamplingStrategyType::RAYLEIGH_PHASE> sampling_strategy;
-    result.sampling_pdf         = sampling_strategy.pdf(glm::dot(interaction.incoming_direction, outgoing_ray_dir));
-    result.phase_function_value = result.sampling_pdf;
+    result.pdf_dw               = sampling_strategy.pdf(glm::dot(interaction.incoming_direction, outgoing_ray_dir));
+    result.phase_function_value = result.pdf_dw;
     return result;
 }
 
@@ -29,7 +29,7 @@ __direct_callable__sample_rayleighphase(const atcg::MediumInteraction& interacti
 
     atcg::PhaseFunctionSamplingResult result;
     result.outgoing_ray_dir      = local_frame.toWorld(local_outgoing_ray_dir);
-    result.sampling_pdf          = sampling_strategy.pdf(local_outgoing_ray_dir.z);
+    result.pdf_dw                = sampling_strategy.pdf(local_outgoing_ray_dir.z);
     result.phase_function_weight = 1.0f;
 
     return result;
