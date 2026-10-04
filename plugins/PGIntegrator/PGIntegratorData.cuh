@@ -6,6 +6,8 @@
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <BSDF/BSDFVPtrTable.cuh>
 #include <Sensor/SensorVPtrTable.cuh>
+#include "vMF.h"
+#include <DataStructure/BoundingBox.h>
 
 namespace atcg
 {
@@ -30,5 +32,13 @@ struct PGIntegratorParams
     const EmitterVPtrTable* environment_emitter;
 
     const SensorVPtrTable* sensor;
+
+    // vMF Mixture
+    vMFMixture<5>* vmf_mixture;
+    int num_vmfs;
+
+    atcg::BoundingBox* scene_aabb;
+    bool use_guiding;
+    bool accumulate;
 };
 }    // namespace atcg

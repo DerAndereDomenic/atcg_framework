@@ -6,7 +6,10 @@
     #include <Shape/MeshShape.h>
     #include <Emitter/MeshEmitter.h>
     #include <Scene/SceneAdapter.h>
+    #include "PGKernels.h"
 #endif
+
+#include "vMF.h"
 
 namespace atcg
 {
@@ -25,8 +28,10 @@ void PGIntegrator::initializePipeline(const Dictionary& dict)
 
     auto scene = dict.getValue<atcg::ref_ptr<Scene>>("scene");
 
-    _optix_scene = SceneAdapter(_context, _pipeline, _sbt)
-                       .apply(scene, dict.getValue<uint32_t>("width"), dict.getValue<uint32_t>("height"));
+    auto adapter    = SceneAdapter(_context, _pipeline, _sbt);
+    _optix_scene    = adapter.apply(scene, dict.getValue<uint32_t>("width"), dict.getValue<uint32_t>("height"));
+    auto scene_aabb = adapter.getSceneAABB();
+    _scene_aabb.upload(&scene_aabb);
 
     const std::string ptx_raygen_filename = "./bin/PGIntegrator_ptx.ptx";
     OptixProgramGroup raygen_prog_group   = _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
@@ -39,6 +44,21 @@ void PGIntegrator::initializePipeline(const Dictionary& dict)
 
     _pipeline->createPipeline();
     _sbt->createSBT();
+
+    // Init distributions
+    int T               = 64 * 64 * 64;
+    _vMF_mixture_buffer = atcg::DeviceBuffer<vMFMixture<5>>(T);
+    std::vector<vMFMixture<5>> vmf_mixtures(T);
+    for(int i = 0; i < T; ++i)
+    {
+        for(int j = 0; j < 5; ++j)
+        {
+            vmf_mixtures[i].lobes[j].mu    = glm::vec3(1.0f, 0.0f, 0.0f);    // Initialize to some arbitrary direction
+            vmf_mixtures[i].lobes[j].kappa = 00.0f;
+            vmf_mixtures[i].weights[j]     = 1.0f / 5.0f;
+        }
+    }
+    _vMF_mixture_buffer.upload(vmf_mixtures.data(), T);
 }
 
 void PGIntegrator::onImGuiRender()
@@ -49,6 +69,20 @@ void PGIntegrator::onImGuiRender()
     {
         shape->onImGuiRender();
     }
+    ImGui::End();
+
+    ImGui::Begin("PGIntegrator Distributions");
+
+    if(ImGui::Checkbox("Use Guiding", &use_guiding))
+    {
+        reset();
+    }
+
+    if(ImGui::Checkbox("Accumulate", &accumulate))
+    {
+        reset();
+    }
+
     ImGui::End();
 #endif
 }
@@ -74,8 +108,14 @@ void PGIntegrator::generateRays(Dictionary& in_out_dictionary)
     params.image_height = height;
     params.image_width  = width;
     params.handle       = _optix_scene->getIAS()->getTraversableHandle();
+    params.scene_aabb   = _scene_aabb.get();
 
-    params.entity_ids = output_entities.numel() > 0 ? (int32_t*)output_entities.data_ptr() : nullptr;
+    params.entity_ids  = output_entities.numel() > 0 ? (int32_t*)output_entities.data_ptr() : nullptr;
+    params.vmf_mixture = _vMF_mixture_buffer.get();
+    params.num_vmfs    = _vMF_mixture_buffer.size();
+
+    params.use_guiding = use_guiding;
+    params.accumulate  = accumulate;
 
     params.frame_counter = _frame_counter++;
 
@@ -100,5 +140,15 @@ void PGIntegrator::generateRays(Dictionary& in_out_dictionary)
     torch::Tensor output_tensor = _optix_scene->getSensor()->getFilm()->develop();
     in_out_dictionary.setValue("output", output_tensor);
     in_out_dictionary.setValue("entity_ids", output_entities);
+
+    updateMixtures(_vMF_mixture_buffer);
+
+    // TODO
+    // Don't accumulate for now, just clear the film and mark the sensor as dirty
+    if(!accumulate)
+    {
+        _optix_scene->getSensor()->getFilm()->clear();
+        _optix_scene->getSensor()->markDirty();
+    }
 }
 }    // namespace atcg

@@ -8,6 +8,7 @@
     #include <Emitter/PointEmitter.h>
     #include <Scene/OptixScene.h>
 
+    #include "vMF.h"
 namespace atcg
 {
 /**
@@ -64,6 +65,12 @@ private:
     atcg::ref_ptr<OptixScene> _optix_scene;
     atcg::dref_ptr<PGIntegratorParams> _launch_params;
     uint32_t _frame_counter = 0;
+
+    atcg::DeviceBuffer<vMFMixture<5>> _vMF_mixture_buffer;
+    atcg::dref_ptr<atcg::BoundingBox> _scene_aabb;
+
+    bool use_guiding = false;
+    bool accumulate  = false;
 };
 }    // namespace atcg
 #endif
