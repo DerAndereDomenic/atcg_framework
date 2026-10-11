@@ -135,9 +135,9 @@ bool IntegratorSettings<VolPathtracingIntegrator>::renderSettings()
 {
     bool updated = false;
 #ifndef ATCG_HEADLESS
-    ImGui::DragInt("Max Depth", (int*)&_max_depth, 1.0f, 1, INT_MAX);
-    ImGui::Checkbox("Use Russian Roulette", &_use_rr);
-    ImGui::Checkbox("Hide Emitters", &_hide_emitters);
+    updated = ImGui::DragInt("Max Depth", (int*)&_max_depth, 1.0f, 1, INT_MAX) || updated;
+    updated = ImGui::Checkbox("Use Russian Roulette", &_use_rr) || updated;
+    updated = ImGui::Checkbox("Hide Emitters", &_hide_emitters) || updated;
 #endif
     return updated;
 }

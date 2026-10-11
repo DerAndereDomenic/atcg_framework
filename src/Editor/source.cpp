@@ -319,7 +319,11 @@ public:
 
         if(integrator_settings)
         {
-            integrator_settings->renderSettings();
+            if(integrator_settings->renderSettings() && enable_pathtracing)
+            {
+                atcg::Dictionary dict = integrator_settings->toDictionary();
+                initializePathtracer(dict);
+            }
         }
 
         ImGui::End();
