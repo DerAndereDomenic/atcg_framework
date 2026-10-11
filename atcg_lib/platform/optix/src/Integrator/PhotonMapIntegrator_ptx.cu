@@ -56,7 +56,7 @@ extern "C" __global__ void __raygen__sample_photons()
 
     float initial_weight = throughput.maxComponent();
 
-    for(int n = 0; n < PHOTON_MAP_TRACE_DEPTH; ++n)
+    for(int n = 0; n < params.max_photon_depth; ++n)
     {
         if(!next_ray_valid) break;
         next_ray_valid = false;
@@ -144,7 +144,7 @@ extern "C" __global__ void __raygen__rg()
     {
         // Reset PPM
         params.photon_gather_data[pixel_index].photon_count     = 0;
-        params.photon_gather_data[pixel_index].gather_radius_sq = PHOTON_MAP_GATHER_RADIUS_SQ;
+        params.photon_gather_data[pixel_index].gather_radius_sq = params.gather_radius_sq;
         params.photon_gather_data[pixel_index].gathered_power   = atcg::SampledSpectrum(0.0f);
     }
 
@@ -155,7 +155,7 @@ extern "C" __global__ void __raygen__rg()
 
     bool next_ray_valid = true;
 
-    for(int n = 0; n < PHOTON_MAP_TRACE_DEPTH; ++n)
+    for(int n = 0; n < params.max_camera_depth; ++n)
     {
         if(!next_ray_valid) break;
         next_ray_valid = false;
@@ -222,7 +222,7 @@ extern "C" __global__ void __raygen__rg()
                     float N = (float)params.photon_gather_data[pixel_index].photon_count;
                     float M = (float)num_photons;
 
-                    float gather_photon_count = N + PHOTON_MAP_REDUCTION_FACTOR * M;
+                    float gather_photon_count = N + params.reduction_factor * M;
 
                     if(M != 0)
                     {
@@ -268,7 +268,7 @@ extern "C" __global__ void __raygen__rg()
     atcg::SampledSpectrum gathered_total_power = params.photon_gather_data[pixel_index].gathered_power;
     float radius_sq                            = params.photon_gather_data[pixel_index].gather_radius_sq;
 
-    int total_emitted_photons = (params.frame_counter + 1) * PHOTON_MAP_PHOTONS_PER_LAUNCH;
+    int total_emitted_photons = (params.frame_counter + 1) * params.photons_per_launch;
     ppm_radiance              = gathered_total_power / ((float)total_emitted_photons * glm::pi<float>() * radius_sq);
 
     params.photon_gather_data[pixel_index].direct_radiance = mc_radiance;

@@ -9,13 +9,6 @@
 #include <cuBQL/bvh.h>
 #include <cuBQL/math/box.h>
 
-#define PHOTON_MAP_MAX_NUM_PHOTONS    1000000
-#define PHOTON_MAP_TRACE_DEPTH        16
-#define PHOTON_MAP_PHOTONS_PER_LAUNCH ((PHOTON_MAP_MAX_NUM_PHOTONS) / (PHOTON_MAP_TRACE_DEPTH))
-#define PHOTON_MAP_GATHER_RADIUS      0.25f
-#define PHOTON_MAP_GATHER_RADIUS_SQ   ((PHOTON_MAP_GATHER_RADIUS) * (PHOTON_MAP_GATHER_RADIUS))
-#define PHOTON_MAP_REDUCTION_FACTOR   0.7f
-
 namespace atcg
 {
 
@@ -29,8 +22,9 @@ struct PhotonMapData
 
 struct PhotonGatherData
 {
-    uint32_t photon_count           = 0;
-    float gather_radius_sq          = PHOTON_MAP_GATHER_RADIUS_SQ;
+    uint32_t photon_count  = 0;
+    float gather_radius_sq = 0.25f * 0.25f;
+    ;
     SampledSpectrum gathered_power  = SampledSpectrum(0.0f);
     SampledSpectrum direct_radiance = SampledSpectrum(0.0f);
 };
@@ -67,5 +61,10 @@ struct PhotonMapParams
     int* photon_index;
 
     PhotonGatherData* photon_gather_data;
+
+    float reduction_factor;
+    float gather_radius_sq;
+    uint32_t max_photon_depth;
+    uint32_t max_camera_depth;
 };
 }    // namespace atcg

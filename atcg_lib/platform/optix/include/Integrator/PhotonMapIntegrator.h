@@ -83,21 +83,25 @@ private:
     atcg::dref_ptr<int> _photon_index;
     atcg::dref_ptr<cuBQL::bvh3f> _device_photon_bvh;
     cuBQL::bvh3f _photon_bvh;
+
+    float _reduction_factor    = 0.7f;
+    float _gather_radius       = 0.25f;
+    uint32_t _max_photon_depth = 16;
+    uint32_t _max_camera_depth = 16;
+    uint32_t _max_num_photons  = 1000000;
 };
 
 template<>
 struct IntegratorSettings<PhotonMapIntegrator> : public IntegratorSettingsBase
 {
-    bool renderSettings() override
-    {
-        ATCG_TRACE("PhotonMapIntegrator");
-        return false;
-    }
+    bool renderSettings() override;
 
-    atcg::Dictionary toDictionary() const override
-    {
-        atcg::Dictionary dict;
-        return dict;
-    }
+    atcg::Dictionary toDictionary() const override;
+
+    float _reduction_factor    = 0.7f;
+    float _gather_radius       = 0.25f;
+    uint32_t _max_photon_depth = 16;
+    uint32_t _max_camera_depth = 16;
+    uint32_t _max_num_photons  = 1000000;
 };
 }    // namespace atcg
