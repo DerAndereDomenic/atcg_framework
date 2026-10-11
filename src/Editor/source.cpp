@@ -30,10 +30,9 @@ public:
 #endif
     }
 
-    void initializePathtracer()
+    void initializePathtracer(atcg::Dictionary& dict)
     {
 #ifdef ATCG_CUDA_BACKEND
-        atcg::Dictionary dict;
         dict.setValue<atcg::ref_ptr<atcg::Scene>>("scene", atcg::Project::getActive()->getActiveScene());
         dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width());
         dict.setValue<uint32_t>("height", atcg::Renderer::getFramebuffer()->height());
@@ -73,7 +72,9 @@ public:
         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
 
 #ifdef ATCG_CUDA_BACKEND
-        optx_context = atcg::RaytracingContextManager::createContext();
+        optx_context        = atcg::RaytracingContextManager::createContext();
+        integrator_settings = atcg::IntegratorRegistry::createIntegratorSettings(
+            atcg::IntegratorRegistry::getRegistry()->getRegisteredTypes()[current_integrator_selection_index]);
 #endif
 
         createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
@@ -146,8 +147,9 @@ public:
         uint32_t current_revision = atcg::RevisionStack::numUndos();
         if(current_revision != last_revision)
         {
-            last_revision = current_revision;
-            if(enable_pathtracing) initializePathtracer();
+            last_revision         = current_revision;
+            atcg::Dictionary dict = integrator_settings->toDictionary();
+            if(enable_pathtracing) initializePathtracer(dict);
         }
     }
 
@@ -203,7 +205,8 @@ public:
                     if(atcg::Project::getActive()->getActiveScene())
                     {
                         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
-                        initializePathtracer();
+                        atcg::Dictionary dict = integrator_settings->toDictionary();
+                        initializePathtracer(dict);
                     }
                     atcg::RevisionStack::clearChache();
 
@@ -271,41 +274,55 @@ public:
                     ImGui::EndCombo();
                 }
             }
-
-    #ifdef ATCG_CUDA_BACKEND
-            if(ImGui::Checkbox("Path Tracing", &enable_pathtracing))
-            {
-                if(enable_pathtracing) initializePathtracer();
-            }
-
-            if(enable_pathtracing)
-            {
-                auto registry                                   = atcg::IntegratorRegistry::getRegistry();
-                const std::vector<std::string> integrator_names = registry->getRegisteredTypes();
-                const char* combo_preview_value_integrator =
-                    integrator_names[current_integrator_selection_index].c_str();
-
-                if(ImGui::BeginCombo("Integrator", combo_preview_value_integrator))
-                {
-                    for(int n = 0; n < integrator_names.size(); n++)
-                    {
-                        const bool is_selected = (current_integrator_selection_index == n);
-                        if(ImGui::Selectable(integrator_names[n].c_str(), is_selected))
-                        {
-                            current_integrator_selection_index = n;
-                            initializePathtracer();
-                        }
-
-                        // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-                        if(is_selected) ImGui::SetItemDefaultFocus();
-                    }
-                    ImGui::EndCombo();
-                }
-            }
-    #endif
-
             ImGui::End();
         }
+
+        ImGui::Begin("Integrator Settings");
+
+        if(enable_pathtracing)
+        {
+            if(ImGui::Button("Stop"))
+            {
+                enable_pathtracing = false;
+            }
+        }
+        else
+        {
+            if(ImGui::Button("Start"))
+            {
+                enable_pathtracing    = true;
+                atcg::Dictionary dict = integrator_settings->toDictionary();
+                initializePathtracer(dict);
+            }
+        }
+
+        auto registry                                   = atcg::IntegratorRegistry::getRegistry();
+        const std::vector<std::string> integrator_names = registry->getRegisteredTypes();
+        const char* combo_preview_value_integrator      = integrator_names[current_integrator_selection_index].c_str();
+
+        if(ImGui::BeginCombo("Integrator", combo_preview_value_integrator))
+        {
+            for(int n = 0; n < integrator_names.size(); n++)
+            {
+                const bool is_selected = (current_integrator_selection_index == n);
+                if(ImGui::Selectable(integrator_names[n].c_str(), is_selected))
+                {
+                    current_integrator_selection_index = n;
+                    integrator_settings = atcg::IntegratorRegistry::createIntegratorSettings(integrator_names[n]);
+                }
+
+                // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                if(is_selected) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+
+        if(integrator_settings)
+        {
+            integrator_settings->renderSettings();
+        }
+
+        ImGui::End();
 
     #ifdef ATCG_CUDA_BACKEND
         if(enable_pathtracing) integrator->onImGuiRender();
@@ -347,7 +364,8 @@ public:
         atcg::WindowResizeEvent resize_event(event->getWidth(), event->getHeight());
         camera_controller->onEvent(&resize_event);
         createOutputTexture(event->getWidth(), event->getHeight());
-        if(enable_pathtracing) initializePathtracer();
+        atcg::Dictionary dict = integrator_settings->toDictionary();
+        if(enable_pathtracing) initializePathtracer(dict);
         return false;
     }
 
@@ -480,6 +498,8 @@ private:
     atcg::ref_ptr<atcg::Texture2D> output_entity_texture;
 
     uint32_t last_revision = 0;
+
+    atcg::ref_ptr<atcg::IntegratorSettingsBase> integrator_settings;
 };
 
 class Editor : public atcg::Application
