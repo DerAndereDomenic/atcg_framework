@@ -7,7 +7,7 @@ namespace atcg
 
 struct IntegratorSettingsBase
 {
-    virtual void renderSettings() = 0;
+    virtual bool renderSettings() = 0;
 
     virtual atcg::Dictionary toDictionary() const = 0;
 };
@@ -15,7 +15,7 @@ struct IntegratorSettingsBase
 template<typename T>
 struct IntegratorSettings : public IntegratorSettingsBase
 {
-    void renderSettings() override {}
+    bool renderSettings() override { return false; }
 
     atcg::Dictionary toDictionary() const override
     {

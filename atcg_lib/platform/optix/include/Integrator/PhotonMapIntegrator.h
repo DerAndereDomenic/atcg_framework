@@ -88,7 +88,11 @@ private:
 template<>
 struct IntegratorSettings<PhotonMapIntegrator> : public IntegratorSettingsBase
 {
-    void renderSettings() override { ATCG_TRACE("PhotonMapIntegrator"); }
+    bool renderSettings() override
+    {
+        ATCG_TRACE("PhotonMapIntegrator");
+        return false;
+    }
 
     atcg::Dictionary toDictionary() const override
     {

@@ -72,7 +72,11 @@ private:
 template<>
 struct IntegratorSettings<PathtracingIntegrator> : public IntegratorSettingsBase
 {
-    void renderSettings() override { ATCG_TRACE("PathtracingIntegrator"); }
+    bool renderSettings() override
+    {
+        ATCG_TRACE("PathtracingIntegrator");
+        return false;
+    }
 
     atcg::Dictionary toDictionary() const override
     {

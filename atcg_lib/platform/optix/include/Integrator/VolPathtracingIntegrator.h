@@ -69,18 +69,19 @@ private:
     uint32_t _frame_counter = 0;
 
     GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("VolPath");
+
+    // Settings:
+    bool _use_rr        = true;
+    uint32_t _max_depth = 512;
+    bool _hide_emitters = false;
 };
 
 template<>
 struct IntegratorSettings<VolPathtracingIntegrator> : public IntegratorSettingsBase
 {
-    void renderSettings() override { ATCG_TRACE("VolPathtracingIntegrator"); }
+    bool renderSettings() override;
 
-    atcg::Dictionary toDictionary() const override
-    {
-        atcg::Dictionary dict;
-        return dict;
-    }
+    atcg::Dictionary toDictionary() const override;
 };
 
 }    // namespace atcg

@@ -122,4 +122,20 @@ void VolPathtracingIntegrator::registerIntegrator(IntegratorRegistry::Registry* 
     ATCG_REGISTER_INTEGRATOR(registry, "VolPathtracing", VolPathtracingIntegrator);
 }
 
+
+bool IntegratorSettings<VolPathtracingIntegrator>::renderSettings()
+{
+    bool updated = false;
+#ifndef ATCG_HEADLESS
+
+#endif
+    return updated;
+}
+
+atcg::Dictionary IntegratorSettings<VolPathtracingIntegrator>::toDictionary() const
+{
+    atcg::Dictionary dict;
+    return dict;
+}
+
 }    // namespace atcg
