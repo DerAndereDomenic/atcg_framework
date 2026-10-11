@@ -25,6 +25,10 @@ VolPathtracingIntegrator::VolPathtracingIntegrator(const atcg::ref_ptr<Raytracin
                                                    const Dictionary& dict)
     : Integrator(context, dict)
 {
+    _use_rr        = dict.getValueOr<bool>("use_rr", true);
+    _max_depth     = dict.getValueOr<uint32_t>("max_depth", 512);
+    _hide_emitters = dict.getValueOr<bool>("hide_emitters", false);
+
     initializePipeline(dict);
 }
 
@@ -99,6 +103,10 @@ void VolPathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
 
     params.occlusion_trace_params = _pipeline->getRay(0, _occlusion_miss_index, true);
 
+    params.hide_emitters = _hide_emitters;
+    params.use_rr        = _use_rr;
+    params.max_depth     = _max_depth;
+
     _launch_params.upload(&params);
 
     OPTIX_CHECK(optixLaunch(_pipeline->getPipeline(),
@@ -127,7 +135,9 @@ bool IntegratorSettings<VolPathtracingIntegrator>::renderSettings()
 {
     bool updated = false;
 #ifndef ATCG_HEADLESS
-
+    ImGui::DragInt("Max Depth", (int*)&_max_depth, 1.0f, 1, INT_MAX);
+    ImGui::Checkbox("Use Russian Roulette", &_use_rr);
+    ImGui::Checkbox("Hide Emitters", &_hide_emitters);
 #endif
     return updated;
 }
@@ -135,6 +145,9 @@ bool IntegratorSettings<VolPathtracingIntegrator>::renderSettings()
 atcg::Dictionary IntegratorSettings<VolPathtracingIntegrator>::toDictionary() const
 {
     atcg::Dictionary dict;
+    dict.setUInt32("max_depth", _max_depth);
+    dict.setValue("use_rr", _use_rr);
+    dict.setValue("hide_emitters", _hide_emitters);
     return dict;
 }
 

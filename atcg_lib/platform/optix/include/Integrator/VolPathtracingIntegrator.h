@@ -82,6 +82,10 @@ struct IntegratorSettings<VolPathtracingIntegrator> : public IntegratorSettingsB
     bool renderSettings() override;
 
     atcg::Dictionary toDictionary() const override;
+
+    bool _use_rr        = true;
+    uint32_t _max_depth = 512;
+    bool _hide_emitters = false;
 };
 
 }    // namespace atcg
