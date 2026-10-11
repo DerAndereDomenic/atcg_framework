@@ -30,5 +30,9 @@ struct PathtracingParams
     const EmitterVPtrTable* environment_emitter;
 
     const SensorVPtrTable* sensor;
+
+    bool hide_emitters;
+    bool use_rr;
+    uint32_t max_depth;
 };
-}
+}    // namespace atcg

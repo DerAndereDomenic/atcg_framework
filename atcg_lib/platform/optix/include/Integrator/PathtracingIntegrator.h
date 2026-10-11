@@ -67,22 +67,23 @@ private:
     atcg::ref_ptr<OptixScene> _optix_scene;
     atcg::dref_ptr<PathtracingParams> _launch_params;
     uint32_t _frame_counter = 0;
+
+    // Settings
+    bool _use_rr        = true;
+    uint32_t _max_depth = 8;
+    bool _hide_emitters = false;
 };
 
 template<>
 struct IntegratorSettings<PathtracingIntegrator> : public IntegratorSettingsBase
 {
-    bool renderSettings() override
-    {
-        ATCG_TRACE("PathtracingIntegrator");
-        return false;
-    }
+    bool renderSettings() override;
 
-    atcg::Dictionary toDictionary() const override
-    {
-        atcg::Dictionary dict;
-        return dict;
-    }
+    atcg::Dictionary toDictionary() const override;
+
+    bool _use_rr        = true;
+    uint32_t _max_depth = 8;
+    bool _hide_emitters = false;
 };
 
 }    // namespace atcg

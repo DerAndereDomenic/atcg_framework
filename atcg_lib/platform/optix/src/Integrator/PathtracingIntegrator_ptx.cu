@@ -41,10 +41,24 @@ extern "C" __global__ void __raygen__rg()
     atcg::SurfaceInteraction last_si;
     last_si.pdf = 1.0f;
 
-    for(int n = 0; n < 8; ++n)
+    for(int n = 0; n < params.max_depth; ++n)
     {
         if(!next_ray_valid) break;
         next_ray_valid = false;
+
+        if(params.use_rr)
+        {
+            float rr_prob = camera_ray.importance.maxComponent();
+            if(rng.nextFloat() < rr_prob)
+            {
+                camera_ray.importance /= rr_prob;
+            }
+            else
+            {
+                next_ray_valid = false;
+                break;
+            }
+        }
 
         atcg::SurfaceInteraction si;
         atcg::traceWithDataPointer<atcg::SurfaceInteraction>(params.handle,
@@ -63,7 +77,7 @@ extern "C" __global__ void __raygen__rg()
         if(si.isValid())
         {
             // Check for light source
-            if(si.emitter)
+            if(si.emitter && (!params.hide_emitters || n > 0))
             {
                 bool mis_valid              = last_si.isValid();
                 float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
@@ -142,7 +156,7 @@ extern "C" __global__ void __raygen__rg()
         }
         else
         {
-            if(params.environment_emitter)
+            if(params.environment_emitter && (!params.hide_emitters || n > 0))
             {
                 bool mis_valid              = last_si.isValid();
                 float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
