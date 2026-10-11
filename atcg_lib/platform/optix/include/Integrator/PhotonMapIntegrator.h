@@ -8,6 +8,7 @@
 #include <Emitter/PointEmitter.h>
 #include <Scene/OptixScene.h>
 #include <cuBQL/bvh.h>
+#include <Integrator/IntegratorSettings.h>
 
 namespace atcg
 {
@@ -82,5 +83,17 @@ private:
     atcg::dref_ptr<int> _photon_index;
     atcg::dref_ptr<cuBQL::bvh3f> _device_photon_bvh;
     cuBQL::bvh3f _photon_bvh;
+};
+
+template<>
+struct IntegratorSettings<PhotonMapIntegrator> : public IntegratorSettingsBase
+{
+    void renderSettings() override { ATCG_TRACE("PhotonMapIntegrator"); }
+
+    atcg::Dictionary toDictionary() const override
+    {
+        atcg::Dictionary dict;
+        return dict;
+    }
 };
 }    // namespace atcg

@@ -9,6 +9,7 @@
 #include <Sensor/Sensor.h>
 #include <Scene/OptixScene.h>
 #include <Scene/SceneHierarchyPanel.h>
+#include <Integrator/IntegratorSettings.h>
 
 namespace atcg
 {
@@ -69,4 +70,17 @@ private:
 
     GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("VolPath");
 };
+
+template<>
+struct IntegratorSettings<VolPathtracingIntegrator> : public IntegratorSettingsBase
+{
+    void renderSettings() override { ATCG_TRACE("VolPathtracingIntegrator"); }
+
+    atcg::Dictionary toDictionary() const override
+    {
+        atcg::Dictionary dict;
+        return dict;
+    }
+};
+
 }    // namespace atcg

@@ -7,6 +7,7 @@
 #include <Emitter/EnvironmentEmitter.h>
 #include <Emitter/PointEmitter.h>
 #include <Scene/OptixScene.h>
+#include <Integrator/IntegratorSettings.h>
 
 namespace atcg
 {
@@ -67,4 +68,17 @@ private:
     atcg::dref_ptr<PathtracingParams> _launch_params;
     uint32_t _frame_counter = 0;
 };
+
+template<>
+struct IntegratorSettings<PathtracingIntegrator> : public IntegratorSettingsBase
+{
+    void renderSettings() override { ATCG_TRACE("PathtracingIntegrator"); }
+
+    atcg::Dictionary toDictionary() const override
+    {
+        atcg::Dictionary dict;
+        return dict;
+    }
+};
+
 }    // namespace atcg
