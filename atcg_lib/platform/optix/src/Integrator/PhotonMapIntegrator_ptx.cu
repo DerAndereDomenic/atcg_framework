@@ -291,8 +291,3 @@ extern "C" __global__ void __miss__ms()
     si->setInvalid();
     si->incoming_direction = ray_dir;
 }
-
-extern "C" __global__ void __miss__occlusion()
-{
-    setOcclusionPayload(false);
-}

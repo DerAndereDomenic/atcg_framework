@@ -4,13 +4,6 @@
 #include <Core/Platform.h>
 #include <Core/CUDA.h>
 
-struct TraceParameters
-{
-    uint32_t rayFlags;
-    uint32_t SBToffset;
-    uint32_t SBTstride;
-    uint32_t missSBTIndex;
-};
 
 #ifdef __CUDACC__
 
@@ -57,28 +50,6 @@ ATCG_INLINE ATCG_DEVICE T* getPayloadDataPointer()
     const uint32_t u0 = optixGetPayload_0();
     const uint32_t u1 = optixGetPayload_1();
     return reinterpret_cast<T*>(unpackPointer(u0, u1));
-}
-
-/**
- * @brief Set the occlusion payload
- *
- * @param occluded If the ray is occluded
- */
-ATCG_INLINE ATCG_DEVICE void setOcclusionPayload(bool occluded)
-{
-    // Set the payload that _this_ ray will yield
-    optixSetPayload_0(static_cast<uint32_t>(occluded));
-}
-
-/**
- * @brief Get the occlusion payload
- *
- * @return If the ray is occluded
- */
-ATCG_INLINE ATCG_DEVICE bool getOcclusionPayload()
-{
-    // Get the payload that _this_ ray will yield
-    return static_cast<bool>(optixGetPayload_0());
 }
 
 #endif

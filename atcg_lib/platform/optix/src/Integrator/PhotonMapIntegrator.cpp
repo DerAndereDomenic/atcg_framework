@@ -44,12 +44,10 @@ void PhotonMapIntegrator::initializePipeline(const Dictionary& dict)
     OptixProgramGroup raygen_sample_photons_prog_group =
         _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__sample_photons"});
     OptixProgramGroup miss_prog_group = _pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
-    OptixProgramGroup occl_prog_group = _pipeline->addMissShader({ptx_raygen_filename, "__miss__occlusion"});
 
     _raygen_index                = _sbt->addRaygenEntry(raygen_prog_group);
     _raygen_sample_photons_index = _sbt->addRaygenEntry(raygen_sample_photons_prog_group);
     _surface_miss_index          = _sbt->addMissEntry(miss_prog_group);
-    _occlusion_miss_index        = _sbt->addMissEntry(occl_prog_group);
 
     _pipeline->createPipeline();
     _sbt->createSBT();
@@ -99,8 +97,6 @@ void PhotonMapIntegrator::tracePhotons()
     params.environment_emitter = environment_emitter ? environment_emitter->getVPtrTable() : nullptr;
 
     params.surface_trace_params = _pipeline->getRay(0, _surface_miss_index, false);
-
-    params.occlusion_trace_params = _pipeline->getRay(0, _occlusion_miss_index, true);
 
     params.photon_data   = _photon_data.get();
     params.photon_bounds = _photon_bounds.get();
@@ -171,8 +167,6 @@ void PhotonMapIntegrator::generateRays(Dictionary& in_out_dictionary)
     params.photon_data        = _photon_data.get();
     params.photon_index       = _photon_index.get();
     params.photon_gather_data = _photon_gather_data.get();
-
-    params.occlusion_trace_params = _pipeline->getRay(0, _occlusion_miss_index, true);
 
     _launch_params.upload(&params);
 

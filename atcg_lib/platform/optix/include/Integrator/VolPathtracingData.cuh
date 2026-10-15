@@ -20,7 +20,6 @@ struct VolPathtracingParams
     OptixTraversableHandle handle;
 
     TraceParameters surface_trace_params;
-    TraceParameters occlusion_trace_params;
 
     uint32_t frame_counter;
 
@@ -32,4 +31,4 @@ struct VolPathtracingParams
 
     const SensorVPtrTable* sensor;
 };
-}
+}    // namespace atcg

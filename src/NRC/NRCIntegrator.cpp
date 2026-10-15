@@ -59,13 +59,11 @@ void NRCIntegrator::initializePipeline(const Dictionary& dict)
         _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__sample_generation"});
     OptixProgramGroup train_prog_group = _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__train"});
     OptixProgramGroup miss_prog_group  = _pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
-    OptixProgramGroup occl_prog_group  = _pipeline->addMissShader({ptx_raygen_filename, "__miss__occlusion"});
 
-    _raygen_render        = _sbt->addRaygenEntry(raygen_prog_group);
-    _raygen_sample_gen    = _sbt->addRaygenEntry(samplegen_prog_group);
-    _raygen_train         = _sbt->addRaygenEntry(train_prog_group);
-    _surface_miss_index   = _sbt->addMissEntry(miss_prog_group);
-    _occlusion_miss_index = _sbt->addMissEntry(occl_prog_group);
+    _raygen_render      = _sbt->addRaygenEntry(raygen_prog_group);
+    _raygen_sample_gen  = _sbt->addRaygenEntry(samplegen_prog_group);
+    _raygen_train       = _sbt->addRaygenEntry(train_prog_group);
+    _surface_miss_index = _sbt->addMissEntry(miss_prog_group);
 
     _pipeline->createPipeline();
     _sbt->createSBT();
@@ -197,8 +195,6 @@ void NRCIntegrator::generateTrainingSamples()
 
     params.surface_trace_params = _pipeline->getRay(0, _surface_miss_index, false);
 
-    params.occlusion_trace_params = _pipeline->getRay(0, _occlusion_miss_index, true);
-
     int zero = 0;
     _training_samples_queue_index.upload(&zero);
     params.training_sample_radiance     = _training_sample_radiance.get();
@@ -299,8 +295,6 @@ void NRCIntegrator::renderWithRadianceCache(Dictionary& in_out_dictionary)
     params.environment_emitter = environment_emitter ? environment_emitter->getVPtrTable() : nullptr;
 
     params.surface_trace_params = _pipeline->getRay(0, _surface_miss_index, false);
-
-    params.occlusion_trace_params = _pipeline->getRay(0, _occlusion_miss_index, true);
 
     params.mlp       = _mlp.getDeviceMLP();
     params.hash_grid = _hash_grid.getDeviceHashGrid();

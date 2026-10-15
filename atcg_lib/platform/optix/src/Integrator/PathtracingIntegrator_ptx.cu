@@ -96,12 +96,11 @@ extern "C" __global__ void __raygen__rg()
                     emitter_sampling.pdf_dw *= emitter_selection_pdf;
                     emitter_sampling.radiance_weight_at_receiver /= emitter_selection_pdf;
 
-                    bool occluded = traceOcclusion(params.handle,
-                                                   si.position,
-                                                   emitter_sampling.direction_to_light,
-                                                   1e-3f,
-                                                   emitter_sampling.distance_to_light - 1e-3f,
-                                                   params.occlusion_trace_params);
+                    bool occluded = atcg::traceOcclusion(params.handle,
+                                                         si.position,
+                                                         emitter_sampling.direction_to_light,
+                                                         1e-3f,
+                                                         emitter_sampling.distance_to_light - 1e-3f);
 
                     if(occluded)
                     {
@@ -171,9 +170,4 @@ extern "C" __global__ void __miss__ms()
 
     si->setInvalid();
     si->incoming_direction = ray_dir;
-}
-
-extern "C" __global__ void __miss__occlusion()
-{
-    setOcclusionPayload(false);
 }
