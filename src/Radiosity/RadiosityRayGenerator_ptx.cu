@@ -40,8 +40,8 @@ extern "C" __global__ void __raygen__rg()
     uint64_t seed        = atcg::sampleTEA64(pixel_index, 1337);
     atcg::PCG32 rng(seed);
 
-    glm::u32vec3 tri_i = params.shape->faces[launch_idx.x];
-    glm::u32vec3 tri_j = params.shape->faces[launch_idx.y];
+    glm::u32vec3 tri_i = params.shape->faces_3d[launch_idx.x];
+    glm::u32vec3 tri_j = params.shape->faces_3d[launch_idx.y];
 
     glm::vec3 p_i1 = params.shape->positions[tri_i.x];
     glm::vec3 p_i2 = params.shape->positions[tri_i.y];
