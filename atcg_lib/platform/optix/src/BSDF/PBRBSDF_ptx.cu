@@ -93,32 +93,31 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
     float specular_pdf                  = 0;
     // Only compute specular component if specular_f0 is not zero!
     atcg::SampledSpectrum kD(1.0f);
-    if(specular_F0.sum() > 1e-5f)
-    {
-        glm::vec3 halfway = glm::normalize(result.out_dir + view_dir);
-        float HdotV       = glm::dot(halfway, result.out_dir);
-        float NdotH       = glm::dot(halfway, normal);
 
-        // Normal distribution
-        float NDF = atcg::D_GGX(NdotH, roughness);
+    glm::vec3 halfway = glm::normalize(result.out_dir + view_dir);
+    float HdotV       = glm::dot(halfway, result.out_dir);
+    float NdotH       = glm::dot(halfway, normal);
 
-        // Visibility
-        float V = atcg::V_SmithGGX(NdotL, NdotV, roughness);
+    // Normal distribution
+    float NDF = atcg::D_GGX(NdotH, roughness);
 
-        // Fresnel
-        atcg::SampledSpectrum F = atcg::fresnel_schlick(specular_F0, HdotV);
+    // Visibility
+    float V = atcg::V_SmithGGX(NdotL, NdotV, roughness);
 
-        kD = (atcg::SampledSpectrum(1.0f) - F);
+    // Fresnel
+    atcg::SampledSpectrum F = atcg::fresnel_schlick(specular_F0, HdotV);
 
-        specular_bsdf = NDF * V * F;
+    kD = (atcg::SampledSpectrum(1.0f) - F);
 
-        float halfway_pdf = NDF * NdotH;
-        float halfway_to_outgoing_pdf =
-            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
-                result.out_dir,
-                halfway);    // 1 / (4*HdotV)
-        specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
-    }
+    specular_bsdf = NDF * V * F;
+
+    float halfway_pdf = NDF * NdotH;
+    float halfway_to_outgoing_pdf =
+        atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
+            result.out_dir,
+            halfway);    // 1 / (4*HdotV)
+    specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
+
 
     result.pdf_dw      = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
     result.bsdf_weight = (specular_bsdf + kD * diffuse_bsdf) * NdotL / (result.pdf_dw + 1e-5f);
