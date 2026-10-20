@@ -39,12 +39,16 @@ void HemisphereCamera::initializePipeline(const atcg::ref_ptr<RayTracingPipeline
         pipeline->addCallableShader({ptx_sensor_filename, "__direct_callable__generate_ray_hemisphere"});
     auto add_sample_prog_group =
         pipeline->addCallableShader({ptx_sensor_filename, "__direct_callable__add_sample_hemisphere"});
+    auto to_pixel_prog_group =
+        pipeline->addCallableShader({ptx_sensor_filename, "__direct_callable__to_pixel_hemisphere"});
     uint32_t generate_ray_idx = sbt->addCallableEntry(generate_ray_prog_group, _hemisphere_camera_data.get());
     uint32_t add_sample_idx   = sbt->addCallableEntry(add_sample_prog_group, _hemisphere_camera_data.get());
+    uint32_t to_pixel_idx     = sbt->addCallableEntry(to_pixel_prog_group, _hemisphere_camera_data.get());
 
     SensorVPtrTable vptr_table;
     vptr_table.generateRayCallIndex = generate_ray_idx;
     vptr_table.addSampleCallIndex   = add_sample_idx;
+    vptr_table.toPixelCallIndex     = to_pixel_idx;
 
     _vptr_table.upload(&vptr_table);
     markInitialized();

@@ -56,3 +56,64 @@ extern "C" __device__ void __direct_callable__add_sample_pinhole(const glm::ivec
 
     pinhole_camera_data->film->addSample(sample_index, pinhole_camera_data->exposure * lrgb);
 }
+
+extern "C" __device__ atcg::PixelCoordinates __direct_callable__to_pixel_pinhole(const glm::vec3& direction)
+{
+    const atcg::PinholeCameraData* camera =
+        *reinterpret_cast<const atcg::PinholeCameraData**>(optixGetSbtDataPointer());
+
+    atcg::PixelCoordinates result {};
+    result.valid = false;
+
+    // Camera basis vectors, matching generate_ray_pinhole()
+    glm::vec3 U = camera->U * camera->aspect_ratio;
+    glm::vec3 V = camera->V;
+    glm::vec3 W = camera->W / glm::tan(glm::radians(camera->fov_y / 2.0f));
+
+    // Normalize the input direction
+    glm::vec3 d = glm::normalize(direction);
+
+    // Invert the ray direction:
+    // d = normalize((u + optical_center.x) * U
+    //             + (v + optical_center.y) * V + W)
+    //
+    // Assuming U, V, W form an orthonormal camera basis
+    // before the scaling applied above, recover u and v
+    // using projections onto the camera basis.
+
+    glm::vec3 U0 = glm::normalize(camera->U);
+    glm::vec3 V0 = glm::normalize(camera->V);
+    glm::vec3 W0 = glm::normalize(camera->W);
+
+    float denom = glm::dot(d, W0);
+    if(denom <= 0.0f) return result;    // Behind the camera or outside the forward hemisphere
+
+    float u = glm::dot(d, U0) / denom;
+    float v = glm::dot(d, V0) / denom;
+
+    // Undo the FOV and aspect-ratio scaling used during ray generation.
+    u *= glm::length(W) / glm::length(U);
+    v *= glm::length(W) / glm::length(V);
+
+    // The original equation uses:
+    // ray_dir = normalize((u + optical_center.x) * U
+    //                   + (v + optical_center.y) * V + W)
+    //
+    // The projected coordinates above must correspond to the
+    // coefficients of U and V relative to W.
+    float screen_u = u - camera->optical_center.x;
+    float screen_v = v - camera->optical_center.y;
+
+    int width  = camera->film->getWidth();
+    int height = camera->film->getHeight();
+
+    glm::vec2 raster = glm::vec2((screen_u * 0.5f + 0.5f) * width, (screen_v * 0.5f + 0.5f) * height);
+
+    result.raster_pos = glm::ivec2(static_cast<int>(glm::floor(raster.x)), static_cast<int>(glm::floor(raster.y)));
+
+    result.subpixel_pos = glm::fract(raster);
+    result.valid        = result.raster_pos.x >= 0 && result.raster_pos.x < width && result.raster_pos.y >= 0 &&
+                          result.raster_pos.y < height;
+
+    return result;
+}
