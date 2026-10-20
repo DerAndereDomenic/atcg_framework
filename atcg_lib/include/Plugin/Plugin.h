@@ -14,7 +14,10 @@
     #include <BSDF/BSDFRegistry.h>
     #include <Integrator/IntegratorRegistry.h>
 #endif
-#include <imgui.h>
+
+#ifndef ATCG_HEADLESS
+    #include <imgui.h>
+#endif
 
 #include <filesystem>
 #include <unordered_map>
@@ -114,10 +117,15 @@ ATCG_INLINE bool releaseAllPlugins()
 }
 }    // namespace PluginManager
 
-#define ATCG_PLUGIN_LIBRARY()                                                                                          \
-    extern "C" ATCG_EXPORT void registerSystems(ImGuiContext* imgui_context)                                           \
-    {                                                                                                                  \
-        ImGui::SetCurrentContext(imgui_context);                                                                       \
-    }
+#ifndef ATCG_HEADLESS
+    #define ATCG_PLUGIN_LIBRARY()                                                                                      \
+        extern "C" ATCG_EXPORT void registerSystems(ImGuiContext* imgui_context)                                       \
+        {                                                                                                              \
+            ImGui::SetCurrentContext(imgui_context);                                                                   \
+        }
+#else
+    #define ATCG_PLUGIN_LIBRARY()                                                                                      \
+        extern "C" ATCG_EXPORT void registerSystems() {}
+#endif
 
 }    // namespace atcg

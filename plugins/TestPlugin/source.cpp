@@ -183,7 +183,7 @@ bool MaterialGUIRenderer<DiffuseMaterial>::renderGUI(const atcg::ref_ptr<Diffuse
                                                      bool& deactivated)
 {
     bool updated = false;
-
+#ifndef ATCG_HEADLESS
     auto diffuse = material->getDiffuseTexture()->getData(atcg::CPU);
 
     float color[4] = {diffuse.index({0, 0, 0}).item<float>() / 255.0f,
@@ -199,6 +199,7 @@ bool MaterialGUIRenderer<DiffuseMaterial>::renderGUI(const atcg::ref_ptr<Diffuse
     }
 
     deactivated = ImGui::IsItemDeactivated() || deactivated;
+#endif
     return updated;
 }
 
