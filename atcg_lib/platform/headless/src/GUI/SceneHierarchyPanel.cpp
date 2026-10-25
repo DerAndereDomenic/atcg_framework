@@ -1,4 +1,4 @@
-#include <Scene/SceneHierarchyPanel.h>
+#include <GUI/SceneHierarchyPanel.h>
 
 namespace atcg
 {

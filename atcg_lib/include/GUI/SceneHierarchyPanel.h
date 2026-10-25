@@ -4,7 +4,7 @@
 #include <Core/Memory.h>
 #include <Scene/Entity.h>
 #include <Renderer/PerspectiveCamera.h>
-#include <Scene/ComponentGUIHandler.h>
+#include <GUI/ComponentGUIHandler.h>
 
 namespace atcg
 {

@@ -9,7 +9,7 @@
 #include <Scene/ComponentRegistry.h>
 
 #ifndef __CUDACC__
-    #include <Scene/ComponentGUIHandler.h>
+    #include <GUI/ComponentGUIHandler.h>
 #endif
 
 #include <optix.h>

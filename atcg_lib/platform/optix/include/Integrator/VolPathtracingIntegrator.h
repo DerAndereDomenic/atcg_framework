@@ -8,7 +8,7 @@
 #include <Emitter/PointEmitter.h>
 #include <Sensor/Sensor.h>
 #include <Scene/OptixScene.h>
-#include <Scene/SceneHierarchyPanel.h>
+#include <GUI/SceneHierarchyPanel.h>
 #include <Integrator/IntegratorSettings.h>
 
 namespace atcg

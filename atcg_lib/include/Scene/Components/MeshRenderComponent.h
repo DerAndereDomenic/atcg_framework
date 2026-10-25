@@ -4,7 +4,7 @@
 #include <Renderer/Shader.h>
 #include <Renderer/ShaderManager.h>
 #include <Scene/Components/RenderComponent.h>
-#include <Scene/ComponentGUIHandler.h>
+#include <GUI/ComponentGUIHandler.h>
 #include <Scene/ComponentRenderer.h>
 #include <Scene/ComponentSerializer.h>
 #include <Scene/ComponentRegistry.h>

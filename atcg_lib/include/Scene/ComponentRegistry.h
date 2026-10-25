@@ -8,7 +8,7 @@
 #include <Scene/Entity.h>
 #include <Renderer/Renderer.h>
 #include <Scene/ComponentRenderer.h>
-#include <Scene/ComponentGUIHandler.h>
+#include <GUI/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
 
 #include <json.hpp>

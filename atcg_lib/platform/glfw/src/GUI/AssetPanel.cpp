@@ -1,14 +1,12 @@
-#include <Asset/AssetPanel.h>
+#include <GUI/AssetPanel.h>
 
-#ifndef ATCG_HEADLESS
-    #include <implot.h>
-#endif
+#include <implot.h>
 
 #include <Core/Application.h>
 #include <Core/glm.h>
 #include <Asset/AssetManagerSystem.h>
 #include <portable-file-dialogs.h>
-#include <Scene/ComponentGUIHandler.h>
+#include <GUI/ComponentGUIHandler.h>
 #include <Asset/Project.h>
 #include <Scene/Scene.h>
 #include <Core/Path.h>
@@ -85,7 +83,6 @@ AssetPanel::AssetPanel()
 
 void AssetPanel::displayMaterial(AssetHandle handle)
 {
-#ifndef ATCG_HEADLESS
     const std::string key = "material";
     auto material_        = AssetManager::getAsset<Material>(handle);
 
@@ -159,12 +156,10 @@ void AssetPanel::displayMaterial(AssetHandle handle)
     {
         atcg::RevisionStack::endRecording();
     }
-#endif
 }
 
 void AssetPanel::displayGraph(AssetHandle handle)
 {
-#ifndef ATCG_HEADLESS
     auto graph     = atcg::AssetManager::getAsset<Graph>(handle);
     int n_vertices = graph ? graph->n_vertices() : 0;
     int n_faces    = graph ? graph->n_faces() : 0;
@@ -224,14 +219,10 @@ void AssetPanel::displayGraph(AssetHandle handle)
     atcg::Renderer::drawVAO(graph->getVerticesArray(), camera, glm::mat4(1.0f), pipeline, graph->n_vertices());
 
     atcg::GraphicsCommand::endRenderPass();
-
-#endif
 }
 
 void AssetPanel::displayScript(AssetHandle handle)
 {
-#ifndef ATCG_HEADLESS
-
     auto current_script = AssetManager::getAsset<PythonScript>(handle);
 
     if(ImGui::Button("Load Script"))
@@ -256,12 +247,10 @@ void AssetPanel::displayScript(AssetHandle handle)
         std::string source = current_script->getSource();
         ImGui::TextUnformatted(source.c_str());
     }
-#endif
 }
 
 void AssetPanel::displayShader(AssetHandle handle)
 {
-#ifndef ATCG_HEADLESS
     auto shader = AssetManager::getAsset<Shader>(handle);
 
     // if(shader)
@@ -421,13 +410,10 @@ void AssetPanel::displayShader(AssetHandle handle)
     {
         ImGui::Text("Invalid Shader");
     }
-
-#endif
 }
 
 void AssetPanel::displayTexture2D(AssetHandle handle)
 {
-#ifndef ATCG_HEADLESS
     if(ImGui::Button(("Load Image##tex2dasset")))
     {
         auto f     = pfd::open_file("Choose files to read",
@@ -468,13 +454,10 @@ void AssetPanel::displayTexture2D(AssetHandle handle)
                      ImVec2 {0, 1},
                      ImVec2 {1, 0});
     }
-
-#endif
 }
 
 void AssetPanel::displayTexture3D(AssetHandle handle)
 {
-#ifndef ATCG_HEADLESS
     auto texture = AssetManager::getAsset<Texture3D>(handle);
 
 
@@ -564,12 +547,10 @@ void AssetPanel::displayTexture3D(AssetHandle handle)
                      ImVec2 {0, 1},
                      ImVec2 {1, 0});
     }
-#endif
 }
 
 void AssetPanel::displayScene(AssetHandle handle)
 {
-#ifndef ATCG_HEADLESS
     auto scene = AssetManager::getAsset<Scene>(handle);
 
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();
@@ -701,11 +682,8 @@ void AssetPanel::displayScene(AssetHandle handle)
     {
         Project::getActive()->setActiveScene(handle);
     }
-
-#endif
 }
 
-#ifndef ATCG_HEADLESS
 ATCG_INLINE static bool ImageTextButton(ImTextureID textureID,
                                         const char* label,
                                         ImVec2 imageSize,
@@ -755,11 +733,9 @@ ATCG_INLINE static bool ImageTextButton(ImTextureID textureID,
 
     return clicked;
 }
-#endif
 
 void AssetPanel::drawAssetList()
 {
-#ifndef ATCG_HEADLESS
     // Begin a scrollable horizontal region
     ImGui::BeginChild("AssetListHorizontal", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
 
@@ -871,13 +847,10 @@ void AssetPanel::drawAssetList()
     }
 
     ImGui::EndChild();
-#endif
 }
 
 void AssetPanel::drawAdd()
 {
-#ifndef ATCG_HEADLESS
-
     if(ImGui::Button("Create new Asset"))
     {
         AssetHandle new_asset = 0;
@@ -934,12 +907,10 @@ void AssetPanel::drawAdd()
             selectAsset(new_asset);
         }
     }
-#endif
 }
 
 void AssetPanel::drawAssetPanel()
 {
-#ifndef ATCG_HEADLESS
     ImGui::Begin("Assets");
 
     if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive())
@@ -950,12 +921,10 @@ void AssetPanel::drawAssetPanel()
     drawAssetList();
 
     ImGui::End();
-#endif
 }
 
 void AssetPanel::drawAssetEditor()
 {
-#ifndef ATCG_HEADLESS
     ImGui::Begin("Asset Editor");
 
     if(_selected_handle != 0)
@@ -1029,18 +998,13 @@ void AssetPanel::drawAssetEditor()
     }
 
     ImGui::End();
-#endif
 }
 
 void AssetPanel::renderPanel()
 {
-#ifndef ATCG_HEADLESS
-
     drawAssetPanel();
 
     drawAssetEditor();
-
-#endif
 }
 
 void AssetPanel::selectAsset(AssetHandle handle)

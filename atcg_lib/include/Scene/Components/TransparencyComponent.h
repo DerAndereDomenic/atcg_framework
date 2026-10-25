@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Scene/ComponentSerializer.h>
-#include <Scene/ComponentGUIHandler.h>
+#include <GUI/ComponentGUIHandler.h>
 #include <Scene/ComponentRegistry.h>
 
 namespace atcg

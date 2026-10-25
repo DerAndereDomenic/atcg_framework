@@ -24,7 +24,6 @@
 #include <Asset/AssetImporter.h>
 #include <Asset/AssetExporter.h>
 #include <Asset/AssetManagerSystem.h>
-#include <Asset/AssetPanel.h>
 #include <Asset/Project.h>
 
 //-------- EVENTS -------
@@ -69,7 +68,6 @@
 #include <DataStructure/Image.h>
 #include <DataStructure/Worker.h>
 #include <DataStructure/WorkerPool.h>
-#include <DataStructure/PerformancePanel.h>
 #include <DataStructure/Dictionary.h>
 #include <DataStructure/Skybox.h>
 #include <DataStructure/TextureBuilder.h>
@@ -85,6 +83,12 @@
 #include <Utils/HostDevice.h>
 #include <Math/Tracing.h>
 #include <Math/Color.h>
+
+//-------- Math -----------
+#include <GUI/SceneHierarchyPanel.h>
+#include <GUI/AssetPanel.h>
+#include <GUI/ComponentGUIHandler.h>
+#include <GUI/PerformancePanel.h>
 
 
 //-------- Utils -----------
@@ -108,8 +112,6 @@
 #include <Scene/Scene.h>
 #include <Scene/Entity.h>
 #include <Scene/Serializer.h>
-#include <Scene/SceneHierarchyPanel.h>
-#include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
 #include <Scene/RevisionStack.h>
 #include <Scene/ComponentRenderer.h>

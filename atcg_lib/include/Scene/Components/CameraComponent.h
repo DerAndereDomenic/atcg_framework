@@ -7,7 +7,7 @@
 #include <Renderer/PerspectiveCamera.h>
 #include <Scene/ComponentRegistry.h>
 #include <Scene/Components/TransformComponent.h>
-#include <Scene/ComponentGUIHandler.h>
+#include <GUI/ComponentGUIHandler.h>
 #include <Scene/ComponentRenderer.h>
 #include <Scene/ComponentSerializer.h>
 

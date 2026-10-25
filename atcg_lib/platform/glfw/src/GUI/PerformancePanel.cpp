@@ -1,8 +1,6 @@
-#include <DataStructure/PerformancePanel.h>
+#include <GUI/PerformancePanel.h>
 
-#ifndef ATCG_HEADLESS
-    #include <implot.h>
-#endif
+#include <implot.h>
 
 namespace atcg
 {
@@ -10,7 +8,6 @@ namespace GUI
 {
 void PerformancePanel::renderPanel(bool& show_window)
 {
-#ifndef ATCG_HEADLESS
     if(show_window)
     {
         ImGui::Begin("Performance##atcg_lib", &show_window);
@@ -48,7 +45,6 @@ void PerformancePanel::renderPanel(bool& show_window)
 
         ImGui::End();
     }
-#endif
 }
 
 void PerformancePanel::registerFrameTime(const float frame_time)
