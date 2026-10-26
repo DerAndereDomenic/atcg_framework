@@ -2,6 +2,10 @@
 #include <Asset/AssetManagerSystem.h>
 #include <Scene/RevisionStack.h>
 
+#ifdef ATCG_CUDA_BACKEND
+    #include <Integrator/IntegratorRegistry.h>
+#endif
+
 namespace atcg
 {
 atcg::ref_ptr<Project> Project::create(const std::filesystem::path& path)
@@ -109,9 +113,24 @@ void Project::serializeProjectInformation_ver1()
     o << std::setw(4) << j << std::endl;
 }
 
+void Project::serializeIntegratorSettings_ver1()
+{
+#ifdef ATCG_CUDA_BACKEND
+    if(_integrator_settings)
+    {
+        nlohmann::json j = _integrator_settings->toJson();
+
+        j["Type"] = _integrator_settings->getType();
+        std::ofstream o(_project_path / "IntegratorSettings.json");
+        o << std::setw(4) << j << std::endl;
+    }
+#endif
+}
+
 void Project::serializeProjectInformation()
 {
     serializeProjectInformation_ver1();
+    serializeIntegratorSettings_ver1();
 }
 
 void Project::deserializeProjectInformation_ver1(const nlohmann::json& j)
@@ -121,23 +140,54 @@ void Project::deserializeProjectInformation_ver1(const nlohmann::json& j)
     _active_scene         = (AssetHandle)j["Scene"];
 }
 
+void Project::deserializeIntegratorSettings_ver1(const nlohmann::json& j)
+{
+#ifdef ATCG_CUDA_BACKEND
+    if(j.contains("Type"))
+    {
+        std::string type = j["Type"];
+
+        _integrator_settings = atcg::IntegratorRegistry::createIntegratorSettings(type);
+
+        if(_integrator_settings)
+        {
+            _integrator_settings->fromJson(j);
+        }
+    }
+#endif
+}
+
 void Project::deserializeProjectInformation()
 {
-    std::ifstream i(_project_path / "Project.json");
-    nlohmann::json j;
-    i >> j;
+    std::ifstream project_info_file(_project_path / "Project.json");
+    nlohmann::json project_info_json;
+    project_info_file >> project_info_json;
 
-    if(!j.contains("Version"))
+    if(!project_info_json.contains("Version"))
     {
         ATCG_WARN("Got invalid Project file with unrecognized version. Abort...");
         return;
     }
 
-    std::string version = j["Version"];
+    std::string version = project_info_json["Version"];
 
     if(version == "1.0")
     {
-        deserializeProjectInformation_ver1(j);
+        deserializeProjectInformation_ver1(project_info_json);
+
+        if(std::filesystem::exists(_project_path / "IntegratorSettings.json"))
+        {
+            std::ifstream integrator_settings_file(_project_path / "IntegratorSettings.json");
+            nlohmann::json integrator_settings_json;
+            integrator_settings_file >> integrator_settings_json;
+
+            deserializeIntegratorSettings_ver1(integrator_settings_json);
+        }
+        else
+        {
+            // Load default settings
+            _integrator_settings = atcg::IntegratorRegistry::createIntegratorSettings("VolPathtracing");
+        }
     }
 }
 }    // namespace atcg
