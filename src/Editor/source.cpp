@@ -72,9 +72,10 @@ public:
         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
 
 #ifdef ATCG_CUDA_BACKEND
-        optx_context        = atcg::RaytracingContextManager::createContext();
-        integrator_settings = atcg::IntegratorRegistry::createIntegratorSettings(
+        optx_context             = atcg::RaytracingContextManager::createContext();
+        auto integrator_settings = atcg::IntegratorRegistry::createIntegratorSettings(
             atcg::IntegratorRegistry::getRegistry()->getRegisteredTypes()[current_integrator_selection_index]);
+        atcg::Project::getActive()->setIntegratorSettings(integrator_settings);
 #endif
 
         createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
@@ -148,7 +149,7 @@ public:
         if(current_revision != last_revision)
         {
             last_revision         = current_revision;
-            atcg::Dictionary dict = integrator_settings->toDictionary();
+            atcg::Dictionary dict = atcg::Project::getActive()->getIntegratorSettings()->toDictionary();
             if(enable_pathtracing) initializePathtracer(dict);
         }
     }
@@ -205,7 +206,7 @@ public:
                     if(atcg::Project::getActive()->getActiveScene())
                     {
                         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
-                        atcg::Dictionary dict = integrator_settings->toDictionary();
+                        atcg::Dictionary dict = atcg::Project::getActive()->getIntegratorSettings()->toDictionary();
                         initializePathtracer(dict);
                     }
                     atcg::RevisionStack::clearChache();
@@ -291,7 +292,7 @@ public:
             if(ImGui::Button("Start"))
             {
                 enable_pathtracing    = true;
-                atcg::Dictionary dict = integrator_settings->toDictionary();
+                atcg::Dictionary dict = atcg::Project::getActive()->getIntegratorSettings()->toDictionary();
                 initializePathtracer(dict);
             }
         }
@@ -308,7 +309,8 @@ public:
                 if(ImGui::Selectable(integrator_names[n].c_str(), is_selected))
                 {
                     current_integrator_selection_index = n;
-                    integrator_settings = atcg::IntegratorRegistry::createIntegratorSettings(integrator_names[n]);
+                    atcg::Project::getActive()->setIntegratorSettings(
+                        atcg::IntegratorRegistry::createIntegratorSettings(integrator_names[n]));
                 }
 
                 // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
@@ -317,6 +319,7 @@ public:
             ImGui::EndCombo();
         }
 
+        auto integrator_settings = atcg::Project::getActive()->getIntegratorSettings();
         if(integrator_settings)
         {
             if(integrator_settings->renderSettings() && enable_pathtracing)
@@ -368,7 +371,7 @@ public:
         atcg::WindowResizeEvent resize_event(event->getWidth(), event->getHeight());
         camera_controller->onEvent(&resize_event);
         createOutputTexture(event->getWidth(), event->getHeight());
-        atcg::Dictionary dict = integrator_settings->toDictionary();
+        atcg::Dictionary dict = atcg::Project::getActive()->getIntegratorSettings()->toDictionary();
         if(enable_pathtracing) initializePathtracer(dict);
         return false;
     }
@@ -502,8 +505,6 @@ private:
     atcg::ref_ptr<atcg::Texture2D> output_entity_texture;
 
     uint32_t last_revision = 0;
-
-    atcg::ref_ptr<atcg::IntegratorSettingsBase> integrator_settings;
 };
 
 class Editor : public atcg::Application
