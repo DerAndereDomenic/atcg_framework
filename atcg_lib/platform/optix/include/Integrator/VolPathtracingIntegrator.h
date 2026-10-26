@@ -54,6 +54,8 @@ public:
 
     static void registerIntegrator(IntegratorRegistry::Registry* registry);
 
+    static std::string getType() { return "VolPathtracing"; }
+
 private:
     /**
      * @brief Initialize a pipeline.
@@ -79,9 +81,15 @@ private:
 template<>
 struct IntegratorSettings<VolPathtracingIntegrator> : public IntegratorSettingsBase
 {
+    std::string getType() const override { return VolPathtracingIntegrator::getType(); }
+
     bool renderSettings() override;
 
     atcg::Dictionary toDictionary() const override;
+
+    nlohmann::json toJson() const override;
+
+    void fromJson(const nlohmann::json& j) override;
 
     bool _use_rr        = true;
     uint32_t _max_depth = 512;

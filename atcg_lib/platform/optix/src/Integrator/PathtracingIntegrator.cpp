@@ -126,7 +126,7 @@ void PathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
 
 void PathtracingIntegrator::registerIntegrator(IntegratorRegistry::Registry* registry)
 {
-    ATCG_REGISTER_INTEGRATOR(registry, "Pathtracing", PathtracingIntegrator);
+    ATCG_REGISTER_INTEGRATOR(registry, PathtracingIntegrator::getType(), PathtracingIntegrator);
 }
 
 
@@ -148,6 +148,22 @@ atcg::Dictionary IntegratorSettings<PathtracingIntegrator>::toDictionary() const
     dict.setValue("max_depth", _max_depth);
     dict.setValue("hide_emitters", _hide_emitters);
     return dict;
+}
+
+nlohmann::json IntegratorSettings<PathtracingIntegrator>::toJson() const
+{
+    static nlohmann::json j;
+    j["use_rr"]        = _use_rr;
+    j["max_depth"]     = _max_depth;
+    j["hide_emitters"] = _hide_emitters;
+    return j;
+}
+
+void IntegratorSettings<PathtracingIntegrator>::fromJson(const nlohmann::json& j)
+{
+    _use_rr        = j.value("use_rr", true);
+    _max_depth     = j.value("max_depth", 8);
+    _hide_emitters = j.value("hide_emitters", false);
 }
 
 }    // namespace atcg

@@ -54,6 +54,8 @@ public:
 
     static void registerIntegrator(IntegratorRegistry::Registry* registry);
 
+    static std::string getType() { return "PhotonMapping"; }
+
 private:
     /**
      * @brief Initialize a pipeline.
@@ -94,9 +96,15 @@ private:
 template<>
 struct IntegratorSettings<PhotonMapIntegrator> : public IntegratorSettingsBase
 {
+    std::string getType() const override { return PhotonMapIntegrator::getType(); }
+
     bool renderSettings() override;
 
     atcg::Dictionary toDictionary() const override;
+
+    nlohmann::json toJson() const override;
+
+    void fromJson(const nlohmann::json& j) override;
 
     float _reduction_factor    = 0.7f;
     float _gather_radius       = 0.25f;

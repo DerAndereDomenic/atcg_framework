@@ -212,7 +212,7 @@ void PhotonMapIntegrator::generateRays(Dictionary& in_out_dictionary)
 
 void PhotonMapIntegrator::registerIntegrator(IntegratorRegistry::Registry* registry)
 {
-    ATCG_REGISTER_INTEGRATOR(registry, "PhotonMapping", PhotonMapIntegrator);
+    ATCG_REGISTER_INTEGRATOR(registry, PhotonMapIntegrator::getType(), PhotonMapIntegrator);
 }
 
 
@@ -237,6 +237,26 @@ atcg::Dictionary IntegratorSettings<PhotonMapIntegrator>::toDictionary() const
     dict.setValue("max_photon_depth", _max_photon_depth);
     dict.setValue("max_camera_depth", _max_camera_depth);
     return dict;
+}
+
+nlohmann::json IntegratorSettings<PhotonMapIntegrator>::toJson() const
+{
+    static nlohmann::json j;
+    j["reduction_factor"] = _reduction_factor;
+    j["gather_radius"]    = _gather_radius;
+    j["max_photon_depth"] = _max_photon_depth;
+    j["max_camera_depth"] = _max_camera_depth;
+    j["max_num_photons"]  = _max_num_photons;
+    return j;
+}
+
+void IntegratorSettings<PhotonMapIntegrator>::fromJson(const nlohmann::json& j)
+{
+    _reduction_factor = j.value("reduction_factor", 0.7f);
+    _gather_radius    = j.value("gather_radius", 0.25f);
+    _max_photon_depth = j.value("max_photon_depth", 16);
+    _max_camera_depth = j.value("max_camera_depth", 16);
+    _max_num_photons  = j.value("max_num_photons", 1000000);
 }
 
 }    // namespace atcg

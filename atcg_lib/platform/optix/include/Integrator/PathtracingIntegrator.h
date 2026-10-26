@@ -53,6 +53,8 @@ public:
 
     static void registerIntegrator(IntegratorRegistry::Registry* registry);
 
+    static std::string getType() { return "Pathtracing"; }
+
 private:
     /**
      * @brief Initialize a pipeline.
@@ -77,9 +79,15 @@ private:
 template<>
 struct IntegratorSettings<PathtracingIntegrator> : public IntegratorSettingsBase
 {
+    std::string getType() const override { return PathtracingIntegrator::getType(); }
+
     bool renderSettings() override;
 
     atcg::Dictionary toDictionary() const override;
+
+    nlohmann::json toJson() const override;
+
+    void fromJson(const nlohmann::json& j) override;
 
     bool _use_rr        = true;
     uint32_t _max_depth = 8;
