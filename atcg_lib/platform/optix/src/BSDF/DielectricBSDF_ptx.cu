@@ -303,7 +303,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalRefractivePDF(const atcg::SurfaceIn
 extern "C" __device__ atcg::BSDFSamplingResult
 __direct_callable__sample_dielectricbsdf(const atcg::SurfaceInteraction& si,
                                          const atcg::SampledWavelengths& wavelengths,
-                                         atcg::PCG32& rng)
+                                         atcg::PCG32& rng,
+                                         const atcg::BSDFContext& ctx)
 {
     const atcg::DielectricBSDFData* sbt_data =
         *reinterpret_cast<const atcg::DielectricBSDFData**>(optixGetSbtDataPointer());
@@ -321,7 +322,8 @@ __direct_callable__sample_dielectricbsdf(const atcg::SurfaceInteraction& si,
 extern "C" __device__ atcg::BSDFEvalResult
 __direct_callable__eval_dielectricbsdf(const atcg::SurfaceInteraction& si,
                                        const glm::vec3& outgoing_dir,
-                                       const atcg::SampledWavelengths& wavelengths)
+                                       const atcg::SampledWavelengths& wavelengths,
+                                       const atcg::BSDFContext& ctx)
 {
     const atcg::DielectricBSDFData* sbt_data =
         *reinterpret_cast<const atcg::DielectricBSDFData**>(optixGetSbtDataPointer());
@@ -338,7 +340,8 @@ __direct_callable__eval_dielectricbsdf(const atcg::SurfaceInteraction& si,
 
 extern "C" __device__ float __direct_callable__evalpdf_dielectricbsdf(const atcg::SurfaceInteraction& si,
                                                                       const glm::vec3& outgoing_dir,
-                                                                      const atcg::SampledWavelengths& wavelengths)
+                                                                      const atcg::SampledWavelengths& wavelengths,
+                                                                      const atcg::BSDFContext& ctx)
 {
     const atcg::DielectricBSDFData* sbt_data =
         *reinterpret_cast<const atcg::DielectricBSDFData**>(optixGetSbtDataPointer());

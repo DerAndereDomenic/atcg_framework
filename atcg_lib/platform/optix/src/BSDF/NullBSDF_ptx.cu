@@ -11,7 +11,8 @@
 extern "C" __device__ atcg::BSDFSamplingResult
 __direct_callable__sample_nullbsdf(const atcg::SurfaceInteraction& si,
                                    const atcg::SampledWavelengths& wavelengths,
-                                   atcg::PCG32& rng)
+                                   atcg::PCG32& rng,
+                                   const atcg::BSDFContext& ctx)
 {
     atcg::BSDFSamplingResult result;
 
@@ -25,7 +26,8 @@ __direct_callable__sample_nullbsdf(const atcg::SurfaceInteraction& si,
 
 extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_nullbsdf(const atcg::SurfaceInteraction& si,
                                                                             const atcg::SampledWavelengths& wavelengths,
-                                                                            const glm::vec3& outgoing_dir)
+                                                                            const glm::vec3& outgoing_dir,
+                                                                            const atcg::BSDFContext& ctx)
 {
     atcg::BSDFEvalResult result;
 
@@ -38,7 +40,8 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_nullbsdf(cons
 
 extern "C" __device__ float __direct_callable__evalpdf_nullbsdf(const atcg::SurfaceInteraction& si,
                                                                 const atcg::SampledWavelengths& wavelengths,
-                                                                const glm::vec3& outgoing_dir)
+                                                                const glm::vec3& outgoing_dir,
+                                                                const atcg::BSDFContext& ctx)
 {
     return 0.0f;
 }
