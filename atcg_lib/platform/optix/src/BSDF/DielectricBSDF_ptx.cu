@@ -52,13 +52,9 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
     glm::vec3 transmitted_ray_dir = glm::refract(-wi, halfway, eta);
     glm::vec3 reflected_ray_dir   = glm::reflect(-wi, halfway);
 
-    // Fresnel reflectance at normal incidence
-    float F0 = (eta - 1.0f) / (eta + 1.0f);
-    F0       = F0 * F0;
-
     // Reflection an transmission probabilities
     float HdotV                    = glm::dot(wi, halfway);
-    float F                        = atcg::fresnel_schlick(F0, HdotV);
+    float F                        = atcg::fresnel(eta, HdotV);
     float reflection_probability   = F;
     float transmission_probability = 1.0f - reflection_probability;
     if(glm::dot(transmitted_ray_dir, transmitted_ray_dir) < 1e-6f)
@@ -148,9 +144,6 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
 
     atcg::SampledSpectrum specular_bsdf = atcg::SampledSpectrum(0);
 
-    float F0 = (eta - 1) / (eta + 1);
-    F0       = F0 * F0;
-
     glm::vec3 interface_normal = outsidein ? si.normal : -si.normal;
     float light_dir_pdf        = 0.0f;
     if(same_side)
@@ -169,7 +162,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
         float F             = 1.0f;
         if(glm::length2(refracted) > 1e-6f)
         {
-            F = atcg::fresnel_schlick(F0, LdotH);
+            F = atcg::fresnel(eta, LdotH);
         }
         float reflection_probability = F;
 
@@ -199,7 +192,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
         float D = atcg::D_GGX(NdotH, roughness);
         float G = atcg::G_SmithJointGGX(NdotL, NdotV, roughness);
 
-        float F                = atcg::fresnel_schlick(F0, glm::abs(VdotH));
+        float F                = atcg::fresnel(eta, glm::abs(VdotH));
         float T                = 1.0f - F;
         float transmission_pdf = T;
 
@@ -261,7 +254,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalRefractivePDF(const atcg::SurfaceIn
         float F             = 1.0f;
         if(glm::length2(refracted) > 1e-6f)
         {
-            F = atcg::fresnel_schlick(F0, LdotH);
+            F = atcg::fresnel(eta, LdotH);
         }
         float reflection_probability = F;
 
@@ -283,7 +276,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalRefractivePDF(const atcg::SurfaceIn
 
         float D = atcg::D_GGX(NdotH, roughness);
 
-        float F                = atcg::fresnel_schlick(F0, glm::abs(VdotH));
+        float F                = atcg::fresnel(eta, glm::abs(VdotH));
         float T                = 1.0f - F;
         float transmission_pdf = T;
 
