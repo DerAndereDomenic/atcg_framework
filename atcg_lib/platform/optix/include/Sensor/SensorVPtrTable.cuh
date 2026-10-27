@@ -25,6 +25,7 @@ struct SensorVPtrTable
     uint32_t generateRayCallIndex;
     uint32_t addSampleCallIndex;
     uint32_t toPixelCallIndex;
+    uint32_t jacobianCallIndex;
 
 #ifdef __CUDACC__
     __device__ CameraRay generateRay(const glm::ivec2& raster_pos, atcg::PCG32& rng) const
@@ -45,6 +46,13 @@ struct SensorVPtrTable
     __device__ PixelCoordinates toPixel(const glm::vec3& direction) const
     {
         return optixDirectCall<PixelCoordinates, const glm::vec3&>(toPixelCallIndex, direction);
+    }
+
+    // We: Mapping from surface area domain to pixel area domain. This is used to convert a radiance value to a pixel
+    // value.
+    __device__ float jacobian(const atcg::SurfaceInteraction& si) const
+    {
+        return optixDirectCall<float, const atcg::SurfaceInteraction&>(jacobianCallIndex, si);
     }
 #endif
 };

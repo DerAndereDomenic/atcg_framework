@@ -117,3 +117,26 @@ extern "C" __device__ atcg::PixelCoordinates __direct_callable__to_pixel_pinhole
 
     return result;
 }
+
+extern "C" __device__ float __direct_callable__jacobian_pinhole(const atcg::SurfaceInteraction& si)
+{
+    const atcg::PinholeCameraData* camera =
+        *reinterpret_cast<const atcg::PinholeCameraData**>(optixGetSbtDataPointer());
+
+    float fov_y        = camera->fov_y;
+    float aspect_ratio = camera->aspect_ratio;
+
+    glm::vec3 camera_position   = camera->cam_eye;
+    glm::vec3 forward_direction = camera->W;
+
+    float t = glm::tan(glm::radians(fov_y * 0.5f));
+    float A = 4.0f * aspect_ratio * t * t;
+
+    glm::vec3 direction_to_camera = glm::normalize(camera_position - si.position);
+    float distance_to_camera      = glm::length(camera_position - si.position);
+
+    float r_2       = distance_to_camera * distance_to_camera;
+    float cos_theta = glm::abs(glm::dot(forward_direction, -direction_to_camera));
+
+    return 1.0f / (A * r_2 * cos_theta * cos_theta * cos_theta);
+}
