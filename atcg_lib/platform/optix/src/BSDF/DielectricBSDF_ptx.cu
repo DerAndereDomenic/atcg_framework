@@ -128,7 +128,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
                 wo,
                 wh);
         result.flags =
-            roughness < 1e-3f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection;
+            roughness < 0.01f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection;
     }
     else
     {
@@ -158,7 +158,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
                 glm::dot(wo, wh),
                 eta);
 
-        result.flags = roughness < 1e-3f ? atcg::BSDFComponentType::IdealTransmission
+        result.flags = roughness < 0.01f ? atcg::BSDFComponentType::IdealTransmission
                                          : atcg::BSDFComponentType::GlossyTransmission;
     }
 
