@@ -70,6 +70,7 @@ __direct_callable__sample_perfectdielectricbsdf(const atcg::SurfaceInteraction& 
         result.out_dir = transmitted_ray_dir;
 
         result.flags = atcg::BSDFComponentType::IdealTransmission;
+        result.eta   = eta;
     }
 
     return result;

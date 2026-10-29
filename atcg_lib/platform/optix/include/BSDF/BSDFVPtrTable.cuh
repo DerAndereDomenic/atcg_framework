@@ -17,6 +17,7 @@ struct BSDFSamplingResult
     SampledSpectrum bsdf_weight;
     float pdf_dw            = 0.0f;
     BSDFComponentType flags = BSDFComponentType::Any;
+    float eta               = 1.0f;
 };
 
 struct BSDFEvalResult

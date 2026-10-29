@@ -213,7 +213,8 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
     }
     else
     {
-        wo = glm::refract(-wi, wh, eta);
+        wo         = glm::refract(-wi, wh, eta);
+        result.eta = eta;
     }
 
     auto eval_result   = evalRefractive(si, wo, reflectance_color, roughness, ior, ctx);
