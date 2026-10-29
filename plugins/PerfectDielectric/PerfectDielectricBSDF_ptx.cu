@@ -63,9 +63,11 @@ __direct_callable__sample_perfectdielectricbsdf(const atcg::SurfaceInteraction& 
     }
     else
     {
-        result.bsdf_weight = atcg::SampledSpectrum(1.0f);
-        result.pdf_dw      = transmission_probability;
-        result.out_dir     = transmitted_ray_dir;
+        result.bsdf_weight = (ctx.transport_mode == atcg::TransportMode::RADIANCE) ? atcg::SampledSpectrum(eta * eta)
+                                                                                   : atcg::SampledSpectrum(1.0f);
+
+        result.pdf_dw  = transmission_probability;
+        result.out_dir = transmitted_ray_dir;
 
         result.flags = atcg::BSDFComponentType::IdealTransmission;
     }
@@ -99,8 +101,6 @@ __direct_callable__evalpdf_perfectdielectricbsdf(const atcg::SurfaceInteraction&
 {
     const atcg::PerfectDielectricData* sbt_data =
         *reinterpret_cast<const atcg::PerfectDielectricData**>(optixGetSbtDataPointer());
-
-    float ior = sbt_data->ior_texture.read(si.uv);
 
     return 0.0f;
 }

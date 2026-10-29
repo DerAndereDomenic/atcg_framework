@@ -91,7 +91,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
                                                                        const glm::vec3& outgoing_dir,
                                                                        const atcg::SampledSpectrum& reflectance_color,
                                                                        const float roughness,
-                                                                       const float ior)
+                                                                       const float ior,
+                                                                       const atcg::BSDFContext& ctx)
 {
     atcg::BSDFEvalResult result;
 
@@ -143,8 +144,10 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
         float G = atcg::G_SmithJointGGX(glm::abs(cos_theta_o), glm::abs(cos_theta_i), roughness);
         float F = atcg::fresnel(eta, glm::abs(glm::dot(wi, wh)));
 
+        float scale = ctx.transport_mode == atcg::TransportMode::IMPORTANCE ? 1.0f : (eta * eta);
+
         float denom = (eta * glm::dot(wi, wh) + glm::dot(wo, wh));
-        value       = (1.0f - F) * G * D * glm::abs(glm::dot(wi, wh)) * glm::abs(glm::dot(wo, wh)) /
+        value       = scale * (1.0f - F) * G * D * glm::abs(glm::dot(wi, wh)) * glm::abs(glm::dot(wo, wh)) /
                       (denom * denom * glm::abs(cos_theta_i));
         result.pdf_dw =
             D * glm::abs(glm::dot(normal, wh)) * (1.0f - F) *
@@ -177,7 +180,8 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
                  const atcg::SampledSpectrum& reflectance_color,
                  const float roughness,
                  const float ior,
-                 atcg::PCG32& rng)
+                 atcg::PCG32& rng,
+                 const atcg::BSDFContext& ctx)
 {
     atcg::BSDFSamplingResult result;
 
@@ -212,7 +216,7 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
         wo = glm::refract(-wi, wh, eta);
     }
 
-    auto eval_result   = evalRefractive(si, wo, reflectance_color, roughness, ior);
+    auto eval_result   = evalRefractive(si, wo, reflectance_color, roughness, ior, ctx);
     result.bsdf_weight = eval_result.bsdf_value / (eval_result.pdf_dw);
     result.pdf_dw      = eval_result.pdf_dw;
     result.out_dir     = wo;
@@ -239,7 +243,7 @@ __direct_callable__sample_dielectricbsdf(const atcg::SurfaceInteraction& si,
 
     float ior = sbt_data->ior_texture.read(si.uv);
 
-    return detail::sampleRefractive(si, reflectance_color, roughness, ior, rng);
+    return detail::sampleRefractive(si, reflectance_color, roughness, ior, rng, ctx);
 }
 
 extern "C" __device__ atcg::BSDFEvalResult
@@ -258,7 +262,7 @@ __direct_callable__eval_dielectricbsdf(const atcg::SurfaceInteraction& si,
 
     float ior = sbt_data->ior_texture.read(si.uv);
 
-    return detail::evalRefractive(si, outgoing_dir, reflectance_color, roughness, ior);
+    return detail::evalRefractive(si, outgoing_dir, reflectance_color, roughness, ior, ctx);
 }
 
 extern "C" __device__ float __direct_callable__evalpdf_dielectricbsdf(const atcg::SurfaceInteraction& si,
