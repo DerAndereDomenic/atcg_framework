@@ -132,12 +132,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
     }
     else
     {
-        glm::vec3 wh = -glm::normalize(eta * wi + wo);
-
-        if(glm::dot(wh, interface_normal) < 0.0f)
-        {
-            return result;
-        }
+        glm::vec3 wh = -glm::sign(cos_theta_i) * glm::normalize(eta * wi + wo);
 
         if(glm::dot(wi, wh) < 0.0f)
         {
