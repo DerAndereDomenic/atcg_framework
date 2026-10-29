@@ -39,12 +39,14 @@ extern "C" __global__ void __raygen__rg()
     atcg::AnyInteraction last_ai;
     last_ai->pdf = 1.0f;
 
+    float eta = 1.0f;
+
     for(int n = 0; n < 512; ++n)
     {
         if(!next_ray_valid) break;
         next_ray_valid = false;
 
-        float rr_prob = camera_ray.importance.maxComponent();
+        float rr_prob = glm::min(camera_ray.importance.maxComponent() / (eta * eta), 0.95f);
         if(rng.nextFloat() < rr_prob)
         {
             camera_ray.importance /= rr_prob;
@@ -263,6 +265,7 @@ extern "C" __global__ void __raygen__rg()
                 camera_ray.ray.origin    = si.position;
                 camera_ray.ray.direction = result.out_dir;
                 camera_ray.importance *= result.bsdf_weight;
+                eta *= result.eta;
                 next_ray_valid = true;
 
                 if((int)(result.flags & atcg::BSDFComponentType::NullTransmission) == 0)

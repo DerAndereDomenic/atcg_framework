@@ -56,12 +56,14 @@ extern "C" __global__ void __raygen__sample_photons()
 
     float initial_weight = throughput.maxComponent();
 
+    float eta = 1.0f;
+
     for(int n = 0; n < PHOTON_MAP_TRACE_DEPTH; ++n)
     {
         if(!next_ray_valid) break;
         next_ray_valid = false;
 
-        float q = throughput.maxComponent() / initial_weight;
+        float q = glm::min(throughput.maxComponent() / (eta * eta) / initial_weight, 0.95f);
 
         if(rng.nextFloat() > q)
         {
@@ -111,13 +113,14 @@ extern "C" __global__ void __raygen__sample_photons()
                 cuBQL::box3f().including(cuBQL::vec3f(si.position.x, si.position.y, si.position.z));
         }
 
-        auto result = si.bsdf->sampleBSDF(si, wavelengths, rng);
+        auto result = si.bsdf->sampleBSDF(si, wavelengths, rng, atcg::BSDFContext(atcg::TransportMode::RADIANCE));
 
         if(result.pdf_dw > 0.0f)
         {
             origin    = si.position;
             direction = result.out_dir;
             throughput *= result.bsdf_weight;
+            eta *= result.eta;
             next_ray_valid = true;
         }
     }
