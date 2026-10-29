@@ -16,6 +16,91 @@
 namespace detail
 {
 
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalRefractivePDF(const atcg::SurfaceInteraction& si,
+                                                           const glm::vec3& outgoing_dir,
+                                                           const atcg::SampledSpectrum& reflectance_color,
+                                                           const float roughness,
+                                                           const float ior)
+{
+    // TODO
+    return 0.0f;
+}
+
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atcg::SurfaceInteraction& si,
+                                                                       const glm::vec3& outgoing_dir,
+                                                                       const atcg::SampledSpectrum& reflectance_color,
+                                                                       const float roughness,
+                                                                       const float ior)
+{
+    atcg::BSDFEvalResult result;
+
+    glm::vec3 wi = -si.incoming_direction;    // Points towards the last traced vertex (might be the camera)
+    glm::vec3 wo = outgoing_dir;              // Points towards next path vertex (might be a light source)
+
+    // Convention: normals points into the thinner medium. If the ior is greater than 1, then the normal points into the
+    // surface.
+    glm::vec3 normal = ior > 1.0f ? si.normal : -si.normal;
+
+    float cos_theta_i = glm::dot(normal, wi);
+    float cos_theta_o = glm::dot(normal, wo);
+
+    glm::vec3 interface_normal = cos_theta_i > 0.0f ? normal : -normal;
+
+    bool reflected = cos_theta_i * cos_theta_o > 0.0f;
+
+    float eta = cos_theta_i > 0.0f ? 1.0f / ior : ior;
+
+    float ni = cos_theta_i > 0.0f ? 1.0f : ior;
+    float no = cos_theta_i > 0.0f ? ior : 1.0f;
+
+    if(reflected)
+    {
+        glm::vec3 wh = glm::sign(cos_theta_i) * glm::normalize(wi + wo);
+
+        float D = atcg::D_GGX(glm::abs(glm::dot(normal, wh)), roughness);
+        float G = atcg::G_SmithJointGGX(glm::abs(cos_theta_o), glm::abs(cos_theta_i), roughness);
+
+        float F = atcg::fresnel(eta, glm::abs(glm::dot(wi, wh)));
+
+        float value       = F * D * G / (4.0f * glm::abs(cos_theta_i));
+        result.bsdf_value = reflectance_color * value;
+        result.pdf_dw     = D * glm::abs(glm::dot(normal, wh)) * F / (4.0f * glm::abs(glm::dot(wo, wh)));
+
+        // G / (glm::abs(cos_theta_i)) / (glm::abs(glm::dot(normal, wh)) / (glm::abs(glm::dot(wo, wh))))
+        // = G * VdotH / (NdotV * NdotH)
+    }
+    else
+    {
+        glm::vec3 wh = -glm::normalize(eta * wi + wo);
+
+        if(glm::dot(wh, interface_normal) < 0.0f)
+        {
+            return result;
+        }
+
+        if(glm::dot(wi, wh) < 0.0f)
+        {
+            return result;
+        }
+
+        float D = atcg::D_GGX(glm::abs(glm::dot(normal, wh)), roughness);
+        float G = atcg::G_SmithJointGGX(glm::abs(cos_theta_o), glm::abs(cos_theta_i), roughness);
+        float F = atcg::fresnel(eta, glm::abs(glm::dot(wi, wh)));
+
+        float denom       = (eta * glm::dot(wi, wh) + glm::dot(wo, wh));
+        float value       = (1.0f - F) * G * D * glm::abs(glm::dot(wi, wh)) * glm::abs(glm::dot(wo, wh)) /
+                            (denom * denom * glm::abs(cos_theta_i));
+        result.bsdf_value = reflectance_color * value;
+        result.pdf_dw = D * glm::abs(glm::dot(normal, wh)) * (1.0f - F) * glm::abs(glm::dot(wo, wh)) / (denom * denom);
+
+        // G * glm::abs(glm::dot(wi, wh)) / (glm::abs(cos_theta_i))
+        // glm::abs(glm::dot(normal, wh))
+        // = G * VdotH / (NdotH * NdotV)
+    }
+
+    return result;
+}
+
 /**
  * @brief Sample a refractive BSDF
  *
@@ -33,280 +118,45 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
                  const float ior,
                  atcg::PCG32& rng)
 {
-    // Compute sampling result
     atcg::BSDFSamplingResult result;
-    result.pdf_dw = 0;
 
-    glm::vec3 wi = -si.incoming_direction;
+    glm::vec3 wi = -si.incoming_direction;    // Points towards the last traced vertex (might be the camera)
 
-    // Determine surface parameters
-    bool outsidein             = glm::dot(wi, si.normal) > 0;
-    glm::vec3 interface_normal = outsidein ? si.normal : -si.normal;
-    float eta                  = outsidein ? 1.0f / ior : ior;
+    float cos_theta_i = glm::dot(si.normal, wi);
 
-    atcg::Frame local_frame = atcg::Frame(interface_normal);
+    // Make normal point into same hemisphere as incoming direction
+    glm::vec3 normal = cos_theta_i > 0.0f ? si.normal : -si.normal;
+
+    float eta = cos_theta_i > 0.0f ? 1.0f / ior : ior;
 
     atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX> strategy(roughness);
-    glm::vec3 local_halfway = strategy.sample(rng.next2d());
-    float halfway_pdf       = strategy.pdf(local_halfway);
-    // Transform local halfway vector from tangent space to world space
-    glm::vec3 halfway = local_frame.toWorld(local_halfway);
+    glm::vec3 wh            = strategy.sample(rng.next2d());
+    atcg::Frame local_frame = atcg::Frame(normal);
+    wh                      = local_frame.toWorld(wh);    // Points into same hemisphere as normal
 
-    // Compute outgoing ray directions
-    glm::vec3 transmitted_ray_dir = glm::refract(-wi, halfway, eta);
-    glm::vec3 reflected_ray_dir   = glm::reflect(-wi, halfway);
+    float F = atcg::fresnel(eta, glm::dot(wi, wh));
 
-    if(glm::dot(interface_normal, reflected_ray_dir) <= 0.0f)
+    glm::vec3 wo;
+    if(rng.next1d() < F)
     {
-        return result;
-    }
-
-    // Reflection an transmission probabilities
-    float HdotV                    = glm::dot(wi, halfway);
-    float F                        = atcg::fresnel(eta, HdotV);
-    float reflection_probability   = F;
-    float transmission_probability = 1.0f - reflection_probability;
-    if(glm::dot(transmitted_ray_dir, transmitted_ray_dir) < 1e-6f)
-    {
-        // Total internal reflection!
-        transmission_probability = 0.0f;
-        reflection_probability   = 1.0f;
-    }
-
-    // Stochastically select a reflection or transmission via russian roulette
-    if(rng.next1d() < reflection_probability)
-    {
-        glm::vec3 wo = reflected_ray_dir;
-        float light_dir_pdf =
-            halfway_pdf *
-            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
-                wo,
-                halfway) *
-            reflection_probability;
-
-        result.pdf_dw = light_dir_pdf;
-        float NdotL   = glm::dot(interface_normal, wo);
-        float HdotL   = glm::dot(halfway, wo);
-
-        if(NdotL <= 0)
+        wo = glm::reflect(-wi, wh);
+        if(glm::dot(wo, normal) <= 0.0f)    // Reflects into the other hemisphere -> reject
         {
-            result.pdf_dw = 0;
+            result.pdf_dw = 0.0f;
             return result;
         }
-
-        result.out_dir = wo;
-
-        float NdotV = glm::abs(glm::dot(interface_normal, wi));
-        float NdotH = glm::dot(halfway, interface_normal);
-
-        float G            = atcg::G_SmithJointGGX(NdotL, NdotV, roughness);
-        result.bsdf_weight = reflectance_color * G * glm::abs(HdotL) / (NdotV * NdotH);
-
-
-        result.flags =
-            roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection;
     }
     else
     {
-        glm::vec3 wo = transmitted_ray_dir;
-        float HdotL  = glm::dot(halfway, wo);
-        float light_dir_pdf =
-            halfway_pdf *
-            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_refracted_direction_pdf(
-                HdotV,
-                HdotL,
-                eta) *
-            transmission_probability;
-
-        result.pdf_dw = light_dir_pdf;
-        float NdotL   = -glm::dot(interface_normal, wo);
-
-        if(NdotL <= 0)
-        {
-            result.pdf_dw = 0;
-            return result;
-        }
-
-        result.out_dir = wo;
-
-        float NdotV = glm::abs(glm::dot(interface_normal, wi));
-        float NdotH = glm::dot(halfway, interface_normal);
-        float HdotV = glm::dot(halfway, wi);
-
-        float G            = atcg::G_SmithJointGGX(NdotL, NdotV, roughness);
-        result.bsdf_weight = reflectance_color * G * glm::abs(HdotV) / (NdotV * NdotH);
-
-
-        result.flags =
-            roughness < 0.1f ? atcg::BSDFComponentType::IdealTransmission : atcg::BSDFComponentType::GlossyTransmission;
+        wo = glm::refract(-wi, wh, eta);
     }
+
+    auto eval_result   = evalRefractive(si, wo, reflectance_color, roughness, ior);
+    result.bsdf_weight = eval_result.bsdf_value / (eval_result.pdf_dw);
+    result.pdf_dw      = eval_result.pdf_dw;
+    result.out_dir     = wo;
 
     return result;
-}
-
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atcg::SurfaceInteraction& si,
-                                                                       const glm::vec3& outgoing_dir,
-                                                                       const atcg::SampledSpectrum& reflectance_color,
-                                                                       const float roughness,
-                                                                       const float ior)
-{
-    atcg::BSDFEvalResult result;
-
-    glm::vec3 wo = outgoing_dir;
-    glm::vec3 wi = -si.incoming_direction;
-
-    bool outsidein = glm::dot(wi, si.normal) > 0;
-    float eta      = outsidein ? 1.0f / ior : ior;
-
-    bool outsideout = glm::dot(wo, si.normal) > 0;
-
-    bool same_side = outsidein == outsideout;
-
-    atcg::SampledSpectrum specular_bsdf = atcg::SampledSpectrum(0);
-
-    glm::vec3 interface_normal = outsidein ? si.normal : -si.normal;
-    float light_dir_pdf        = 0.0f;
-    if(same_side)
-    {
-        glm::vec3 halfway = glm::normalize(wi + wo);
-        float NdotH       = glm::dot(halfway, interface_normal);
-        float LdotH       = glm::dot(halfway, wo);
-
-        float NdotL = glm::dot(interface_normal, wo);
-        float NdotV = glm::dot(interface_normal, wi);
-
-        float D = atcg::D_GGX(NdotH, roughness);
-        float G = atcg::G_SmithJointGGX(NdotL, NdotV, roughness);
-
-        glm::vec3 refracted = glm::refract(-wi, halfway, eta);
-        float F             = 1.0f;
-        if(glm::length2(refracted) > 1e-6f)
-        {
-            F = atcg::fresnel(eta, LdotH);
-        }
-        float reflection_probability = F;
-
-        light_dir_pdf =
-            D * NdotH * reflection_probability *
-            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
-                wo,
-                halfway);
-
-        specular_bsdf = reflectance_color * D * G * F / (4.0f * NdotV * NdotL + 1e-5f);
-        result.flags =
-            roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection;
-    }
-    else
-    {
-        glm::vec3 halfway = -glm::normalize(eta * wi + wo);
-        float NdotH       = glm::dot(si.normal, halfway);
-
-        float LdotH = glm::dot(wo, halfway);
-        float VdotH = glm::dot(wi, halfway);
-
-        float NdotL = glm::abs(glm::dot(si.normal, wo));
-        float NdotV = glm::abs(glm::dot(si.normal, wi));
-
-        float D = atcg::D_GGX(NdotH, roughness);
-        float G = atcg::G_SmithJointGGX(NdotL, NdotV, roughness);
-
-        float F                = atcg::fresnel(eta, glm::abs(VdotH));
-        float T                = 1.0f - F;
-        float transmission_pdf = T;
-
-        float denom = (LdotH + eta * VdotH);
-        denom *= denom;
-
-        float numerator = T * D * G * glm::abs(LdotH) * glm::abs(VdotH);
-
-        light_dir_pdf =
-            D * NdotH * transmission_pdf *
-            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_refracted_direction_pdf(
-                VdotH,
-                LdotH,
-                eta);
-
-        specular_bsdf = reflectance_color * numerator / (denom * NdotL * NdotV + 1e-5f);
-
-        result.flags =
-            roughness < 0.1f ? atcg::BSDFComponentType::IdealTransmission : atcg::BSDFComponentType::GlossyTransmission;
-    }
-
-    result.bsdf_value = specular_bsdf * glm::abs(glm::dot(si.normal, wo));
-    result.pdf_dw     = light_dir_pdf;
-    return result;
-}
-
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalRefractivePDF(const atcg::SurfaceInteraction& si,
-                                                           const glm::vec3& outgoing_dir,
-                                                           const atcg::SampledSpectrum& reflectance_color,
-                                                           const float roughness,
-                                                           const float ior)
-{
-    glm::vec3 wo = outgoing_dir;
-    glm::vec3 wi = -si.incoming_direction;
-
-    bool outsidein = glm::dot(wi, si.normal) > 0;
-    float eta      = outsidein ? 1.0f / ior : ior;
-
-    bool outsideout = glm::dot(wo, si.normal) > 0;
-
-    bool same_side = outsidein == outsideout;
-
-    atcg::SampledSpectrum specular_bsdf = atcg::SampledSpectrum(0);
-
-    float F0 = (eta - 1) / (eta + 1);
-    F0       = F0 * F0;
-
-    glm::vec3 interface_normal = outsidein ? si.normal : -si.normal;
-    float light_dir_pdf        = 0.0f;
-    if(same_side)
-    {
-        glm::vec3 halfway = glm::normalize(wi + wo);
-        float NdotH       = glm::dot(halfway, interface_normal);
-        float LdotH       = glm::dot(halfway, wo);
-
-        float D = atcg::D_GGX(NdotH, roughness);
-
-        glm::vec3 refracted = glm::refract(-wi, halfway, eta);
-        float F             = 1.0f;
-        if(glm::length2(refracted) > 1e-6f)
-        {
-            F = atcg::fresnel(eta, LdotH);
-        }
-        float reflection_probability = F;
-
-        light_dir_pdf =
-            D * NdotH * reflection_probability *
-            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
-                wo,
-                halfway);
-    }
-    else
-    {
-        glm::vec3 halfway = -glm::normalize(eta * wi + wo);
-        // The halfway vector always points into the thinner medium
-        glm::vec3 thin_normal = ior > 1.0f ? si.normal : -si.normal;
-        float NdotH           = glm::dot(si.normal, halfway);
-
-        float LdotH = glm::dot(wo, halfway);
-        float VdotH = glm::dot(wi, halfway);
-
-        float D = atcg::D_GGX(NdotH, roughness);
-
-        float F                = atcg::fresnel(eta, glm::abs(VdotH));
-        float T                = 1.0f - F;
-        float transmission_pdf = T;
-
-        light_dir_pdf =
-            D * NdotH * transmission_pdf *
-            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_refracted_direction_pdf(
-                VdotH,
-                LdotH,
-                eta);
-    }
-    float pdf_dw = light_dir_pdf;
-    return pdf_dw;
 }
 
 }    // namespace detail
