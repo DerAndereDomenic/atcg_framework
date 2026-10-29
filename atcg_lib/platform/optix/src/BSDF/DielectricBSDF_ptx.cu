@@ -47,7 +47,11 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalRefractivePDF(const atcg::SurfaceIn
 
         float F = atcg::fresnel(eta, glm::abs(glm::dot(wi, wh)));
 
-        float pdf_dw = D * glm::abs(glm::dot(normal, wh)) * F / (4.0f * glm::abs(glm::dot(wo, wh)));
+        float pdf_dw =
+            D * glm::abs(glm::dot(normal, wh)) * F *
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
+                wo,
+                wh);
 
         return pdf_dw;
     }
@@ -69,10 +73,15 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalRefractivePDF(const atcg::SurfaceIn
         float G = atcg::G_SmithJointGGX(glm::abs(cos_theta_o), glm::abs(cos_theta_i), roughness);
         float F = atcg::fresnel(eta, glm::abs(glm::dot(wi, wh)));
 
-        float denom  = (eta * glm::dot(wi, wh) + glm::dot(wo, wh));
-        float value  = (1.0f - F) * G * D * glm::abs(glm::dot(wi, wh)) * glm::abs(glm::dot(wo, wh)) /
-                       (denom * denom * glm::abs(cos_theta_i));
-        float pdf_dw = D * glm::abs(glm::dot(normal, wh)) * (1.0f - F) * glm::abs(glm::dot(wo, wh)) / (denom * denom);
+        float denom = (eta * glm::dot(wi, wh) + glm::dot(wo, wh));
+        float value = (1.0f - F) * G * D * glm::abs(glm::dot(wi, wh)) * glm::abs(glm::dot(wo, wh)) /
+                      (denom * denom * glm::abs(cos_theta_i));
+        float pdf_dw =
+            D * glm::abs(glm::dot(normal, wh)) * (1.0f - F) *
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_refracted_direction_pdf(
+                glm::dot(wi, wh),
+                glm::dot(wo, wh),
+                eta);
 
         return pdf_dw;
     }
@@ -102,6 +111,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
 
     float eta = cos_theta_i > 0.0f ? 1.0f / ior : ior;
 
+    float value = 0.0f;
     if(reflected)
     {
         glm::vec3 wh = glm::sign(cos_theta_i) * glm::normalize(wi + wo);
@@ -111,9 +121,12 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
 
         float F = atcg::fresnel(eta, glm::abs(glm::dot(wi, wh)));
 
-        float value       = F * D * G / (4.0f * glm::abs(cos_theta_i));
-        result.bsdf_value = reflectance_color * value;
-        result.pdf_dw     = D * glm::abs(glm::dot(normal, wh)) * F / (4.0f * glm::abs(glm::dot(wo, wh)));
+        value = F * D * G / (4.0f * glm::abs(cos_theta_i));
+        result.pdf_dw =
+            D * glm::abs(glm::dot(normal, wh)) * F *
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
+                wo,
+                wh);
         result.flags =
             roughness < 1e-3f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection;
     }
@@ -135,15 +148,21 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
         float G = atcg::G_SmithJointGGX(glm::abs(cos_theta_o), glm::abs(cos_theta_i), roughness);
         float F = atcg::fresnel(eta, glm::abs(glm::dot(wi, wh)));
 
-        float denom       = (eta * glm::dot(wi, wh) + glm::dot(wo, wh));
-        float value       = (1.0f - F) * G * D * glm::abs(glm::dot(wi, wh)) * glm::abs(glm::dot(wo, wh)) /
-                            (denom * denom * glm::abs(cos_theta_i));
-        result.bsdf_value = reflectance_color * value;
-        result.pdf_dw = D * glm::abs(glm::dot(normal, wh)) * (1.0f - F) * glm::abs(glm::dot(wo, wh)) / (denom * denom);
+        float denom = (eta * glm::dot(wi, wh) + glm::dot(wo, wh));
+        value       = (1.0f - F) * G * D * glm::abs(glm::dot(wi, wh)) * glm::abs(glm::dot(wo, wh)) /
+                      (denom * denom * glm::abs(cos_theta_i));
+        result.pdf_dw =
+            D * glm::abs(glm::dot(normal, wh)) * (1.0f - F) *
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_refracted_direction_pdf(
+                glm::dot(wi, wh),
+                glm::dot(wo, wh),
+                eta);
 
         result.flags = roughness < 1e-3f ? atcg::BSDFComponentType::IdealTransmission
                                          : atcg::BSDFComponentType::GlossyTransmission;
     }
+
+    result.bsdf_value = reflectance_color * value;
 
     return result;
 }
