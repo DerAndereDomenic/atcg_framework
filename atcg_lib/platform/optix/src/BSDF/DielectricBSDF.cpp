@@ -25,7 +25,8 @@ DielectricBSDF::DielectricBSDF(const Dictionary& dict)
     data.ior_texture.texture_data.texture       = _ior_texture->getTextureObject();
     data.ior_texture.spec                       = _ior_texture->getSpecification();
 
-    _flags = BSDFComponentType::IdealReflection | BSDFComponentType::IdealReflection;
+    _flags = BSDFComponentType::IdealReflection | BSDFComponentType::IdealTransmission |
+             BSDFComponentType::GlossyReflection | BSDFComponentType::GlossyTransmission;
 
     _bsdf_data_buffer.upload(&data);
 }
