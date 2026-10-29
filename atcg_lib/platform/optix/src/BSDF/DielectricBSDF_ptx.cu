@@ -65,7 +65,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
         float value       = F * D * G / (4.0f * glm::abs(cos_theta_i));
         result.bsdf_value = reflectance_color * value;
         result.pdf_dw     = D * glm::abs(glm::dot(normal, wh)) * F / (4.0f * glm::abs(glm::dot(wo, wh)));
-
+        result.flags =
+            roughness < 1e-3f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection;
         // G / (glm::abs(cos_theta_i)) / (glm::abs(glm::dot(normal, wh)) / (glm::abs(glm::dot(wo, wh))))
         // = G * VdotH / (NdotV * NdotH)
     }
@@ -93,6 +94,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
         result.bsdf_value = reflectance_color * value;
         result.pdf_dw = D * glm::abs(glm::dot(normal, wh)) * (1.0f - F) * glm::abs(glm::dot(wo, wh)) / (denom * denom);
 
+        result.flags = roughness < 1e-3f ? atcg::BSDFComponentType::IdealTransmission
+                                         : atcg::BSDFComponentType::GlossyTransmission;
         // G * glm::abs(glm::dot(wi, wh)) / (glm::abs(cos_theta_i))
         // glm::abs(glm::dot(normal, wh))
         // = G * VdotH / (NdotH * NdotV)
@@ -155,6 +158,7 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
     result.bsdf_weight = eval_result.bsdf_value / (eval_result.pdf_dw);
     result.pdf_dw      = eval_result.pdf_dw;
     result.out_dir     = wo;
+    result.flags       = eval_result.flags;
 
     return result;
 }
