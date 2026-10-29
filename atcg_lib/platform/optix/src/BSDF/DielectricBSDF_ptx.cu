@@ -22,8 +22,60 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalRefractivePDF(const atcg::SurfaceIn
                                                            const float roughness,
                                                            const float ior)
 {
-    // TODO
-    return 0.0f;
+    glm::vec3 wi = -si.incoming_direction;    // Points towards the last traced vertex (might be the camera)
+    glm::vec3 wo = outgoing_dir;              // Points towards next path vertex (might be a light source)
+
+    // Convention: normals points into the thinner medium. If the ior is greater than 1, then the normal points into the
+    // surface.
+    glm::vec3 normal = ior > 1.0f ? si.normal : -si.normal;
+
+    float cos_theta_i = glm::dot(normal, wi);
+    float cos_theta_o = glm::dot(normal, wo);
+
+    glm::vec3 interface_normal = cos_theta_i > 0.0f ? normal : -normal;
+
+    bool reflected = cos_theta_i * cos_theta_o > 0.0f;
+
+    float eta = cos_theta_i > 0.0f ? 1.0f / ior : ior;
+
+    if(reflected)
+    {
+        glm::vec3 wh = glm::sign(cos_theta_i) * glm::normalize(wi + wo);
+
+        float D = atcg::D_GGX(glm::abs(glm::dot(normal, wh)), roughness);
+        float G = atcg::G_SmithJointGGX(glm::abs(cos_theta_o), glm::abs(cos_theta_i), roughness);
+
+        float F = atcg::fresnel(eta, glm::abs(glm::dot(wi, wh)));
+
+        float pdf_dw = D * glm::abs(glm::dot(normal, wh)) * F / (4.0f * glm::abs(glm::dot(wo, wh)));
+
+        return pdf_dw;
+    }
+    else
+    {
+        glm::vec3 wh = -glm::normalize(eta * wi + wo);
+
+        if(glm::dot(wh, interface_normal) < 0.0f)
+        {
+            return 0.0f;
+        }
+
+        if(glm::dot(wi, wh) < 0.0f)
+        {
+            return 0.0f;
+        }
+
+        float D = atcg::D_GGX(glm::abs(glm::dot(normal, wh)), roughness);
+        float G = atcg::G_SmithJointGGX(glm::abs(cos_theta_o), glm::abs(cos_theta_i), roughness);
+        float F = atcg::fresnel(eta, glm::abs(glm::dot(wi, wh)));
+
+        float denom  = (eta * glm::dot(wi, wh) + glm::dot(wo, wh));
+        float value  = (1.0f - F) * G * D * glm::abs(glm::dot(wi, wh)) * glm::abs(glm::dot(wo, wh)) /
+                       (denom * denom * glm::abs(cos_theta_i));
+        float pdf_dw = D * glm::abs(glm::dot(normal, wh)) * (1.0f - F) * glm::abs(glm::dot(wo, wh)) / (denom * denom);
+
+        return pdf_dw;
+    }
 }
 
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atcg::SurfaceInteraction& si,
@@ -50,9 +102,6 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
 
     float eta = cos_theta_i > 0.0f ? 1.0f / ior : ior;
 
-    float ni = cos_theta_i > 0.0f ? 1.0f : ior;
-    float no = cos_theta_i > 0.0f ? ior : 1.0f;
-
     if(reflected)
     {
         glm::vec3 wh = glm::sign(cos_theta_i) * glm::normalize(wi + wo);
@@ -67,8 +116,6 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
         result.pdf_dw     = D * glm::abs(glm::dot(normal, wh)) * F / (4.0f * glm::abs(glm::dot(wo, wh)));
         result.flags =
             roughness < 1e-3f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection;
-        // G / (glm::abs(cos_theta_i)) / (glm::abs(glm::dot(normal, wh)) / (glm::abs(glm::dot(wo, wh))))
-        // = G * VdotH / (NdotV * NdotH)
     }
     else
     {
@@ -96,9 +143,6 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
 
         result.flags = roughness < 1e-3f ? atcg::BSDFComponentType::IdealTransmission
                                          : atcg::BSDFComponentType::GlossyTransmission;
-        // G * glm::abs(glm::dot(wi, wh)) / (glm::abs(cos_theta_i))
-        // glm::abs(glm::dot(normal, wh))
-        // = G * VdotH / (NdotH * NdotV)
     }
 
     return result;
