@@ -207,6 +207,14 @@ public:
                     {
                         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
                         atcg::Dictionary dict = atcg::Project::getActive()->getIntegratorSettings()->toDictionary();
+                        const auto& registered_integrators =
+                            atcg::IntegratorRegistry::getRegistry()->getRegisteredTypes();
+                        current_integrator_selection_index =
+                            std::distance(registered_integrators.begin(),
+                                          std::find(registered_integrators.begin(),
+                                                    registered_integrators.end(),
+                                                    atcg::Project::getActive()->getIntegratorSettings()->getType()));
+
                         initializePathtracer(dict);
                     }
                     atcg::RevisionStack::clearChache();
