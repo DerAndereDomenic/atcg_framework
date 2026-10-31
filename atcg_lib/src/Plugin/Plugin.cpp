@@ -149,6 +149,18 @@ bool PluginManagerSystem::loadPluginFromName(const std::string& name)
     return false;
 }
 
+bool PluginManagerSystem::releasePluginFromName(const std::string& name)
+{
+    for(const auto& [path, handle]: _loaded_plugins)
+    {
+        if(path.stem() == name)
+        {
+            return releasePlugin(path);
+        }
+    }
+    return false;
+}
+
 bool PluginManagerSystem::releasePlugin(const std::filesystem::path& path)
 {
     auto it = _loaded_plugins.find(path);

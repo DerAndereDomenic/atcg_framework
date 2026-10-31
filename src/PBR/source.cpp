@@ -491,8 +491,8 @@ public:
                 integrator.reset();
             }
     #endif
-            atcg::PluginManager::releasePlugin("bin/Debug/TestPlugin.dll");
-            atcg::PluginManager::loadPlugin("bin/Debug/TestPlugin.dll");
+            atcg::PluginManager::releasePluginFromName("TestPlugin");
+            atcg::PluginManager::loadPluginFromName("TestPlugin");
 
             if(enable_pathtracing)
             {

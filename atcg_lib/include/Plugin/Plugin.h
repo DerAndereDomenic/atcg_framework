@@ -42,6 +42,8 @@ public:
 
     bool releasePlugin(const std::filesystem::path& path);
 
+    bool releasePluginFromName(const std::string& name);
+
     bool releaseAllPlugins();
 
 private:
@@ -113,6 +115,11 @@ ATCG_INLINE bool loadPluginFromName(const std::string& name)
 ATCG_INLINE bool releasePlugin(const std::filesystem::path& path)
 {
     return SystemRegistry::instance()->getSystem<PluginManagerSystem>()->releasePlugin(path);
+}
+
+ATCG_INLINE bool releasePluginFromName(const std::string& name)
+{
+    return SystemRegistry::instance()->getSystem<PluginManagerSystem>()->releasePluginFromName(name);
 }
 
 ATCG_INLINE bool releaseAllPlugins()
