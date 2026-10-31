@@ -52,7 +52,6 @@ bool PluginManagerSystem::loadPlugin(const std::filesystem::path& path)
     temp_path.replace_extension(".temp");
     std::filesystem::copy(path, temp_path, std::filesystem::copy_options::overwrite_existing);
 
-    // TODO Platform-specific implementation for loading plugin using LoadLibrary (Windows) or dlopen (Linux)
     // Implementation for loading plugin
 
     auto handle = detail::loadLibrary(temp_path.string().c_str());
@@ -108,6 +107,46 @@ bool PluginManagerSystem::loadPlugin(const std::filesystem::path& path)
     _loaded_plugins[path] = handle;
 
     return true;
+}
+
+bool PluginManagerSystem::loadPluginFromName(const std::string& name)
+{
+#ifdef ATCG_BUILD_DEBUG
+    const std::string build_dir_name = "bin/Debug";
+#elif defined(ATCG_BUILD_RELEASE)
+    const std::string build_dir_name = "bin/Release";
+#else
+    const std::string build_dir_name = "bin/RelWithDebInfo";
+#endif
+
+#ifdef ATCG_PLATFORM_WINDOWS
+    const std::filesystem::path candidate_paths[] = {std::filesystem::path(name + ".dll"),
+                                                     std::filesystem::path("bin") / (name + ".dll"),
+                                                     std::filesystem::path("bin") / build_dir_name / (name + ".dll"),
+                                                     std::filesystem::path("lib") / (name + ".dll"),
+                                                     std::filesystem::path("lib") / build_dir_name / (name + ".dll")};
+#else
+    const std::filesystem::path candidate_paths[] = {std::filesystem::path(name + ".so"),
+                                                     std::filesystem::path("bin") / (name + ".so"),
+                                                     std::filesystem::path("bin") / build_dir_name / (name + ".so"),
+                                                     std::filesystem::path("lib") / (name + ".so"),
+                                                     std::filesystem::path("lib") / build_dir_name / (name + ".so")};
+
+#endif
+
+    for(const auto& path: candidate_paths)
+    {
+        if(std::filesystem::exists(path))
+        {
+            bool loaded = loadPlugin(path);
+            if(loaded)
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 bool PluginManagerSystem::releasePlugin(const std::filesystem::path& path)

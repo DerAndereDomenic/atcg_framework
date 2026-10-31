@@ -38,6 +38,8 @@ public:
 
     bool loadPlugin(const std::filesystem::path& path);
 
+    bool loadPluginFromName(const std::string& name);
+
     bool releasePlugin(const std::filesystem::path& path);
 
     bool releaseAllPlugins();
@@ -101,6 +103,11 @@ namespace PluginManager
 ATCG_INLINE bool loadPlugin(const std::filesystem::path& path)
 {
     return SystemRegistry::instance()->getSystem<PluginManagerSystem>()->loadPlugin(path);
+}
+
+ATCG_INLINE bool loadPluginFromName(const std::string& name)
+{
+    return SystemRegistry::instance()->getSystem<PluginManagerSystem>()->loadPluginFromName(name);
 }
 
 ATCG_INLINE bool releasePlugin(const std::filesystem::path& path)
