@@ -112,11 +112,11 @@ bool PluginManagerSystem::loadPlugin(const std::filesystem::path& path)
 bool PluginManagerSystem::loadPluginFromName(const std::string& name)
 {
 #ifdef ATCG_BUILD_DEBUG
-    const std::string build_dir_name = "bin/Debug";
+    const std::string build_dir_name = "Debug";
 #elif defined(ATCG_BUILD_RELEASE)
-    const std::string build_dir_name = "bin/Release";
+    const std::string build_dir_name = "Release";
 #else
-    const std::string build_dir_name = "bin/RelWithDebInfo";
+    const std::string build_dir_name = "RelWithDebInfo";
 #endif
 
 #ifdef ATCG_PLATFORM_WINDOWS
@@ -184,14 +184,12 @@ bool PluginManagerSystem::releasePlugin(const std::filesystem::path& path)
         integrator_registry->unregisterPlugin(it->second);
 #endif
 
-
-        // TODO Platform-specific implementation for releasing plugin using FreeLibrary (Windows) or dlclose (Linux)
         detail::freeLibrary(it->second);
-        _loaded_plugins.erase(it);
 
         std::filesystem::path temp_path = path;
         temp_path.replace_extension(".temp");
         std::filesystem::remove(temp_path);
+        _loaded_plugins.erase(it);
 
         return true;
     }
@@ -220,7 +218,6 @@ bool PluginManagerSystem::releaseAllPlugins()
         integrator_registry->unregisterPlugin(handle);
 #endif
 
-        // TODO Platform-specific implementation for releasing plugin using FreeLibrary (Windows) or dlclose (Linux)
         if(!detail::freeLibrary(handle))
         {
             success = false;

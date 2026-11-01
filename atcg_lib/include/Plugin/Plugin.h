@@ -46,7 +46,11 @@ public:
 
     bool releaseAllPlugins();
 
-private:
+    ATCG_INLINE const std::unordered_map<std::filesystem::path, PluginHandle>& getLoadedPlugins() const
+    {
+        return _loaded_plugins;
+    }
+
 private:
     std::unordered_map<std::filesystem::path, PluginHandle> _loaded_plugins;
 };
@@ -125,6 +129,11 @@ ATCG_INLINE bool releasePluginFromName(const std::string& name)
 ATCG_INLINE bool releaseAllPlugins()
 {
     return SystemRegistry::instance()->getSystem<PluginManagerSystem>()->releaseAllPlugins();
+}
+
+ATCG_INLINE const std::unordered_map<std::filesystem::path, PluginHandle>& getLoadedPlugins()
+{
+    return SystemRegistry::instance()->getSystem<PluginManagerSystem>()->getLoadedPlugins();
 }
 }    // namespace PluginManager
 

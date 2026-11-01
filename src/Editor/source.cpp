@@ -345,6 +345,7 @@ public:
 
         performance_panel.renderPanel(show_performance);
         panel.renderPanel(atcg::Project::getActive()->getActiveScene());
+        plugin_panel.renderPanel();
         hovered_entity = panel.getSelectedEntity();
         atcg::Project::getActive()->getActiveScene()->setSelectedEntity(hovered_entity);
 
@@ -481,6 +482,7 @@ private:
     atcg::GUI::SceneHierarchyPanel panel;
     atcg::GUI::PerformancePanel performance_panel;
     atcg::GUI::AssetPanel asset_panel;
+    atcg::GUI::PluginPanel plugin_panel;
     bool show_performance = false;
 
     float time       = 0.0f;

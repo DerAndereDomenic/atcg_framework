@@ -84,11 +84,12 @@
 #include <Math/Tracing.h>
 #include <Math/Color.h>
 
-//-------- Math -----------
+//-------- GUI -----------
 #include <GUI/SceneHierarchyPanel.h>
 #include <GUI/AssetPanel.h>
 #include <GUI/ComponentGUIHandler.h>
 #include <GUI/PerformancePanel.h>
+#include <GUI/PluginPanel.h>
 
 
 //-------- Utils -----------
