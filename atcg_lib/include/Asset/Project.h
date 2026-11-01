@@ -125,10 +125,12 @@ private:
     void serializeProjectInformation();
     void serializeProjectInformation_ver1();
     void serializeIntegratorSettings_ver1();
+    void serializePlugins_ver1();
 
     void deserializeProjectInformation();
     void deserializeProjectInformation_ver1(const nlohmann::json& j);
     void deserializeIntegratorSettings_ver1(const nlohmann::json& j);
+    void deserializePlugins_ver1(const nlohmann::json& j);
 
 private:
     std::filesystem::path _project_path;

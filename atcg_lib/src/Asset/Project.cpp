@@ -1,6 +1,7 @@
 #include <Asset/Project.h>
 #include <Asset/AssetManagerSystem.h>
 #include <Scene/RevisionStack.h>
+#include <Plugin/Plugin.h>
 
 #ifdef ATCG_CUDA_BACKEND
     #include <Integrator/IntegratorRegistry.h>
@@ -131,6 +132,7 @@ void Project::serializeProjectInformation()
 {
     serializeProjectInformation_ver1();
     serializeIntegratorSettings_ver1();
+    serializePlugins_ver1();
 }
 
 void Project::deserializeProjectInformation_ver1(const nlohmann::json& j)
@@ -188,6 +190,43 @@ void Project::deserializeProjectInformation()
             // Load default settings
             _integrator_settings = atcg::IntegratorRegistry::createIntegratorSettings("VolPathtracing");
         }
+
+        if(std::filesystem::exists(_project_path / "Plugins.json"))
+        {
+            std::ifstream plugins_file(_project_path / "Plugins.json");
+            nlohmann::json plugins_json;
+            plugins_file >> plugins_json;
+
+            deserializePlugins_ver1(plugins_json);
+        }
     }
 }
+
+void Project::serializePlugins_ver1()
+{
+    nlohmann::json j;
+
+    auto loaded_plugins = PluginManager::getLoadedPlugins();
+
+    for(const auto& [path, handle]: loaded_plugins)
+    {
+        std::string filename = path.filename().stem().string();
+        j["Plugins"].push_back(filename);
+    }
+
+    std::ofstream o(_project_path / "Plugins.json");
+    o << std::setw(4) << j << std::endl;
+}
+
+void Project::deserializePlugins_ver1(const nlohmann::json& j)
+{
+    if(j.contains("Plugins"))
+    {
+        for(const auto& plugin_name: j["Plugins"])
+        {
+            PluginManager::loadPluginFromName(plugin_name);
+        }
+    }
+}
+
 }    // namespace atcg
