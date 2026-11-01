@@ -464,6 +464,10 @@ public:
                 auto texture = atcg::Texture2D::create(img);
                 atcg::AssetManager::registerAsset(texture, filepath.stem().string());
             }
+            else if(file_ending == ".dll" || file_ending == ".so")
+            {
+                atcg::PluginManager::loadPlugin(filepath);
+            }
         }
 
         return true;
