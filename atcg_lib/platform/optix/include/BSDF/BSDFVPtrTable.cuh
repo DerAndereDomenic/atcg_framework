@@ -6,6 +6,7 @@
 #include <BSDF/BSDFFlags.h>
 #include <Spectrum/SampledSpectrum.h>
 #include <optix.h>
+#include <Integrator/TransportMode.h>
 
 
 namespace atcg
@@ -16,6 +17,7 @@ struct BSDFSamplingResult
     SampledSpectrum bsdf_weight;
     float pdf_dw            = 0.0f;
     BSDFComponentType flags = BSDFComponentType::Any;
+    float eta               = 1.0f;
 };
 
 struct BSDFEvalResult
@@ -23,6 +25,14 @@ struct BSDFEvalResult
     SampledSpectrum bsdf_value = SampledSpectrum(0);
     float pdf_dw               = 0.0f;
     BSDFComponentType flags    = BSDFComponentType::Any;
+};
+
+struct BSDFContext
+{
+    ATCG_HOST_DEVICE BSDFContext() : transport_mode(TransportMode::IMPORTANCE) {}
+    ATCG_HOST_DEVICE BSDFContext(TransportMode mode) : transport_mode(mode) {}
+
+    TransportMode transport_mode = TransportMode::IMPORTANCE;
 };
 
 struct BSDFVPtrTable
@@ -37,34 +47,38 @@ struct BSDFVPtrTable
 
     __device__ BSDFSamplingResult sampleBSDF(const SurfaceInteraction& si,
                                              const atcg::SampledWavelengths& wavelengths,
-                                             PCG32& rng) const
+                                             PCG32& rng,
+                                             const BSDFContext& ctx = BSDFContext()) const
     {
-        return optixDirectCall<BSDFSamplingResult, const SurfaceInteraction&, const atcg::SampledWavelengths&, PCG32&>(
-            sampleCallIndex,
-            si,
-            wavelengths,
-            rng);
+        return optixDirectCall<BSDFSamplingResult,
+                               const SurfaceInteraction&,
+                               const atcg::SampledWavelengths&,
+                               PCG32&,
+                               const BSDFContext&>(sampleCallIndex, si, wavelengths, rng, ctx);
     }
 
     __device__ BSDFEvalResult evalBSDF(const SurfaceInteraction& si,
                                        const glm::vec3& outgoing_dir,
-                                       const atcg::SampledWavelengths& wavelengths) const
+                                       const atcg::SampledWavelengths& wavelengths,
+                                       const BSDFContext& ctx = BSDFContext()) const
     {
         return optixDirectCall<BSDFEvalResult,
                                const SurfaceInteraction&,
                                const glm::vec3&,
-                               const atcg::SampledWavelengths&>(evalCallIndex, si, outgoing_dir, wavelengths);
+                               const atcg::SampledWavelengths&,
+                               const BSDFContext&>(evalCallIndex, si, outgoing_dir, wavelengths, ctx);
     }
 
     __device__ float evalPDF(const SurfaceInteraction& si,
                              const glm::vec3& outgoing_dir,
-                             const atcg::SampledWavelengths& wavelengths) const
+                             const atcg::SampledWavelengths& wavelengths,
+                             const BSDFContext& ctx = BSDFContext()) const
     {
-        return optixDirectCall<float, const SurfaceInteraction&, const glm::vec3&, const atcg::SampledWavelengths&>(
-            evalPDFCallIndex,
-            si,
-            outgoing_dir,
-            wavelengths);
+        return optixDirectCall<float,
+                               const SurfaceInteraction&,
+                               const glm::vec3&,
+                               const atcg::SampledWavelengths&,
+                               const BSDFContext&>(evalPDFCallIndex, si, outgoing_dir, wavelengths, ctx);
     }
 
     __device__ inline bool isDelta() const { return hasBSDFFlag(flags, BSDFComponentType::AnyDelta); }

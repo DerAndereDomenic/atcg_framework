@@ -154,7 +154,8 @@ public:
 
         createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
 #if ATCG_PLATFORM_WINDOWS
-        atcg::PluginManager::loadPlugin("bin/Debug/TestPlugin.dll");
+        atcg::PluginManager::loadPlugin("bin/RelWithDebInfo/TestPlugin.dll");
+        atcg::PluginManager::loadPlugin("bin/RelWithDebInfo/PerfectDielectric.dll");
 #else
         atcg::PluginManager::loadPlugin("lib/libTestPlugin.so");
 #endif

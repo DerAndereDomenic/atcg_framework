@@ -29,9 +29,22 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE float D_GGX(const float NdotH, const float ro
  *
  * @return Reflectance
  */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE ATCG_HOST_DEVICE float fresnel_schlick(const float F0, const float VdotH)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float fresnel_schlick(const float F0, const float VdotH)
 {
     return F0 + (1.0f - F0) * glm::pow(glm::max(0.0f, 1.0f - VdotH), 5.0f);
+}
+
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float fresnel(float eta, float cos_i)
+{
+    float sin2_t = eta * eta * (1.0f - cos_i * cos_i);
+
+    if(sin2_t >= 1.0f) return 1.0f;    // TIR
+
+    float cos_t = glm::sqrt(1.0f - sin2_t);
+    float n     = 1.0f / eta;    // η_t / η_i
+    float r_par = (n * cos_i - cos_t) / (n * cos_i + cos_t);
+    float r_per = (cos_i - n * cos_t) / (cos_i + n * cos_t);
+    return 0.5f * (r_par * r_par + r_per * r_per);
 }
 
 /**
@@ -82,4 +95,4 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 faceForward(const glm::vec3& normal
 {
     return glm::dot(normal, direction) < 0.0f ? -normal : normal;
 }
-}
+}    // namespace atcg

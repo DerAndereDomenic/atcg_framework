@@ -56,7 +56,7 @@ struct SamplingStrategy<SamplingStrategyType::HEMISPHERE_GGX, T>
     warp_halfway_to_refracted_direction_pdf(const float HdotV, const float HdotL, const float eta)
     {
         float denom = (HdotL + eta * HdotV);
-        return eta * eta * glm::abs(HdotV) / (denom * denom);
+        return glm::abs(HdotL) / (denom * denom);
     }
 };
 

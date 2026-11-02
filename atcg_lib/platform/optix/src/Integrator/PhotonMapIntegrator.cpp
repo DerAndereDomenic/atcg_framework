@@ -119,9 +119,9 @@ void PhotonMapIntegrator::tracePhotons()
 
     CUDA_SAFE_CALL(cudaStreamSynchronize(nullptr));
 
-    int generated_photons = 0;
-    _photon_index.download(&generated_photons);
-    ATCG_DEBUG("Generated photons: {}", generated_photons);
+    // int generated_photons = 0;
+    // _photon_index.download(&generated_photons);
+    // ATCG_DEBUG("Generated photons: {}", generated_photons);
 }
 
 void PhotonMapIntegrator::buildPhotonMap()
