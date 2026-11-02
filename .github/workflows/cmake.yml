@@ -16,7 +16,7 @@ jobs:
           submodules: recursive
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version: "3.12"
           cache: "pip"
       - run: sudo apt-get -y update
       - run: sudo apt-get install mesa-utils libglu1-mesa-dev freeglut3-dev mesa-common-dev libglew-dev libglfw3-dev libglm-dev libao-dev libmpg123-dev xorg-dev libxkbcommon-dev
@@ -50,7 +50,7 @@ jobs:
           submodules: recursive
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version: "3.12"
           cache: "pip"
       - run: pip install torch torchvision torchaudio
       - run: cmake -B ./build -S . -DATCG_CUDA_BACKEND=Off
