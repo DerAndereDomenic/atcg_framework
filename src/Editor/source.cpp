@@ -365,6 +365,7 @@ public:
         atcg::drawGuizmo(atcg::Project::getActive()->getActiveScene(),
                          hovered_entity,
                          current_operation,
+                         current_mode,
                          camera_controller->getCamera());
     }
 #endif
@@ -421,10 +422,17 @@ public:
                 current_operation = atcg::GuizmoOperation::ROTATE;
             }
         }
-        if(event->getKeyCode() == ATCG_KEY_S)
+        if(event->getKeyCode() == ATCG_KEY_Z)
         {
             current_operation = atcg::GuizmoOperation::SCALE;
         }
+
+        if(event->getKeyCode() == ATCG_KEY_L)
+        {
+            current_mode =
+                (current_mode == atcg::GuizmoMode::LOCAL) ? atcg::GuizmoMode::WORLD : atcg::GuizmoMode::LOCAL;
+        }
+
         // if(event->getKeyCode() == ATCG_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
         return true;
@@ -525,6 +533,7 @@ private:
     bool msaa_enabled                     = true;
 #ifndef ATCG_HEADLESS
     atcg::GuizmoOperation current_operation = atcg::GuizmoOperation::TRANSLATE;
+    atcg::GuizmoMode current_mode           = atcg::GuizmoMode::LOCAL;
 #endif
 
 #ifdef ATCG_CUDA_BACKEND

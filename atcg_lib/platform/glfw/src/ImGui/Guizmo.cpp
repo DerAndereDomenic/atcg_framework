@@ -25,11 +25,26 @@ ATCG_INLINE ImGuizmo::OPERATION toImGuizmoOperation(GuizmoOperation operation)
             return ImGuizmo::TRANSLATE;
     }
 }
+
+ATCG_INLINE ImGuizmo::MODE toImGuizmoMode(GuizmoMode mode)
+{
+    switch(mode)
+    {
+        case LOCAL:
+            return ImGuizmo::LOCAL;
+        case WORLD:
+            return ImGuizmo::WORLD;
+        default:
+            return ImGuizmo::LOCAL;
+    }
+}
+
 }    // namespace detail
 
 void drawGuizmo(const atcg::ref_ptr<Scene>& scene,
                 Entity entity,
                 GuizmoOperation operation,
+                GuizmoMode mode,
                 const atcg::ref_ptr<PerspectiveCamera>& camera)
 {
     bool useViewports        = atcg::Application::get()->getImGuiLayer()->dockspaceEnabled();
@@ -69,7 +84,7 @@ void drawGuizmo(const atcg::ref_ptr<Scene>& scene,
         bool manipulated = ImGuizmo::Manipulate(glm::value_ptr(camera_view),
                                                 glm::value_ptr(camera_projection),
                                                 detail::toImGuizmoOperation(operation),
-                                                ImGuizmo::LOCAL,
+                                                detail::toImGuizmoMode(mode),
                                                 glm::value_ptr(model));
 
         bool deactived = ImGui::IsItemDeactivated();

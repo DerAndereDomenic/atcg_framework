@@ -17,6 +17,12 @@ enum GuizmoOperation
     SCALE
 };
 
+enum GuizmoMode
+{
+    LOCAL,
+    WORLD
+};
+
 /**
  * @brief Draw a guizmo of the selected entity
  *
@@ -28,6 +34,7 @@ enum GuizmoOperation
 ATCG_API void drawGuizmo(const atcg::ref_ptr<Scene>& scene,
                          Entity entity,
                          GuizmoOperation operation,
+                         GuizmoMode mode,
                          const atcg::ref_ptr<PerspectiveCamera>& camera);
 
 /**

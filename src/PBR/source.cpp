@@ -429,6 +429,7 @@ public:
         atcg::drawGuizmo(atcg::Project::getActive()->getActiveScene(),
                          hovered_entity,
                          current_operation,
+                         atcg::GuizmoMode::LOCAL,
                          camera_controller->getCamera());
     }
 #endif

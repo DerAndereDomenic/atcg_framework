@@ -226,7 +226,11 @@ public:
         ImGui::End();
 
         // Gizmo test
-        atcg::drawGuizmo(scene, selected_entity, current_operation, camera_controller->getCamera());
+        atcg::drawGuizmo(scene,
+                         selected_entity,
+                         current_operation,
+                         atcg::GuizmoMode::LOCAL,
+                         camera_controller->getCamera());
 
         // if(atcg::GuizmoOperation::IsUsing()) { sphere->setModel(transform); }
     }

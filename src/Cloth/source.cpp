@@ -176,7 +176,11 @@ public:
         panel.renderPanel(scene);
         hovered_entity = panel.getSelectedEntity();
 
-        atcg::drawGuizmo(scene, hovered_entity, current_operation, camera_controller->getCamera());
+        atcg::drawGuizmo(scene,
+                         hovered_entity,
+                         current_operation,
+                         atcg::GuizmoMode::LOCAL,
+                         camera_controller->getCamera());
     }
 #endif
 
