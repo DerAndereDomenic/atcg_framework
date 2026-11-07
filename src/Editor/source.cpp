@@ -169,6 +169,11 @@ public:
 
                 atcg::Project::getActive()->setActiveScene(atcg::make_ref<atcg::Scene>());
                 atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
+
+                auto integrator_settings = atcg::IntegratorRegistry::createIntegratorSettings(
+                    atcg::IntegratorRegistry::getRegistry()->getRegisteredTypes()[current_integrator_selection_index]);
+                atcg::Project::getActive()->setIntegratorSettings(integrator_settings);
+
                 saved = false;
             }
 
@@ -319,6 +324,12 @@ public:
                     current_integrator_selection_index = n;
                     atcg::Project::getActive()->setIntegratorSettings(
                         atcg::IntegratorRegistry::createIntegratorSettings(integrator_names[n]));
+
+                    if(enable_pathtracing)
+                    {
+                        atcg::Dictionary dict = atcg::Project::getActive()->getIntegratorSettings()->toDictionary();
+                        initializePathtracer(dict);
+                    }
                 }
 
                 // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
@@ -380,8 +391,15 @@ public:
         atcg::WindowResizeEvent resize_event(event->getWidth(), event->getHeight());
         camera_controller->onEvent(&resize_event);
         createOutputTexture(event->getWidth(), event->getHeight());
-        atcg::Dictionary dict = atcg::Project::getActive()->getIntegratorSettings()->toDictionary();
-        if(enable_pathtracing) initializePathtracer(dict);
+        if(enable_pathtracing)
+        {
+            auto settings = atcg::Project::getActive()->getIntegratorSettings();
+            if(settings)
+            {
+                atcg::Dictionary dict = settings->toDictionary();
+                initializePathtracer(dict);
+            }
+        }
         return false;
     }
 
