@@ -76,12 +76,7 @@ extern "C" __global__ void __raygen__rg()
 
         if(cos_theta_i > 0 && cos_theta_j > 0)
         {
-            bool occluded = atcg::traceOcclusion(params.handle,
-                                                 c_i,
-                                                 ray_direction,
-                                                 1e-4,
-                                                 ray_distance - 1e-4f,
-                                                 params.occlusion_trace_params);
+            bool occluded = atcg::traceOcclusion(params.handle, c_i, ray_direction, 1e-4, ray_distance - 1e-4f);
 
             if(!occluded)
             {
@@ -94,10 +89,4 @@ extern "C" __global__ void __raygen__rg()
 
     params.form_factors[launch_idx.x + params.n_faces * launch_idx.y] = G * area_j;
     params.form_factors[launch_idx.y + params.n_faces * launch_idx.x] = G * area_i;
-}
-
-
-extern "C" __global__ void __miss__occlusion()
-{
-    setOcclusionPayload(false);
 }

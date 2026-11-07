@@ -51,7 +51,6 @@ struct NRCParams
     atcg::BoundingBox* scene_aabb;
 
     TraceParameters surface_trace_params;
-    TraceParameters occlusion_trace_params;
 
     uint32_t frame_counter;
 

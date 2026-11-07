@@ -23,10 +23,8 @@ void RadiosityRayGenerator::initializePipeline()
 
     const std::string ptx_raygen_filename = "./bin/RadiosityRayGenerator_ptx.ptx";
     OptixProgramGroup raygen_prog_group   = _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
-    OptixProgramGroup occl_prog_group     = _pipeline->addMissShader({ptx_raygen_filename, "__miss__occlusion"});
 
-    _raygen_index         = _sbt->addRaygenEntry(raygen_prog_group);
-    _occlusion_miss_index = _sbt->addMissEntry(occl_prog_group);
+    _raygen_index = _sbt->addRaygenEntry(raygen_prog_group);
 
     _ias = atcg::make_ref<atcg::InstanceAccelerationStructure>(_context, _shapes, _pipeline->numRays());
 
@@ -41,8 +39,7 @@ void RadiosityRayGenerator::generateRays(atcg::Dictionary& dict)
 
     RadiosityParams params;
 
-    params.handle                 = _ias->getTraversableHandle();
-    params.occlusion_trace_params = _pipeline->getRay(0, _occlusion_miss_index, true);
+    params.handle = _ias->getTraversableHandle();
 
     params.form_factors = (float*)output.data_ptr();
     params.shape        = std::static_pointer_cast<atcg::MeshShape>(_shape)->getMeshShapeData().get();

@@ -76,7 +76,6 @@ private:
     uint32_t _raygen_sample_gen;
     uint32_t _raygen_train;
     uint32_t _surface_miss_index;
-    uint32_t _occlusion_miss_index;
 
     atcg::ref_ptr<Scene> _scene;
     atcg::ref_ptr<OptixScene> _optix_scene;

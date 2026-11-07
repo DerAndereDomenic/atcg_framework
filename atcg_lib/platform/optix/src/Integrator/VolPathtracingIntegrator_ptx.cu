@@ -39,6 +39,8 @@ extern "C" __global__ void __raygen__rg()
     atcg::AnyInteraction last_ai;
     last_ai->pdf = 1.0f;
 
+    float eta = 1.0f;
+
     for(int n = 0; n < params.max_depth; ++n)
     {
         if(!next_ray_valid) break;
@@ -46,7 +48,7 @@ extern "C" __global__ void __raygen__rg()
 
         if(params.use_rr)
         {
-            float rr_prob = camera_ray.importance.maxComponent();
+            float rr_prob = glm::min(camera_ray.importance.maxComponent() / (eta * eta), 0.95f);
             if(rng.nextFloat() < rr_prob)
             {
                 camera_ray.importance /= rr_prob;
@@ -125,12 +127,11 @@ extern "C" __global__ void __raygen__rg()
                     }
 
                     bool occluded =
-                        traceOcclusion(params.handle,
-                                       si_dummy.position,
-                                       emitter_sampling.direction_to_light,
-                                       1e-3f,
-                                       emitter_sampling.distance_to_light - si_dummy.incoming_distance - 1e-3f,
-                                       params.occlusion_trace_params);
+                        atcg::traceOcclusion(params.handle,
+                                             si_dummy.position,
+                                             emitter_sampling.direction_to_light,
+                                             1e-3f,
+                                             emitter_sampling.distance_to_light - si_dummy.incoming_distance - 1e-3f);
 
                     if(occluded)
                     {
@@ -236,12 +237,11 @@ extern "C" __global__ void __raygen__rg()
                 emitter_sampling.pdf_dw *= emitter_selection_pdf;
                 emitter_sampling.radiance_weight_at_receiver /= emitter_selection_pdf;
 
-                bool occluded = traceOcclusion(params.handle,
-                                               si.position,
-                                               emitter_sampling.direction_to_light,
-                                               1e-3f,
-                                               emitter_sampling.distance_to_light - 1e-3f,
-                                               params.occlusion_trace_params);
+                bool occluded = atcg::traceOcclusion(params.handle,
+                                                     si.position,
+                                                     emitter_sampling.direction_to_light,
+                                                     1e-3f,
+                                                     emitter_sampling.distance_to_light - 1e-3f);
 
                 if(occluded)
                 {
@@ -268,6 +268,7 @@ extern "C" __global__ void __raygen__rg()
                 camera_ray.ray.origin    = si.position;
                 camera_ray.ray.direction = result.out_dir;
                 camera_ray.importance *= result.bsdf_weight;
+                eta *= result.eta;
                 next_ray_valid = true;
 
                 if((int)(result.flags & atcg::BSDFComponentType::NullTransmission) == 0)
@@ -312,9 +313,4 @@ extern "C" __global__ void __miss__ms()
 
     si->setInvalid();
     si->incoming_direction = ray_dir;
-}
-
-extern "C" __global__ void __miss__occlusion()
-{
-    setOcclusionPayload(false);
 }

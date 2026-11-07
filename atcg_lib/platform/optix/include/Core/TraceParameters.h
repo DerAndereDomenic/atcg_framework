@@ -29,25 +29,22 @@ ATCG_INLINE ATCG_DEVICE bool traceOcclusion(OptixTraversableHandle handle,
                                             const glm::vec3& ray_origin,
                                             const glm::vec3& ray_direction,
                                             float tmin,
-                                            float tmax,
-                                            TraceParameters trace_params)
+                                            float tmax)
 {
-    uint32_t occluded = 1u;
-    float3 o          = make_float3(ray_origin.x, ray_origin.y, ray_origin.z);
-    float3 d          = make_float3(ray_direction.x, ray_direction.y, ray_direction.z);
-    optixTrace(handle,
-               o,
-               d,
-               tmin,
-               tmax,
-               0.0f,                      // rayTime
-               OptixVisibilityMask(1),    // visibilityMask
-               trace_params.rayFlags,     // OPTIX_RAY_FLAG_NONE
-               trace_params.SBToffset,
-               trace_params.SBTstride,
-               trace_params.missSBTIndex,
-               occluded);
-    return occluded != 0;
+    float3 o = make_float3(ray_origin.x, ray_origin.y, ray_origin.z);
+    float3 d = make_float3(ray_direction.x, ray_direction.y, ray_direction.z);
+    optixTraverse(handle,
+                  o,
+                  d,
+                  tmin,
+                  tmax,
+                  0.0f,                                                                     // rayTime
+                  OptixVisibilityMask(1),                                                   // visibilityMask
+                  OPTIX_RAY_FLAG_DISABLE_ANYHIT | OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT,    // OPTIX_RAY_FLAG_NONE
+                  0,
+                  0,
+                  0);
+    return optixHitObjectIsHit();
 }
 
 /**

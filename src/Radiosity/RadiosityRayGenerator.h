@@ -30,7 +30,6 @@ private:
     atcg::ref_ptr<atcg::Shape> _shape;
 
     uint32_t _raygen_index;
-    uint32_t _occlusion_miss_index;
 
     atcg::dref_ptr<RadiosityParams> _launch_params;
 

@@ -72,6 +72,7 @@ bool PluginManagerSystem::loadPlugin(const std::filesystem::path& path)
         return false;
     }
 
+#ifndef ATCG_HEADLESS
     using RegisterSystemsFunc = void (*)(ImGuiContext*);
     auto registerSystems      = detail::getFunction<RegisterSystemsFunc>(handle, "registerSystems");
     if(!registerSystems)
@@ -81,6 +82,7 @@ bool PluginManagerSystem::loadPlugin(const std::filesystem::path& path)
         return false;
     }
     registerSystems(ImGui::GetCurrentContext());
+#endif
 
     using RegisterPythonBindingsFunc = void (*)(pybind11::module&);
     auto registerPythonBindings = detail::getFunction<RegisterPythonBindingsFunc>(handle, "registerPythonBindings");
