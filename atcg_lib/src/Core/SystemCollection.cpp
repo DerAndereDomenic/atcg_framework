@@ -190,6 +190,11 @@ void SystemCollection::Impl::initSystems(const WindowProps& props, const Window:
 
     SystemRegistry::instance()->registerSystem(_render_pass_registry.get());
 
+#ifdef ATCG_CUDA_BACKEND
+    // All built-in materials and BSDFs are registered at this point
+    BSDFRegistry::validateMaterialCoverage();
+#endif
+
     _scene_renderer = atcg::make_ref<SceneRendererSystem>(_renderer.get());
     SystemRegistry::instance()->registerSystem(_scene_renderer.get());
 
