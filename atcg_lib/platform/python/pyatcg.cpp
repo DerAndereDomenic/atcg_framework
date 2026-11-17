@@ -1505,9 +1505,7 @@ inline void defineBindings(py::module_& m)
 
     m_scene_hierarchy_panel.def(py::init<>())
         .def(py::init<>())
-        .def("renderPanel", &atcg::GUI::SceneHierarchyPanel::renderPanel)
-        .def("selectEntity", &atcg::GUI::SceneHierarchyPanel::selectEntity, "entity"_a)
-        .def("getSelectedEntity", &atcg::GUI::SceneHierarchyPanel::getSelectedEntity);
+        .def("renderPanel", &atcg::GUI::SceneHierarchyPanel::renderPanel);
 
     m_hit_info.def_readonly("position", &atcg::Tracing::HitInfo::position)
         .def_readonly("incoming_direction", &atcg::Tracing::HitInfo::incoming_direction)

@@ -22,7 +22,7 @@ public:
     /**
      * @brief Default constructor
      */
-    SceneHierarchyPanel(const std::string uuid = "Main") : _uuid(uuid) {};
+    SceneHierarchyPanel(const std::string& uuid = "Main") : _uuid(uuid) {};
 
     /**
      * @brief Should be called in onImGuiRender.
@@ -30,30 +30,17 @@ public:
      */
     void renderPanel(const atcg::ref_ptr<Scene>& scene);
 
-    /**
-     * @brief Set an entity as selected
-     *
-     * @param entity The entity
-     */
-    void selectEntity(Entity entity);
-
-    /**
-     * @brief Get the currently selected entity
-     *
-     * @return The selected entity
-     */
-    ATCG_INLINE Entity getSelectedEntity() const { return _selected_entity; }
 
 private:
+    void selectEntity(Entity entity);
+
     void drawEntityNode(const atcg::ref_ptr<Scene>& scene, Entity entity);
 
     void drawComponents(const atcg::ref_ptr<Scene>& scene, Entity entity);
 
-    Entity _selected_entity;
-
     bool _focues_components = false;
 
-    std::string _uuid;
+    std::string _uuid = "Main";
 };
 }    // namespace GUI
 }    // namespace atcg

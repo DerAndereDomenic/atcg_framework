@@ -20,10 +20,11 @@ namespace GUI
 
 void SceneHierarchyPanel::drawEntityNode(const atcg::ref_ptr<Scene>& scene, Entity entity)
 {
-    auto& tag = entity.getComponent<NameComponent>().name();
+    auto selected_entity = scene->getSelectedEntity();
+    auto& tag            = entity.getComponent<NameComponent>().name();
 
-    ImGuiTreeNodeFlags flags = ((_selected_entity && _selected_entity.getComponent<IDComponent>().ID() ==
-                                                         entity.getComponent<IDComponent>().ID())
+    ImGuiTreeNodeFlags flags = ((selected_entity && selected_entity.getComponent<IDComponent>().ID() ==
+                                                        entity.getComponent<IDComponent>().ID())
                                     ? ImGuiTreeNodeFlags_Selected
                                     : 0) |
                                ImGuiTreeNodeFlags_Bullet;
@@ -50,7 +51,7 @@ void SceneHierarchyPanel::drawEntityNode(const atcg::ref_ptr<Scene>& scene, Enti
     if(entityDeleted)
     {
         atcg::RevisionStack::startRecording<EntityRemovedRevision>(scene, entity);
-        if(_selected_entity == entity) selectEntity({});
+        if(selected_entity == entity) scene->setSelectedEntity({});
         scene->removeEntity(entity);
         atcg::RevisionStack::endRecording();
     }
@@ -99,22 +100,27 @@ void SceneHierarchyPanel::drawComponents(const atcg::ref_ptr<Scene>& scene, Enti
 
 void SceneHierarchyPanel::selectEntity(Entity entity)
 {
-    _selected_entity   = entity;
     _focues_components = true;
+
+    if(entity && entity.scene())
+    {
+        entity.scene()->setSelectedEntity(entity);
+    }
 }
 
 void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene)
 {
-    if(_selected_entity.scene() != scene.get())
-    {
-        _selected_entity = {};
-    }
+    // if(_selected_entity.scene() != scene.get())
+    // {
+    //     _selected_entity = {};
+    // }
+    auto selected_entity = scene->getSelectedEntity();
 
     ImGui::Begin(ATCG_CONCAT_ID("Scene Hierarchy", _uuid));
 
     if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive())
     {
-        selectEntity({});
+        scene->setSelectedEntity({});
     }
 
     for(auto e: scene->getAllEntitiesWith<NameComponent>())
@@ -152,9 +158,9 @@ void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene)
     {
         if(ImGui::BeginTabItem(ATCG_CONCAT_ID("Components", _uuid), (bool*)0, flags))
         {
-            if(_selected_entity)
+            if(selected_entity)
             {
-                drawComponents(scene, _selected_entity);
+                drawComponents(scene, selected_entity);
             }
             ImGui::EndTabItem();
         }

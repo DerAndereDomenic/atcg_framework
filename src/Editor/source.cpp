@@ -224,8 +224,8 @@ public:
                     }
                     atcg::RevisionStack::clearChache();
 
-                    hovered_entity = atcg::Entity();
-                    saved          = true;
+                    selected_entity = atcg::Entity();
+                    saved           = true;
                 }
             }
 
@@ -357,13 +357,13 @@ public:
         performance_panel.renderPanel(show_performance);
         panel.renderPanel(atcg::Project::getActive()->getActiveScene());
         plugin_panel.renderPanel();
-        hovered_entity = panel.getSelectedEntity();
-        atcg::Project::getActive()->getActiveScene()->setSelectedEntity(hovered_entity);
+        selected_entity = atcg::Project::getActive()->getActiveScene()->getSelectedEntity();
+        // atcg::Project::getActive()->getActiveScene()->setSelectedEntity(selected_entity);
 
         asset_panel.renderPanel();
 
         atcg::drawGuizmo(atcg::Project::getActive()->getActiveScene(),
-                         hovered_entity,
+                         selected_entity,
                          current_operation,
                          current_mode,
                          camera_controller->getCamera());
@@ -442,9 +442,9 @@ public:
     {
         if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !atcg::isOverGuizmo())
         {
-            hovered_entity = atcg::Utils::pickEntity(mouse_pos);
-            panel.selectEntity(hovered_entity);
-            atcg::Project::getActive()->getActiveScene()->setSelectedEntity(hovered_entity);
+            selected_entity = atcg::Utils::pickEntity(mouse_pos);
+            // panel.selectEntity(selected_entity);
+            atcg::Project::getActive()->getActiveScene()->setSelectedEntity(selected_entity);
         }
         return true;
     }
@@ -503,7 +503,7 @@ public:
 private:
     bool saved = false;
 
-    atcg::Entity hovered_entity;
+    atcg::Entity selected_entity;
 
     atcg::ref_ptr<atcg::CameraController> camera_controller;
 

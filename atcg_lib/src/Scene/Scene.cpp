@@ -22,7 +22,7 @@ public:
     atcg::ref_ptr<Skybox> skybox;
     bool has_skybox = false;
 
-    Entity selected_entity;
+    Entity selected_entity = {};
 };
 
 Scene::Impl::Impl()
