@@ -21,7 +21,7 @@ CMake options:
 
 Torch is found through the active Python installation, using charonload. On Windows, `<python>/Lib/site-packages/torch/lib` must be on `PATH` at runtime.
 
-All executables, DLLs and `.ptx` files are written to `bin/`, and libraries to `lib/`. Executables load PTX through relative paths such as `./bin/MeshShape_ptx.ptx`. They also expect shaders and resources relative to the repo root. **Run binaries from the repository root.** (The MSVC debugger working directory is already set to the root.)
+All executables, DLLs and `.ptx` files are written to `bin/`, and libraries to `lib/`. Shaders, resources and PTX modules are located through absolute paths baked in at build time (`atcg::shader_directory()`, `resource_directory()`, `ptx_directory()` in `Core/Path.h`). The environment variables `ATCG_SHADER_DIR`, `ATCG_RESOURCE_DIR` and `ATCG_PTX_DIR` override these directories at runtime.
 
 ## Tests
 
@@ -65,7 +65,7 @@ The design is Hazel-style. An app defines `atcg::createApplication()` (entry poi
 
 ### OptiX / CUDA device code
 - Device programs are `*_ptx.cu` files whose first line is `#pragma cuda_source_property_format = PTX`. `cmake/FilterPTX.cmake` finds them by that pragma. It compiles them into a `<prefix>_ptxmodules` object library and copies the `.ptx` into `bin/`. Without the pragma a `.cu` file is compiled as normal CUDA into the host target.
-- Host classes (`Foo.h/.cpp`) build an OptiX pipeline and SBT. They reference PTX entry points by file and name, e.g. `{"./bin/Foo_ptx.ptx", "__raygen__rg"}`. Launch parameters shared between host and device go in `FooData.cuh`.
+- Host classes (`Foo.h/.cpp`) build an OptiX pipeline and SBT. They reference PTX entry points by module name and entry point, e.g. `{"Foo_ptx", "__raygen__rg"}`. Launch parameters shared between host and device go in `FooData.cuh`.
 - Polymorphism on the device uses "VPtrTable" structs (`*VPtrTable.cuh`). These hold OptiX direct-callable indices. BSDFs, emitters, sensors, films, media, phase functions and shape samplers all use them. Integrators build on `Integrator`, `SceneAdapter` (Scene → OptiX scene/IAS) and `RaytracingPipeline`/`ShaderBindingTable`. `plugins/SimpleIntegrator` is a minimal reference implementation.
 - Radiance is carried as `SampledSpectrum`/`SampledWavelengths`. `ATCG_SPECTRAL_RENDERING` decides whether the renderer is truly spectral.
 
@@ -89,6 +89,8 @@ These load automatically when working in the matching directories:
 - Always make sure the formatting is applied
 - Do not commit any code or push code
 - Do not compile or run the tests unless I tell you to
+- Do not plan to write tests unless told to
+- Do not throw runtime exceptions. Use ATCG_WARN, ATCG_ERROR, etc. to log errors
 
 ## Coding rules
 - Adhere to the coding conventions when defining new classes, variables and functions

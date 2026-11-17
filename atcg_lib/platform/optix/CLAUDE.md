@@ -8,7 +8,8 @@ Everything under `atcg_lib/platform/optix/` is compiled only when `ATCG_CUDA_BAC
 - Headers shared by host and device must compile under both `nvcc` (PTX) and the host compiler. Use `ATCG_HOST_DEVICE`, and put device-only members inside `#ifdef __CUDACC__`. Host-only includes (ImGui, `ComponentGUIHandler`) go inside `#ifndef __CUDACC__`.
 - PTX modules are compiled separately from `atcg_lib`. They inherit its include dirs and compile definitions but do not link against it. Device code can only use header-only code, `__device__` functions and OptiX intrinsics.
 - PTX entry-point names (`__raygen__*`, `__miss__*`, `__closesthit__*`, `__direct_callable__*`) and PTX file paths are plain strings in host code. If you rename one side, grep for and update the other. By convention, direct-callable names carry a type suffix, e.g. `__direct_callable__sample_pbrbsdf`.
-- After changing a `*_ptx.cu` file, rebuild the owning target so the `-copy` step refreshes `bin/*.ptx`. The binary loads `./bin/*.ptx` at runtime, so a stale PTX file causes confusing behavior.
+- Refer to PTX modules by bare module name (`"Foo_ptx"`), never by path. `RayTracingPipeline` resolves the name to `atcg::ptx_directory()/Foo_ptx.ptx` (`Core/Path.h`; overridable with the `ATCG_PTX_DIR` environment variable). Relative paths like `"./bin/Foo_ptx.ptx"` still work but are deprecated and log a warning.
+- After changing a `*_ptx.cu` file, rebuild the owning target so the `-copy` step refreshes `bin/*.ptx`. PTX is loaded from disk at runtime, so a stale PTX file causes confusing behavior.
 - Device-side objects are allocated with `atcg::dref_ptr<T>` / `atcg::DeviceBuffer<T>` and filled with `.upload(&host_obj)`. Never use `make_ref` for device memory.
 
 ## File conventions (per component `Foo`)
@@ -32,7 +33,7 @@ Everything under `atcg_lib/platform/optix/` is compiled only when `ATCG_CUDA_BAC
 There are no virtual functions on the device. Each polymorphic family (BSDF, Emitter, Sensor, Film, Medium, PhaseFunction, ShapeSampler) has a `*VPtrTable` struct in `*VPtrTable.cuh`. The struct holds SBT callable indices plus flags. Its `__device__` methods dispatch with `optixDirectCall`.
 
 The pattern, using `BSDF/PBRBSDF.cpp` as the reference:
-1. In `initializePipeline`, call `pipeline->addCallableShader({"./bin/Foo_ptx.ptx", "__direct_callable__..."})` for each method.
+1. In `initializePipeline`, call `pipeline->addCallableShader({"Foo_ptx", "__direct_callable__..."})` for each method.
 2. Call `sbt->addCallableEntry(group, _data_buffer.get())` and keep the returned index.
 3. Fill a host `FooVPtrTable` with the indices and flags, then `_vptr_table.upload(&table)`.
 4. Integrators and launch params store `const FooVPtrTable*` device pointers and call e.g. `bsdf->sampleBSDF(si, wavelengths, rng, ctx)`.
@@ -46,7 +47,7 @@ If you add a method to a family, update all of these: the VPtrTable struct (inde
 ## Integrators (`Integrator/`)
 
 - Subclass `Integrator(context, dict)`. It provides `_pipeline` and `_sbt`.
-  - In the constructor, register the shape hit groups (e.g. `MeshShape` → `"./bin/MeshShape_ptx.ptx"`, `__closesthit__mesh`), run `SceneAdapter`, add your raygen and miss programs, then call `createPipeline()` + `createSBT()`. The scene arrives as `dict["scene"]`, with `dict["width"]` and `dict["height"]`.
+  - In the constructor, register the shape hit groups (e.g. `MeshShape` → `"MeshShape_ptx"`, `__closesthit__mesh`), run `SceneAdapter`, add your raygen and miss programs, then call `createPipeline()` + `createSBT()`. The scene arrives as `dict["scene"]`, with `dict["width"]` and `dict["height"]`.
   - Implement `generateRays(Dictionary&)`, `reset()` and `onImGuiRender()`.
 - `generateRays` fills a `*Params` struct (from `FooData.cuh`), uploads it, and calls `_pipeline->launch(...)`. It writes `"output"` (radiance tensor) and `"entity_ids"` into the dictionary. Consumers (`src/PBR`, the Python bindings) read those keys.
 - Built-ins (`PathtracingIntegrator`, `VolPathtracingIntegrator`, `PhotonMapIntegrator`), `BSDF`s and other components are registered in `atcg_lib/src/Core/SystemCollection.cpp`. Plugins register through `registry.registerIntegrator<T>("Name")` / `registerBSDF`. They are created by name with `IntegratorRegistry::createIntegrator(name, context, dict)`.
