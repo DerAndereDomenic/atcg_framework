@@ -1,1 +1,0 @@
-@../../src/Renderer/CLAUDE.md
