@@ -8,6 +8,11 @@ namespace atcg
 class PerfectDielectric : public atcg::Material
 {
 public:
+    /**
+     * @brief The material type name, shared by the material and its BSDF registration
+     */
+    static constexpr const char* TypeName = "PerfectDielectric";
+
     PerfectDielectric();
 
     virtual void uploadMaterial(atcg::RendererSystem* renderer, const atcg::ref_ptr<atcg::Shader>& shader) override;

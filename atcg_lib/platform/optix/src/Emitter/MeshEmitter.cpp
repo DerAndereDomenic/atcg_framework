@@ -37,7 +37,7 @@ void MeshEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pi
 {
     _sampler->ensureInitialized(pipeline, sbt);
 
-    const std::string ptx_emitter_filename = "./bin/MeshEmitter_ptx.ptx";
+    const std::string ptx_emitter_filename = "MeshEmitter_ptx";
     auto sample_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_meshemitter"});
     auto eval_prog_group = pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_meshemitter"});

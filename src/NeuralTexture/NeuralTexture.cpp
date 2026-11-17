@@ -29,7 +29,7 @@ NeuralTexture::NeuralTexture(const atcg::ref_ptr<atcg::RaytracingContext>& conte
     _pipeline = atcg::make_ref<atcg::RayTracingPipeline>(context);
     _sbt      = atcg::make_ref<atcg::ShaderBindingTable>();
 
-    const std::string ptx_raygen_filename = "./bin/NeuralTexture_ptx.ptx";
+    const std::string ptx_raygen_filename = "NeuralTexture_ptx";
     OptixProgramGroup fwd_prog_group      = _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__fwd"});
     OptixProgramGroup bckwd_prog_group    = _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__bckwd"});
 

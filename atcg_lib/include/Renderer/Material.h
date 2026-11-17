@@ -225,6 +225,12 @@ protected:
 class ATCG_API OpaqueMaterial : public MicrofacetMaterial
 {
 public:
+    /**
+     * @brief The material type name. Used as the key in the material registry, for serialization, and to select the
+     * matching BSDF in the OptiX backend.
+     */
+    static constexpr const char* TypeName = "Opaque";
+
     OpaqueMaterial();
 
     /**
@@ -287,6 +293,11 @@ private:
 class ATCG_API DielectricMaterial : public MicrofacetMaterial
 {
 public:
+    /**
+     * @brief The material type name (see OpaqueMaterial::TypeName)
+     */
+    static constexpr const char* TypeName = "Dielectric";
+
     DielectricMaterial();
 
     /**
@@ -307,6 +318,11 @@ private:
 class ATCG_API NullMaterial : public Material
 {
 public:
+    /**
+     * @brief The material type name (see OpaqueMaterial::TypeName)
+     */
+    static constexpr const char* TypeName = "Null";
+
     NullMaterial();
 
     /**

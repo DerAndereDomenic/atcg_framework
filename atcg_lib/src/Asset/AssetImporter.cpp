@@ -34,11 +34,11 @@ namespace detail
 atcg::ref_ptr<Material> deserializeMaterialType_ver1(const std::filesystem::path& path,
                                                      const nlohmann::json& material_node)
 {
-    std::string material_type_string = material_node.value(TYPE_KEY, "Opaque");
+    std::string material_type_string = material_node.value(TYPE_KEY, std::string(OpaqueMaterial::TypeName));
 
     if(material_type_string == "Glass")
     {
-        material_type_string = "Dielectric";    // Backwards compatibility
+        material_type_string = DielectricMaterial::TypeName;    // Backwards compatibility
     }
 
     return MaterialRegistry::deserializeMaterial(material_type_string, path, material_node);

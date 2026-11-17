@@ -31,7 +31,7 @@ PerfectDielectricBSDF::~PerfectDielectricBSDF() {}
 void PerfectDielectricBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                                const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    const std::string ptx_bsdf_filename = "./bin/PerfectDielectricBSDF_ptx.ptx";
+    const std::string ptx_bsdf_filename = "PerfectDielectricBSDF_ptx";
     auto sample_prog_group =
         pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_perfectdielectricbsdf"});
     auto eval_prog_group =
@@ -56,6 +56,6 @@ void PerfectDielectricBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPip
 
 void PerfectDielectricBSDF::registerBSDF(BSDFRegistry::Registry* registry)
 {
-    ATCG_REGISTER_BSDF(registry, "PerfectDielectric", PerfectDielectricBSDF);
+    ATCG_REGISTER_BSDF(registry, PerfectDielectric::TypeName, PerfectDielectricBSDF);
 }
 }    // namespace atcg

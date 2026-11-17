@@ -39,7 +39,7 @@ PBRBSDF::~PBRBSDF()
 void PBRBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                  const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    const std::string ptx_bsdf_filename = "./bin/PBRBSDF_ptx.ptx";
+    const std::string ptx_bsdf_filename = "PBRBSDF_ptx";
     auto sample_prog_group   = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_pbrbsdf"});
     auto eval_prog_group     = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_pbrbsdf"});
     auto eval_pdf_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__evalpdf_pbrbsdf"});
@@ -60,6 +60,6 @@ void PBRBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeli
 
 void PBRBSDF::registerBSDF(BSDFRegistry::Registry* registry)
 {
-    ATCG_REGISTER_BSDF(registry, "Opaque", PBRBSDF);
+    ATCG_REGISTER_BSDF(registry, OpaqueMaterial::TypeName, PBRBSDF);
 }
 }    // namespace atcg

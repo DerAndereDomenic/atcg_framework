@@ -5,7 +5,7 @@
 
 void RadiosityRayGenerator::initializePipeline()
 {
-    _pipeline->addTrianglesHitGroupShader("MeshShape", 0, {"./bin/MeshShape_ptx.ptx", "__closesthit__mesh"}, {});
+    _pipeline->addTrianglesHitGroupShader("MeshShape", 0, {"MeshShape_ptx", "__closesthit__mesh"}, {});
 
     auto graph = atcg::Graph::createTriangleMesh(_mesh);
     atcg::Dictionary dict;
@@ -21,7 +21,7 @@ void RadiosityRayGenerator::initializePipeline()
     shape_instance->initializePipeline(_pipeline, _sbt);
     _shapes.push_back(shape_instance);
 
-    const std::string ptx_raygen_filename = "./bin/RadiosityRayGenerator_ptx.ptx";
+    const std::string ptx_raygen_filename = "RadiosityRayGenerator_ptx";
     OptixProgramGroup raygen_prog_group   = _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
 
     _raygen_index = _sbt->addRaygenEntry(raygen_prog_group);
