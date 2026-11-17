@@ -56,6 +56,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added object outlining in editor
 - Added cull_mode to MeshRenderComponent, PointSphereRenderComponent, and EdgeCylidnerRenderComponent
 - Add options to the SceneRenderer
+- Added a multi-resolution hash grid and additional input encodings for neural networks
+- Added a Neural Radiance Caching (NRC) sample
+- Added drag and drop import of meshes and images
+- Added a global default material
+- Added a generic Registry class with runtime registries for materials, BSDFs, integrators, render passes and components
+- Added a plugin system that loads materials, BSDFs, integrators, render passes and components from shared libraries at runtime, including hot reloading and Linux support
+- Added Python bindings for registries, integrators, Dictionary, CameraComponent and MeshLightComponent, and a hook for plugins to add their own bindings
+- Added a progressive photon mapping integrator with photon emission for mesh, point and environment emitters
+- Added cuBQL as a dependency for GPU spatial queries
+- Added shape samplers with pdf evaluation (used by mesh emitters), including edge sampling for meshes
+- Added helper functions to convert pdfs between integration domains and to query BSDF flags
+- Added sensor functions to map ray directions to pixel coordinates and to compute the camera jacobian for light tracing
+- Added a BSDFContext that passes the transport mode to BSDF evaluation and sampling
+- Added a PerfectDielectric plugin with a Fresnel-based dielectric BSDF
+- Added a SimpleIntegrator plugin with BSDF-only and emitter-only sampling integrators
+- Added a fluid simulation sample
+- Added tangent vectors and more hit information to CPU-side ray tracing
+- Added `atcg::ptx_directory()` and the environment variables `ATCG_SHADER_DIR`, `ATCG_RESOURCE_DIR` and `ATCG_PTX_DIR` to override the shader, resource and PTX directories at runtime
+- Added `TypeName` constants to all material classes
+- Added a check that warns about material types without a matching BSDF at startup and after loading a plugin
 
 ### Changed
 
@@ -120,14 +140,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed RenderGraph and RenderPass API to use a reflection model with explicit input output declaration
 - Overhauled render passes and removed Skybox Pass (now handled in forward pass)
 - Scene class no longer holds a RenderGraph. Rendering of scenes is now handled by the new SceneRenderer class
-  <<<<<<< HEAD
 - Applications no longer link against ImGuizmo. Use exposed wrappers in Guizmo.h instead
 - FileDroppedEvent now holds all dropped files if multiple are dropped in at once
 - The revision stack now no longer tracks every change but only edits that may span multiple frames (e.g. for slider)
-- # AssetManager::clear will not clear standard assets
+- AssetManager::clear will not clear standard assets
 - Removed Math/Functions.h and merged it with Utils/HostDevice.h
 - Removed createRenderGraph()
-  > > > > > > > dev
+- Removed the material type enum; materials are now created by type name through the MaterialRegistry
+- The ComponentRegistry now registers components at runtime instead of at compile time
+- Core engine systems were moved from Application into a separate SystemCollection class
+- Upgraded to C++20 and updated spdlog
+- Path tracing components and integrators are only compiled when CUDA is available
+- Camera jittering is now performed by the sensor when generating rays
+- Occlusion rays now use optixTraverse, which simplifies the trace API
+- Mesh shapes now store separate index buffers for positions, uvs, normals and colors
+- Rasterization shaders, the PBR BSDF and photon mapping no longer depend on the normal orientation, and imported models and previews are no longer culled
+- The dielectric BSDF now uses the exact Fresnel equations
+- Removed the hemisphere camera and the neural BSDF
+- PTX modules are referenced by module name instead of a path relative to the working directory, so executables no longer need to be started from the repository root
+- Dictionary errors now name the key and the stored and requested types, and `getValueOr` warns on a type mismatch
+- Registering an already registered type in a registry now logs a warning
 
 ### Fixed
 
@@ -142,6 +174,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Guizmo deselecting entity
 - Fixed Deserialization of Script Components
 - Fixed export of textures that have a width that is not a multiple of 4
+- Fixed serialization of engine assets by assigning them fixed handles
+- Fixed deserialization of Dielectric materials
+- Fixed unloading of plugins and the plugin interface in headless mode
+- Fixed DLL export of templated classes in the RevisionStack
+- Fixed transformed ray queries in CPU-side ray tracing
+- Fixed photon weights of point emitters and a superfluous cosine term in the photon mapper
+- Fixed the Radiosity sample
+- Fixed clamping of the specular color
+- Fixed the dielectric BSDF (refraction jacobian, half-vector orientation and transport mode at interfaces)
+- Fixed Russian roulette weights by tracking the relative index of refraction during BSDF sampling
 
 ## [0.2.1-beta]
 
