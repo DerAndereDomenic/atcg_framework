@@ -372,9 +372,10 @@ void RendererSystem::drawCircle(const glm::vec3& position,
                                 const float& radius,
                                 const float& thickness,
                                 const glm::vec3& color,
-                                const atcg::ref_ptr<Camera>& camera)
+                                const atcg::ref_ptr<Camera>& camera,
+                                uint32_t entity_id)
 {
-    impl->drawCircle(position, radius, thickness, color, camera);
+    impl->drawCircle(position, radius, thickness, color, camera, entity_id);
 }
 
 void RendererSystem::drawImage(const atcg::ref_ptr<Framebuffer>& img)

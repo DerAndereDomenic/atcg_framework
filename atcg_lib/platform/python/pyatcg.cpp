@@ -799,7 +799,14 @@ inline void defineBindings(py::module_& m)
             "drawCADGrid",
             [](const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { atcg::Renderer::drawCADGrid(camera); },
             "camera"_a)
-        .def("drawCircle", &atcg::Renderer::drawCircle, "position"_a, "radius"_a, "thickness"_a, "color"_a, "camera"_a)
+        .def("drawCircle",
+             &atcg::Renderer::drawCircle,
+             "position"_a,
+             "radius"_a,
+             "thickness"_a,
+             "color"_a,
+             "camera"_a,
+             "entity_id"_a)
         .def(
             "drawImage",
             [](const atcg::ref_ptr<atcg::Framebuffer>& img) { atcg::Renderer::drawImage(img); },
@@ -828,7 +835,8 @@ inline void defineBindings(py::module_& m)
              "radius"_a,
              "thickness"_a,
              "color"_a,
-             "camera"_a)
+             "camera"_a,
+             "entity_id"_a)
         .def(
             "drawImage",
             [](const atcg::ref_ptr<atcg::RendererSystem>& self, const atcg::ref_ptr<atcg::Framebuffer>& img)
