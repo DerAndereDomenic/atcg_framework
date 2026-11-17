@@ -28,8 +28,9 @@ This file covers the rasterization renderer. Its code is spread over four places
 - Physical resources are keyed by `pass->name() + "." + port`. Pass names are type names (e.g. `"BlitPass"`), so **two instances of the same pass type in one graph collide** and share or overwrite each other's resources. Don't add a second instance of a pass type until this is fixed.
 - Every graph ends in the built-in `OutputPass`. It takes `color`, `entities`, `stencil` and `depth`, and writes them to the target FBO.
 - `SceneRendererSystem::Impl::createRenderGraph()` (`Scene/SceneRenderer.cpp`) builds the default graph:
-  `DepthPass` + `ShadowPass` → `ForwardPass` → (`BlitPass` if MSAA) → `TonemapPass` → `OutlinePass` → `OutputPass`.
+  `DepthPass` + `ShadowPass` → `ForwardPass` → (`BlitPass` if MSAA) → `TonemapPass` → `OutlinePass` → `OutputPass`, plus `SelectionMaskPass` → `OutlinePass`.
   Users can replace it with `SceneRenderer::setRenderGraph`.
+- Selection outline: `SelectionMaskPass` draws only `Scene::getSelectedEntity()` into a non-multisampled `RINT` mask (`selection_mask`; id where covered, -1 elsewhere). It has no depth attachment, so occluders are ignored. It doesn't light anything: it links the existing vertex/geometry stages (`base.vs`, `instanced.vs`, `cylinder_edge.vs`, `edge.vs`+`edge.gs`) with `shader/selection_mask.fs`. It renders each supported component through its `ComponentRenderer<T>` with `override_shader`. Components whose renderers ignore `override_shader` (`CameraComponent`, the medium components, `CustomRenderComponent`) are not outlined. `OutlinePass` (`shader/outline.fs`) then colors pixels just outside the mask's silhouette.
 
 ### Adding a render pass
 1. Subclass `RenderPass`. Its constructor must take `Dictionary& properties`, which is used for configuration.

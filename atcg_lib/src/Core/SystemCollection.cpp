@@ -25,6 +25,7 @@
 #include <Renderer/RenderPasses/OutlinePass.h>
 #include <Renderer/RenderPasses/BlitPass.h>
 #include <Renderer/RenderPasses/OutputPass.h>
+#include <Renderer/RenderPasses/SelectionMaskPass.h>
 
 // Renderer
 #include <Core/Window.h>
@@ -187,6 +188,7 @@ void SystemCollection::Impl::initSystems(const WindowProps& props, const Window:
     ShadowPass::registerRenderPass(_render_pass_registry.get());
     OutlinePass::registerRenderPass(_render_pass_registry.get());
     BlitPass::registerRenderPass(_render_pass_registry.get());
+    SelectionMaskPass::registerRenderPass(_render_pass_registry.get());
 
     SystemRegistry::instance()->registerSystem(_render_pass_registry.get());
 

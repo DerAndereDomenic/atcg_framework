@@ -76,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `atcg::ptx_directory()` and the environment variables `ATCG_SHADER_DIR`, `ATCG_RESOURCE_DIR` and `ATCG_PTX_DIR` to override the shader, resource and PTX directories at runtime
 - Added `TypeName` constants to all material classes
 - Added a check that warns about material types without a matching BSDF at startup and after loading a plugin
+- Added SelectionMaskPass that renders the selected entity into a separate id mask without lighting
 
 ### Changed
 
@@ -160,6 +161,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PTX modules are referenced by module name instead of a path relative to the working directory, so executables no longer need to be started from the repository root
 - Dictionary errors now name the key and the stored and requested types, and `getValueOr` warns on a type mismatch
 - Registering an already registered type in a registry now logs a warning
+- The selection outline is now computed from the selection mask and drawn outside the silhouette, so occluding objects no longer produce outline edges
 
 ### Fixed
 

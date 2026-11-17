@@ -5,12 +5,10 @@ layout(location = 0) out vec4 FragColor;
 in vec2 frag_uv;
 
 uniform int selected_entity_id;
-uniform isampler2D entity_ids;
+uniform isampler2D selection_mask;
 uniform sampler2D input_color_buffer;
 
-// vec3 outline_color = vec3(1, 0, 0);
-
-const int OUTLINE_THICKNESS = 2;
+const int OUTLINE_THICKNESS = 3;
 const vec3 outline_color = vec3(1.0, 0.69, 0.0);
 
 void main()
@@ -22,22 +20,22 @@ void main()
         return;
     }
 
-    ivec2 size = textureSize(entity_ids, 0);
-    int center_id = texture(entity_ids, frag_uv).r;
-    if(center_id != selected_entity_id)
+    // The mask and the output have the same resolution (both FULL_FRAMEBUFFER)
+    ivec2 size  = textureSize(selection_mask, 0);
+    ivec2 pixel = ivec2(gl_FragCoord.xy);
+
+    // Pixels covered by the selected entity keep their color; the outline is drawn outside the silhouette
+    if(texelFetch(selection_mask, pixel, 0).r == selected_entity_id)
     {
         return;
     }
-
-    float dx = 1.0 / float(size.x);
-    float dy = 1.0 / float(size.y);
 
     for(int x = -OUTLINE_THICKNESS; x <= OUTLINE_THICKNESS; x++)
     {
         for(int y = -OUTLINE_THICKNESS; y <= OUTLINE_THICKNESS; y++)
         {
-            int sample_id = texture(entity_ids, frag_uv + vec2(x * dx, y * dy)).r;
-            if(sample_id != selected_entity_id)
+            ivec2 sample_pixel = clamp(pixel + ivec2(x, y), ivec2(0), size - 1);
+            if(texelFetch(selection_mask, sample_pixel, 0).r == selected_entity_id)
             {
                 FragColor = vec4(outline_color, 1);
                 return;
