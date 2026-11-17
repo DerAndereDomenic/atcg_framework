@@ -18,9 +18,11 @@ SelectionMaskPass::SelectionMaskPass(Dictionary& properties) : RenderPass(proper
     _mask_shader_base      = atcg::make_ref<Shader>((shader_dir / "base.vs").string(), mask_fragment);
     _mask_shader_instanced = atcg::make_ref<Shader>((shader_dir / "instanced.vs").string(), mask_fragment);
     _mask_shader_cylinder  = atcg::make_ref<Shader>((shader_dir / "cylinder_edge.vs").string(), mask_fragment);
-    _mask_shader_edge      = atcg::make_ref<Shader>((shader_dir / "edge.vs").string(),
-                                               mask_fragment,
-                                               (shader_dir / "edge.gs").string());
+    _mask_shader_edge =
+        atcg::make_ref<Shader>((shader_dir / "edge.vs").string(), mask_fragment, (shader_dir / "edge.gs").string());
+    // Point lights are drawn as circles, so the fragment stage has to discard outside the circle as well
+    _mask_shader_circle =
+        atcg::make_ref<Shader>((shader_dir / "circle.vs").string(), (shader_dir / "selection_mask_circle.fs").string());
 }
 
 RenderPassReflection SelectionMaskPass::reflect(const CompileData& ctx)
@@ -86,6 +88,8 @@ void SelectionMaskPass::execute(const RenderContext& ctx, const ResourceTable& r
     renderWithMaskShader<InstanceRenderComponent>(ctx, selected, _mask_shader_instanced, auxiliary);
     renderWithMaskShader<EdgeCylinderRenderComponent>(ctx, selected, _mask_shader_cylinder, auxiliary);
     renderWithMaskShader<EdgeRenderComponent>(ctx, selected, _mask_shader_edge, auxiliary);
+    renderWithMaskShader<CameraComponent>(ctx, selected, _mask_shader_edge, auxiliary);
+    renderWithMaskShader<PointLightComponent>(ctx, selected, _mask_shader_circle, auxiliary);
 
     GraphicsCommand::endRenderPass();
 }

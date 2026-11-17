@@ -77,6 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `TypeName` constants to all material classes
 - Added a check that warns about material types without a matching BSDF at startup and after loading a plugin
 - Added SelectionMaskPass that renders the selected entity into a separate id mask without lighting
+- Added `override_shader` support to the CameraComponent and PointLightComponent renderers
 
 ### Changed
 

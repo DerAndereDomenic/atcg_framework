@@ -1,4 +1,5 @@
 #include <Scene/Components/PointLightComponent.h>
+#include <Asset/AssetManagerSystem.h>
 #include <Scene/ComponentRegistry.h>
 #include <Scene/Components/TransformComponent.h>
 
@@ -19,9 +20,35 @@ void ComponentRenderer<PointLightComponent>::renderComponent(atcg::RendererSyste
     auto& transform   = entity.getComponent<atcg::TransformComponent>();
     auto& point_light = entity.getComponent<atcg::PointLightComponent>();
 
+    const float radius    = 0.1f;
+    const float thickness = 1.0f;
+
+    auto override_shader = auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", nullptr);
+    if(override_shader)
+    {
+        // Draw the camera-facing billboard ourselves so that the override shader is used. The shader is expected to
+        // use the vertex stage of circle.vs (uniforms: position, radius, V, P).
+        auto quad = AssetManager::getQuadMesh();
+
+        override_shader->setVec3("position", transform.getPosition());
+        override_shader->setFloat("radius", radius);
+        override_shader->setFloat("thickness", thickness);
+        override_shader->setVec3("flat_color", point_light.color);
+        override_shader->setInt("entityID", entity.entity_handle());
+
+        GraphicsPipeline pipeline = GraphicsPipeline()
+                                        .setShader(override_shader)
+                                        .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+                                        .setRasterizerState(RasterizerState().enableCulling(false));
+
+        _renderer->drawVAO(quad->getVerticesArray(), camera, glm::mat4(1), pipeline, quad->n_vertices());
+        return;
+    }
+
     const auto& shader = _renderer->getShaderManager()->getShader("circle");
     shader->setInt("entityID", entity.entity_handle());
-    _renderer->drawCircle(transform.getPosition(), 0.1f, 1.0f, point_light.color, camera);
+    _renderer
+        ->drawCircle(transform.getPosition(), radius, thickness, point_light.color, camera, entity.entity_handle());
 }
 
 namespace Serialization

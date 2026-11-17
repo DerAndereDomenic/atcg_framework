@@ -56,5 +56,6 @@ private:
     atcg::ref_ptr<Shader> _mask_shader_instanced;
     atcg::ref_ptr<Shader> _mask_shader_cylinder;
     atcg::ref_ptr<Shader> _mask_shader_edge;
+    atcg::ref_ptr<Shader> _mask_shader_circle;
 };
 }    // namespace atcg
