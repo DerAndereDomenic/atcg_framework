@@ -52,10 +52,16 @@ struct ShapeSamplerVPtrTable
     }
 
     // Pdf in area domain. Because of uniform sampling, this is the same for all points on the shape
-    __device__ float evalShapePdf() const { return optixDirectCall<float>(evalShapePdfCallIndex); }
+    __device__ float evalShapePdf(const glm::vec3& position) const
+    {
+        return optixDirectCall<float, const glm::vec3&>(evalShapePdfCallIndex, position);
+    }
 
     // Pdf in area domain. Because of uniform sampling, this is the same for all edge points
-    __device__ float evalEdgePdf() const { return optixDirectCall<float>(evalEdgePdfCallIndex); }
+    __device__ float evalEdgePdf(const glm::vec3& position) const
+    {
+        return optixDirectCall<float, const glm::vec3&>(evalEdgePdfCallIndex, position);
+    }
 #endif
 };
 }    // namespace atcg
