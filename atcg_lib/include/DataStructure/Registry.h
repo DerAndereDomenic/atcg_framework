@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/Log.h>
 #include <Plugin/PluginHandle.h>
 #include <vector>
 
@@ -18,7 +19,11 @@ public:
 
     bool registerType(Handle plugin, std::string_view type, Desc desc)
     {
-        if(_entries.find(std::string(type)) != _entries.end()) return false;
+        if(_entries.find(std::string(type)) != _entries.end())
+        {
+            ATCG_WARN("Registry: type '{0}' is already registered; the new registration is ignored", type);
+            return false;
+        }
 
         _entries.emplace(std::string(type), Entry {plugin, std::move(desc)});
         _registered_types.push_back(std::string(type));
