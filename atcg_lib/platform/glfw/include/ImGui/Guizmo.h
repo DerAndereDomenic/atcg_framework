@@ -24,15 +24,17 @@ enum GuizmoMode
 };
 
 /**
- * @brief Draw a guizmo of the selected entity
+ * @brief Draw a guizmo for all selected entities of the scene.
+ * If one entity is selected, the guizmo manipulates its transform. If multiple entities are selected, the guizmo is
+ * placed at the mean position of the selection and transforms all selected entities around it. In local mode, the
+ * guizmo uses the orientation of the active entity.
  *
  * @param scene The scene
- * @param entity The entity
  * @param operation The guizmo operation
+ * @param mode The guizmo mode
  * @param camera The camera to draw from
  */
 ATCG_API void drawGuizmo(const atcg::ref_ptr<Scene>& scene,
-                         Entity entity,
                          GuizmoOperation operation,
                          GuizmoMode mode,
                          const atcg::ref_ptr<PerspectiveCamera>& camera);

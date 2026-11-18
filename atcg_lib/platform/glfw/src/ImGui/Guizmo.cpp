@@ -39,10 +39,38 @@ ATCG_INLINE ImGuizmo::MODE toImGuizmoMode(GuizmoMode mode)
     }
 }
 
+/**
+ * @brief Compute the matrix that is manipulated by the guizmo.
+ * This is the model matrix of the pivot entity with its translation replaced by the mean position of all entities. For
+ * a single entity, this is exactly its model matrix.
+ *
+ * The matrix is recomputed every frame from the current transforms. This works because ImGuizmo applies translations
+ * and rotations relative to the matrix it receives in each frame, and scales relative to the scale of the matrix at the
+ * start of the drag. Since the pivot entity is scaled along with the guizmo, its current scale always matches what
+ * ImGuizmo expects, and new_matrix * inverse(old_matrix) is the transformation of the current frame.
+ *
+ * @param entities The entities (all have a TransformComponent)
+ * @param pivot_entity The entity that defines the orientation and scale of the guizmo
+ *
+ * @return The guizmo matrix
+ */
+ATCG_INLINE glm::mat4 computeGuizmoMatrix(const std::vector<Entity>& entities, Entity pivot_entity)
+{
+    glm::vec3 center(0);
+    for(auto entity: entities)
+    {
+        center += entity.getComponent<TransformComponent>().getPosition();
+    }
+    center /= (float)entities.size();
+
+    glm::mat4 matrix = pivot_entity.getComponent<TransformComponent>().getModel();
+    matrix[3]        = glm::vec4(center, 1.0f);
+
+    return matrix;
+}
 }    // namespace detail
 
 void drawGuizmo(const atcg::ref_ptr<Scene>& scene,
-                Entity entity,
                 GuizmoOperation operation,
                 GuizmoMode mode,
                 const atcg::ref_ptr<PerspectiveCamera>& camera)
@@ -59,7 +87,17 @@ void drawGuizmo(const atcg::ref_ptr<Scene>& scene,
         ImGui::Begin("Viewport");
     }
 
-    if(entity && (entity.hasComponent<atcg::TransformComponent>()))
+    // Only entities with a transform can be manipulated. The active entity is the last element of the selection.
+    std::vector<Entity> entities;
+    for(auto entity: scene->getSelectedEntities())
+    {
+        if(entity && entity.hasComponent<atcg::TransformComponent>())
+        {
+            entities.push_back(entity);
+        }
+    }
+
+    if(!entities.empty())
     {
         ImGuizmo::SetOrthographic(false);
         ImGuizmo::BeginFrame();
@@ -76,27 +114,42 @@ void drawGuizmo(const atcg::ref_ptr<Scene>& scene,
         glm::mat4 camera_projection = camera->getProjection();
         glm::mat4 camera_view       = camera->getView();
 
-        glm::mat4 model;
-
-        atcg::TransformComponent& transform = entity.getComponent<atcg::TransformComponent>();
-        model                               = transform.getModel();
+        // The guizmo is placed at the center of the selection and oriented like the active entity
+        glm::mat4 before = detail::computeGuizmoMatrix(entities, entities.back());
+        glm::mat4 matrix = before;
 
         bool manipulated = ImGuizmo::Manipulate(glm::value_ptr(camera_view),
                                                 glm::value_ptr(camera_projection),
                                                 detail::toImGuizmoOperation(operation),
                                                 detail::toImGuizmoMode(mode),
-                                                glm::value_ptr(model));
+                                                glm::value_ptr(matrix));
 
         bool deactived = ImGui::IsItemDeactivated();
 
         if(manipulated && !atcg::RevisionStack::isRecording())
         {
-            atcg::RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(scene, entity);
+            atcg::RevisionStack::startRecording<MultiEntityRevision<ComponentEditedRevision<TransformComponent>>>(
+                scene,
+                entities);
         }
 
         if(manipulated)
         {
-            transform.setModel(model);
+            if(entities.size() == 1)
+            {
+                // The guizmo matrix is the model matrix of the entity
+                entities.front().getComponent<TransformComponent>().setModel(matrix);
+            }
+            else
+            {
+                // Apply the transformation of this frame to every entity
+                glm::mat4 delta = matrix * glm::inverse(before);
+                for(auto entity: entities)
+                {
+                    auto& transform = entity.getComponent<TransformComponent>();
+                    transform.setModel(delta * transform.getModel());
+                }
+            }
         }
 
         if(deactived && atcg::RevisionStack::isRecording())
