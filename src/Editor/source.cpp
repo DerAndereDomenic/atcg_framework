@@ -180,6 +180,8 @@ public:
     #endif
 
         performance_panel.renderPanel(show_performance);
+        // The active entity is only outlined if no asset was selected after it
+        panel.setEntitySelectionActive(!asset_panel.isAssetSelectionActive());
         panel.renderPanel(atcg::Project::getActive()->getActiveScene());
         plugin_panel.renderPanel();
 
@@ -246,6 +248,18 @@ public:
                 (current_mode == atcg::GuizmoMode::LOCAL) ? atcg::GuizmoMode::WORLD : atcg::GuizmoMode::LOCAL;
         }
 
+        // Copy & paste. Ctrl shortcuts are passed on by the ImGui layer independent of the focused window.
+        bool ctrl =
+            atcg::Input::isKeyPressed(ATCG_KEY_LEFT_CONTROL) || atcg::Input::isKeyPressed(ATCG_KEY_RIGHT_CONTROL);
+        if(ctrl && event->getKeyCode() == ATCG_KEY_C && !event->IsRepeat())
+        {
+            copySelection();
+        }
+        if(ctrl && event->getKeyCode() == ATCG_KEY_V && !event->IsRepeat())
+        {
+            pasteClipboard();
+        }
+
         if(event->getKeyCode() == ATCG_KEY_DELETE && !atcg::RevisionStack::isRecording())
         {
             // Delete all selected entities in one revision. Removing an entity also removes it from the selection.
@@ -300,6 +314,38 @@ public:
             mouse_pos.x >= 0 && mouse_pos.y >= 0 && mouse_pos.y < height && mouse_pos.x < app->getViewportSize().x;
 
         return false;
+    }
+
+    /**
+     * @brief Copy (Ctrl+C). Copies the most recent selection: the selected asset, otherwise the selected entities.
+     */
+    void copySelection()
+    {
+        if(asset_panel.isAssetSelectionActive())
+        {
+            atcg::Clipboard::copyAsset(asset_panel.getSelectedAsset());
+            return;
+        }
+
+        auto scene = atcg::Project::getActive()->getActiveScene();
+        if(scene) atcg::Clipboard::copyEntities(scene->getSelectedEntities());
+    }
+
+    /**
+     * @brief Paste (Ctrl+V). Entities are pasted into the active scene, assets into the asset manager.
+     */
+    void pasteClipboard()
+    {
+        auto scene = atcg::Project::getActive()->getActiveScene();
+        if(atcg::Clipboard::hasEntities() && scene)
+        {
+            atcg::Clipboard::pasteEntities(scene);
+        }
+        else if(atcg::Clipboard::hasAsset())
+        {
+            atcg::AssetHandle pasted = atcg::Clipboard::pasteAsset();
+            if(pasted != 0) asset_panel.selectAsset(pasted);
+        }
     }
 
     bool onAssetDropped(atcg::AssetDroppedEvent* event)
