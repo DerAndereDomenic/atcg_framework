@@ -266,9 +266,14 @@ public:
     EntityAddedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : EntityRevision(scene, entity) {}
 
     /**
-     * @brief Callback that is called on a redo
+     * @brief Callback that is called on a redo. The entity is recreated with the components it had at the end of the
+     * recording.
      */
-    virtual void apply() override { auto entity = _scene->createEntity((entt::entity)_entity_handle, _uuid, _name); }
+    virtual void apply() override
+    {
+        auto entity = _scene->createEntity((entt::entity)_entity_handle, _uuid, _name);
+        restoreComponents(entity);
+    }
 
     /**
      * @brief Callback that is called on a rollback
@@ -282,14 +287,20 @@ public:
     virtual void record_start_state() override;
 
     /**
-     * @brief Function that is called at the end of a capture. This should store all relevant information after the
-     * scene element was changed.
+     * @brief Function that is called at the end of a capture. This stores the components that were added to the entity
+     * during the recording.
      */
-    virtual void record_end_state() override {}
+    virtual void record_end_state() override;
+
+private:
+    // These functions are implemented in a cpp unit because they rely on the ComponentRegistry which also relies on the
+    // RevisionStack and therefore, we get a circular dependency.
+    void restoreComponents(atcg::Entity entity);
 
 private:
     UUID _uuid;
     std::string _name;
+    std::unordered_map<entt::id_type, std::shared_ptr<void>> _components;
 };
 
 /**

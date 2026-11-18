@@ -31,6 +31,25 @@ void EntityAddedRevision::record_start_state()
     _name = entity.getComponent<NameComponent>().name();
 }
 
+void EntityAddedRevision::record_end_state()
+{
+    // Capture the components that were added during the recording, so that a redo restores them
+    atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
+    _components.clear();
+    if(entity)
+    {
+        ComponentRegistry::storeAllComponents(entity, _components);
+    }
+}
+
+void EntityAddedRevision::restoreComponents(atcg::Entity entity)
+{
+    for(auto& [id, component]: _components)
+    {
+        ComponentRegistry::restoreAddAllComponents(entity, id, component);
+    }
+}
+
 void EntityRemovedRevision::record_start_state()
 {
     atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
