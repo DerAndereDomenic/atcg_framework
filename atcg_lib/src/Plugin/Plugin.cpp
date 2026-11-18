@@ -1,5 +1,6 @@
 #include <Plugin/Plugin.h>
 #include <Core/Path.h>
+#include <Scene/Clipboard.h>
 #if ATCG_PLATFORM_WINDOWS
     #include <Windows.h>    // TODO
 #else
@@ -178,6 +179,10 @@ bool PluginManagerSystem::releasePlugin(const std::filesystem::path& path)
     auto it = _loaded_plugins.find(path);
     if(it != _loaded_plugins.end())
     {
+        // The clipboard may hold copies of components or assets whose code lives in the plugin
+        ClipboardSystem* clipboard = SystemRegistry::instance()->getSystem<ClipboardSystem>();
+        if(clipboard) clipboard->clear();
+
         // Remove all classes registered by this plugin
         MaterialRegistry::Registry* material_registry = MaterialRegistry::getRegistry();
         material_registry->unregisterPlugin(it->second);
