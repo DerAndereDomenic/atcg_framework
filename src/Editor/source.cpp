@@ -13,41 +13,6 @@
 class EditorLayer : public atcg::Layer
 {
 public:
-    void createOutputTexture(int width, int height)
-    {
-#ifdef ATCG_CUDA_BACKEND
-        atcg::TextureSpecification spec;
-        spec.width     = width;
-        spec.height    = height;
-        spec.format    = atcg::TextureFormat::RGBA;
-        output_texture = atcg::Texture2D::create(spec);
-
-        atcg::TextureSpecification spec_int;
-        spec_int.width        = width;
-        spec_int.height       = height;
-        spec_int.format       = atcg::TextureFormat::RINT;
-        output_entity_texture = atcg::Texture2D::create(spec_int);
-#endif
-    }
-
-    void initializePathtracer(atcg::Dictionary& dict)
-    {
-#ifdef ATCG_CUDA_BACKEND
-        dict.setValue<atcg::ref_ptr<atcg::Scene>>("scene", atcg::Project::getActive()->getActiveScene());
-        dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width());
-        dict.setValue<uint32_t>("height", atcg::Renderer::getFramebuffer()->height());
-
-        // integrator = plugin_manager.createClass<atcg::Integrator>("TestIntegrator", optx_context, dict);
-        // integrator = atcg::make_ref<atcg::VolPathtracingIntegrator>(optx_context, dict);
-        auto registry                                          = atcg::IntegratorRegistry::getRegistry();
-        const std::vector<std::string>& registered_integrators = registry->getRegisteredTypes();
-        integrator =
-            atcg::IntegratorRegistry::createIntegrator(registered_integrators[current_integrator_selection_index],
-                                                       optx_context,
-                                                       dict);
-#endif
-    }
-
     EditorLayer(const std::string& name) : atcg::Layer(name) {}
 
     // This is run at the start of the program
@@ -72,14 +37,9 @@ public:
         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
 
 #ifdef ATCG_CUDA_BACKEND
-        optx_context             = atcg::RaytracingContextManager::createContext();
-        auto integrator_settings = atcg::IntegratorRegistry::createIntegratorSettings(
-            atcg::IntegratorRegistry::getRegistry()->getRegisteredTypes()[current_integrator_selection_index]);
-        atcg::Project::getActive()->setIntegratorSettings(integrator_settings);
+        integrator_controller = atcg::make_ref<atcg::IntegratorController>();
+        integrator_panel      = atcg::GUI::IntegratorPanel(integrator_controller);
 #endif
-
-        createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
-        atcg::SceneRenderer::setNumberMSAASamples(msaa_samples[current_msaa_selection_index]);
 
         // Create default scene
         {
@@ -102,56 +62,22 @@ public:
     virtual void onUpdate(float delta_time) override
     {
         performance_panel.registerFrameTime(delta_time);
-        bool updated = camera_controller->onUpdate(delta_time);
-
-#ifdef ATCG_CUDA_BACKEND
-        if(enable_pathtracing && updated)
-        {
-            integrator->reset();
-        }
-#endif
+        camera_controller->onUpdate(delta_time);
 
         atcg::Scripting::handleScriptUpdates(atcg::Project::getActive()->getActiveScene(), delta_time);
 
+        auto scene = atcg::Project::getActive()->getActiveScene();
 
-        // atcg::Renderer::clear();
-
-        if(enable_pathtracing)
-        {
 #ifdef ATCG_CUDA_BACKEND
-            atcg::Dictionary dict;
-            integrator->generateRays(dict);
-            torch::Tensor output_tensor   = dict.getValue<torch::Tensor>("output");
-            torch::Tensor output_entities = dict.getValue<torch::Tensor>("entity_ids");
-            output_texture->setData(output_tensor);
-            output_entity_texture->setData(output_entities);
-
-            atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
-            atcg::GraphicsCommand::clear();
-            atcg::Renderer::drawImage(output_texture, output_entity_texture);
-            atcg::GraphicsCommand::endRenderPass();
+        // The controller rebuilds or resets the integrator itself if the scene, camera or viewport changed
+        if(integrator_controller->render(scene, atcg::Renderer::getFramebuffer())) return;
 #endif
-        }
-        else
-        {
-            atcg::SceneRenderer::render(atcg::Project::getActive()->getActiveScene(),
-                                        camera_controller->getCamera(),
-                                        atcg::Renderer::getFramebuffer());
 
-            atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
+        atcg::SceneRenderer::render(scene, camera_controller->getCamera(), atcg::Renderer::getFramebuffer());
 
-            atcg::Renderer::drawCADGrid(camera_controller->getCamera());
-            atcg::GraphicsCommand::endRenderPass();
-        }
-
-
-        uint32_t current_revision = atcg::RevisionStack::numUndos();
-        if(current_revision != last_revision)
-        {
-            last_revision         = current_revision;
-            atcg::Dictionary dict = atcg::Project::getActive()->getIntegratorSettings()->toDictionary();
-            if(enable_pathtracing) initializePathtracer(dict);
-        }
+        atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
+        atcg::Renderer::drawCADGrid(camera_controller->getCamera());
+        atcg::GraphicsCommand::endRenderPass();
     }
 
 #ifndef ATCG_HEADLESS
@@ -169,10 +95,6 @@ public:
 
                 atcg::Project::getActive()->setActiveScene(atcg::make_ref<atcg::Scene>());
                 atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
-
-                auto integrator_settings = atcg::IntegratorRegistry::createIntegratorSettings(
-                    atcg::IntegratorRegistry::getRegistry()->getRegisteredTypes()[current_integrator_selection_index]);
-                atcg::Project::getActive()->setIntegratorSettings(integrator_settings);
 
                 saved = false;
             }
@@ -208,19 +130,10 @@ public:
                 {
                     atcg::Project::load(files[0]);
 
+                    // The integrator controller picks up the loaded integrator settings on its own
                     if(atcg::Project::getActive()->getActiveScene())
                     {
                         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
-                        atcg::Dictionary dict = atcg::Project::getActive()->getIntegratorSettings()->toDictionary();
-                        const auto& registered_integrators =
-                            atcg::IntegratorRegistry::getRegistry()->getRegisteredTypes();
-                        current_integrator_selection_index =
-                            std::distance(registered_integrators.begin(),
-                                          std::find(registered_integrators.begin(),
-                                                    registered_integrators.end(),
-                                                    atcg::Project::getActive()->getIntegratorSettings()->getType()));
-
-                        initializePathtracer(dict);
                     }
                     atcg::RevisionStack::clearChache();
 
@@ -240,6 +153,9 @@ public:
         if(ImGui::BeginMenu("Rendering"))
         {
             ImGui::MenuItem("Show Render Settings", nullptr, &show_render_settings);
+    #ifdef ATCG_CUDA_BACKEND
+            ImGui::MenuItem("Show Integrator Settings", nullptr, &show_integrator_settings);
+    #endif
             ImGui::EndMenu();
         }
 
@@ -258,99 +174,9 @@ public:
             ImGui::End();
         }
 
-        if(show_render_settings)
-        {
-            ImGui::Begin("Settings", &show_render_settings);
-            if(ImGui::Checkbox("VSync", &vsync))
-            {
-                atcg::Application::get()->getWindow()->toggleVSync(vsync);
-            }
-
-            const char* combo_preview_value = msaa_samples_str[current_msaa_selection_index];
-
-            if(msaa_enabled)
-            {
-                if(ImGui::BeginCombo("MSAA Samples", combo_preview_value))
-                {
-                    for(int n = 0; n < IM_ARRAYSIZE(msaa_samples); n++)
-                    {
-                        const bool is_selected = (current_msaa_selection_index == n);
-                        if(ImGui::Selectable(msaa_samples_str[n], is_selected))
-                        {
-                            current_msaa_selection_index = n;
-                            atcg::SceneRenderer::setNumberMSAASamples(msaa_samples[current_msaa_selection_index]);
-                        }
-
-                        // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-                        if(is_selected) ImGui::SetItemDefaultFocus();
-                    }
-                    ImGui::EndCombo();
-                }
-            }
-            ImGui::End();
-        }
-
-        ImGui::Begin("Integrator Settings");
-
-        if(enable_pathtracing)
-        {
-            if(ImGui::Button("Stop"))
-            {
-                enable_pathtracing = false;
-            }
-        }
-        else
-        {
-            if(ImGui::Button("Start"))
-            {
-                enable_pathtracing    = true;
-                atcg::Dictionary dict = atcg::Project::getActive()->getIntegratorSettings()->toDictionary();
-                initializePathtracer(dict);
-            }
-        }
-
-        auto registry                                   = atcg::IntegratorRegistry::getRegistry();
-        const std::vector<std::string> integrator_names = registry->getRegisteredTypes();
-        const char* combo_preview_value_integrator      = integrator_names[current_integrator_selection_index].c_str();
-
-        if(ImGui::BeginCombo("Integrator", combo_preview_value_integrator))
-        {
-            for(int n = 0; n < integrator_names.size(); n++)
-            {
-                const bool is_selected = (current_integrator_selection_index == n);
-                if(ImGui::Selectable(integrator_names[n].c_str(), is_selected))
-                {
-                    current_integrator_selection_index = n;
-                    atcg::Project::getActive()->setIntegratorSettings(
-                        atcg::IntegratorRegistry::createIntegratorSettings(integrator_names[n]));
-
-                    if(enable_pathtracing)
-                    {
-                        atcg::Dictionary dict = atcg::Project::getActive()->getIntegratorSettings()->toDictionary();
-                        initializePathtracer(dict);
-                    }
-                }
-
-                // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-                if(is_selected) ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-        }
-
-        auto integrator_settings = atcg::Project::getActive()->getIntegratorSettings();
-        if(integrator_settings)
-        {
-            if(integrator_settings->renderSettings() && enable_pathtracing)
-            {
-                atcg::Dictionary dict = integrator_settings->toDictionary();
-                initializePathtracer(dict);
-            }
-        }
-
-        ImGui::End();
-
+        render_settings_panel.renderPanel(show_render_settings);
     #ifdef ATCG_CUDA_BACKEND
-        if(enable_pathtracing) integrator->onImGuiRender();
+        integrator_panel.renderPanel(show_integrator_settings);
     #endif
 
         performance_panel.renderPanel(show_performance);
@@ -387,16 +213,6 @@ public:
     {
         atcg::WindowResizeEvent resize_event(event->getWidth(), event->getHeight());
         camera_controller->onEvent(&resize_event);
-        createOutputTexture(event->getWidth(), event->getHeight());
-        if(enable_pathtracing)
-        {
-            auto settings = atcg::Project::getActive()->getIntegratorSettings();
-            if(settings)
-            {
-                atcg::Dictionary dict = settings->toDictionary();
-                initializePathtracer(dict);
-            }
-        }
         return false;
     }
 
@@ -541,32 +357,21 @@ private:
 
     glm::vec2 mouse_pos;
 
+    atcg::GUI::RenderSettingsPanel render_settings_panel;
     bool show_render_settings      = false;
+    bool show_integrator_settings  = true;
     bool show_editor_settings      = false;
-    bool vsync                     = true;
     bool create_entities_on_import = true;
 
-    bool enable_pathtracing = false;
-
-    uint32_t msaa_samples[6]              = {1, 2, 4, 8, 16, 32};
-    const char* msaa_samples_str[6]       = {"1", "2", "4", "8", "16", "32"};
-    uint32_t current_msaa_selection_index = 0;
-    bool msaa_enabled                     = true;
 #ifndef ATCG_HEADLESS
     atcg::GuizmoOperation current_operation = atcg::GuizmoOperation::TRANSLATE;
     atcg::GuizmoMode current_mode           = atcg::GuizmoMode::LOCAL;
 #endif
 
 #ifdef ATCG_CUDA_BACKEND
-    atcg::ref_ptr<atcg::RaytracingContext> optx_context;
-    atcg::ref_ptr<atcg::Integrator> integrator;
-    uint32_t current_integrator_selection_index = 0;
+    atcg::ref_ptr<atcg::IntegratorController> integrator_controller;
+    atcg::GUI::IntegratorPanel integrator_panel;
 #endif
-
-    atcg::ref_ptr<atcg::Texture2D> output_texture;
-    atcg::ref_ptr<atcg::Texture2D> output_entity_texture;
-
-    uint32_t last_revision = 0;
 };
 
 class Editor : public atcg::Application
