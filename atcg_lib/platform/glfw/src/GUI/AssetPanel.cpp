@@ -11,6 +11,7 @@
 #include <Scene/Scene.h>
 #include <Core/Path.h>
 #include <Utils/Utils.h>
+#include <Scene/Clipboard.h>
 #include <Renderer/Renderer.h>
 #include <Scene/SceneRenderer.h>
 
@@ -689,11 +690,14 @@ void AssetPanel::displayScene(AssetHandle handle)
 ATCG_INLINE static bool ImageTextButton(ImTextureID textureID,
                                         const char* label,
                                         ImVec2 imageSize,
+                                        bool selected  = false,
+                                        bool outlined  = false,
                                         float spacing  = 4.0f,
                                         ImVec2 padding = ImVec2(4, 4))
 {
-    ImDrawList* drawList = ImGui::GetWindowDrawList();
-    ImVec2 textSize      = ImGui::CalcTextSize(label);
+    const ImVec4 selection_outline_color = ImVec4(1.0f, 0.69f, 0.0f, 1.0f);
+    ImDrawList* drawList                 = ImGui::GetWindowDrawList();
+    ImVec2 textSize                      = ImGui::CalcTextSize(label);
 
     // compute button size
     float buttonWidth  = std::max(imageSize.x, textSize.x) + padding.x * 2.0f;
@@ -712,6 +716,8 @@ ATCG_INLINE static bool ImageTextButton(ImTextureID textureID,
         col = ImGui::GetColorU32(ImGuiCol_ButtonActive);
     else if(ImGui::IsItemHovered())
         col = ImGui::GetColorU32(ImGuiCol_ButtonHovered);
+    else if(selected)
+        col = ImGui::GetColorU32(ImGuiCol_Header);
 
     if(col != 0)
     {
@@ -732,6 +738,16 @@ ATCG_INLINE static bool ImageTextButton(ImTextureID textureID,
     // draw text
     ImVec2 textPos = ImVec2(pos.x + (buttonWidth - textSize.x) * 0.5f, imagePos.y + imageSize.y + spacing);
     drawList->AddText(textPos, ImGui::GetColorU32(ImGuiCol_Text), label);
+
+    if(outlined)
+    {
+        drawList->AddRect(pos,
+                          ImVec2(pos.x + buttonSize.x, pos.y + buttonSize.y),
+                          ImGui::GetColorU32(selection_outline_color),
+                          ImGui::GetStyle().FrameRounding,
+                          0,
+                          2.0f);
+    }
 
     return clicked;
 }
@@ -817,8 +833,9 @@ void AssetPanel::drawAssetList()
             auto handle     = entry.first;
             std::string tag = data.name;
 
-            bool isSelected = (handle == _selected_handle);
-            if(isSelected) ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.5f, 0.9f, 1.0f));
+            // Gray background if the asset is selected, additional outline if it is the most recent selection
+            bool is_selected = (handle == _selected_handle);
+            bool is_outlined = is_selected && isAssetSelectionActive();
 
             auto icon = _script_icon;
 
@@ -836,18 +853,42 @@ void AssetPanel::drawAssetList()
             }
 
             ImGui::PushID(handle);
-            if(ImageTextButton((ImTextureID)icon->getID(), tag.c_str(), ImVec2(content_scale * 96, content_scale * 96)))
+            if(ImageTextButton((ImTextureID)icon->getID(),
+                               tag.c_str(),
+                               ImVec2(content_scale * 96, content_scale * 96),
+                               is_selected,
+                               is_outlined))
             {
                 selectAsset(handle);
             }
             // Assets can be dragged onto entities, selection combo boxes and the viewport
             Utils::beginAssetDragSource(handle);
-            ImGui::PopID();
 
-            if(isSelected) ImGui::PopStyleColor();    // always pop if you pushed
+            if(ImGui::BeginPopupContextItem("AssetContext"))
+            {
+                if(ImGui::MenuItem("Copy", "Ctrl+C"))
+                {
+                    Clipboard::copyAsset(handle);
+                }
+                ImGui::EndPopup();
+            }
+            ImGui::PopID();
 
             ImGui::SameLine();
         }
+    }
+
+    // Right click on empty space of the asset list
+    if(ImGui::BeginPopupContextWindow("AssetListContext",
+                                      ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+    {
+        if(ImGui::MenuItem("Paste", "Ctrl+V", false, Clipboard::hasAsset()))
+        {
+            // The pasted asset is selected
+            AssetHandle pasted = Clipboard::pasteAsset();
+            if(pasted != 0) selectAsset(pasted);
+        }
+        ImGui::EndPopup();
     }
 
     ImGui::EndChild();
@@ -920,6 +961,19 @@ void AssetPanel::drawAssetPanel()
     if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive())
     {
         selectAsset(0);
+    }
+
+    // The most recent selection wins: if the entity selection changes, the asset stays open in the editor but is no
+    // longer the active selection (see isAssetSelectionActive).
+    const auto& scene = Project::getActive()->getActiveScene();
+    if(scene)
+    {
+        std::vector<Entity> entity_selection = scene->getSelectedEntities();
+        if(entity_selection != _last_entity_selection)
+        {
+            if(!entity_selection.empty()) _asset_selection_active = false;
+            _last_entity_selection = std::move(entity_selection);
+        }
     }
 
     drawAssetList();
@@ -1013,7 +1067,8 @@ void AssetPanel::renderPanel()
 
 void AssetPanel::selectAsset(AssetHandle handle)
 {
-    _selected_handle = handle;
+    _selected_handle        = handle;
+    _asset_selection_active = handle != 0;
 
     // Clean up
     _current_vertex_path   = "";
