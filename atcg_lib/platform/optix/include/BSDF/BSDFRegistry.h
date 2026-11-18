@@ -31,6 +31,12 @@ ATCG_API atcg::ref_ptr<BSDF> createBSDF(Registry* registry,
                                         const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                         const atcg::ref_ptr<ShaderBindingTable>& sbt);
 
+/**
+ * @brief Check that every registered material type has a BSDF registered under the same name.
+ * Logs one warning per material type without a BSDF.
+ */
+ATCG_API void validateMaterialCoverage();
+
 ATCG_INLINE Registry* getRegistry()
 {
     Registry* registry = SystemRegistry::instance()->getSystem<BSDFRegistry::Registry>();

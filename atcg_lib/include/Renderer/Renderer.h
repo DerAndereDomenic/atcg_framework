@@ -128,12 +128,14 @@ public:
      * @param thickness The thickness of the circle
      * @param color The color
      * @param camera The camera
+     * @param entity_id The entity id
      */
     void drawCircle(const glm::vec3& position,
                     const float& radius,
                     const float& thickness,
                     const glm::vec3& color,
-                    const atcg::ref_ptr<Camera>& camera = {});
+                    const atcg::ref_ptr<Camera>& camera = {},
+                    uint32_t entity_id                  = -1);
 
     /**
      * @brief Display an image/texture in the main viewport. It is assumed that the image resolution is the same as the
@@ -291,9 +293,15 @@ ATCG_INLINE void drawCircle(const glm::vec3& position,
                             const float& radius,
                             const float& thickness,
                             const glm::vec3& color,
-                            const atcg::ref_ptr<Camera>& camera = {})
+                            const atcg::ref_ptr<Camera>& camera = {},
+                            uint32_t entity_id                  = -1)
 {
-    SystemRegistry::instance()->getSystem<RendererSystem>()->drawCircle(position, radius, thickness, color, camera);
+    SystemRegistry::instance()->getSystem<RendererSystem>()->drawCircle(position,
+                                                                        radius,
+                                                                        thickness,
+                                                                        color,
+                                                                        camera,
+                                                                        entity_id);
 }
 
 /**

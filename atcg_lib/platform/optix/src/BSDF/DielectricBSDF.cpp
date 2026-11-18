@@ -40,7 +40,7 @@ DielectricBSDF::~DielectricBSDF()
 void DielectricBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                         const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    const std::string ptx_bsdf_filename = "./bin/DielectricBSDF_ptx.ptx";
+    const std::string ptx_bsdf_filename = "DielectricBSDF_ptx";
     auto sample_prog_group =
         pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_dielectricbsdf"});
     auto eval_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_dielectricbsdf"});
@@ -63,6 +63,6 @@ void DielectricBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>&
 
 void DielectricBSDF::registerBSDF(BSDFRegistry::Registry* registry)
 {
-    ATCG_REGISTER_BSDF(registry, "Dielectric", DielectricBSDF);
+    ATCG_REGISTER_BSDF(registry, DielectricMaterial::TypeName, DielectricBSDF);
 }
 }    // namespace atcg

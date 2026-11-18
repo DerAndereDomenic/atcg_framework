@@ -36,14 +36,14 @@ VolPathtracingIntegrator::~VolPathtracingIntegrator() {}
 
 void VolPathtracingIntegrator::initializePipeline(const Dictionary& dict)
 {
-    _pipeline->addTrianglesHitGroupShader("MeshShape", 0, {"./bin/MeshShape_ptx.ptx", "__closesthit__mesh"}, {});
+    _pipeline->addTrianglesHitGroupShader("MeshShape", 0, {"MeshShape_ptx", "__closesthit__mesh"}, {});
 
     auto scene = dict.getValue<atcg::ref_ptr<Scene>>("scene");
 
     _optix_scene = SceneAdapter(_context, _pipeline, _sbt)
                        .apply(scene, dict.getValue<uint32_t>("width"), dict.getValue<uint32_t>("height"));
 
-    const std::string ptx_raygen_filename = "./bin/VolPathtracingIntegrator_ptx.ptx";
+    const std::string ptx_raygen_filename = "VolPathtracingIntegrator_ptx";
     OptixProgramGroup raygen_prog_group   = _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
     OptixProgramGroup miss_prog_group     = _pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
 

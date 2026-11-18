@@ -18,7 +18,7 @@ PointEmitter::~PointEmitter() {}
 void PointEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                       const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    const std::string ptx_emitter_filename = "./bin/PointEmitter_ptx.ptx";
+    const std::string ptx_emitter_filename = "PointEmitter_ptx";
     auto sample_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_pointemitter"});
     auto eval_prog_group = pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_pointemitter"});

@@ -40,7 +40,7 @@ void PinholeCamera::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& 
     _film->ensureInitialized(pipeline, sbt);
     markDirty();
 
-    const std::string ptx_sensor_filename = "./bin/PinholeCamera_ptx.ptx";
+    const std::string ptx_sensor_filename = "PinholeCamera_ptx";
     auto generate_ray_prog_group =
         pipeline->addCallableShader({ptx_sensor_filename, "__direct_callable__generate_ray_pinhole"});
     auto add_sample_prog_group =

@@ -30,8 +30,8 @@ ATCG_PLUGIN_LIBRARY();
 
 extern "C" ATCG_EXPORT void registerPlugin(atcg::PluginRegistry& registry)
 {
-    registry.registerMaterial<atcg::PerfectDielectric>("PerfectDielectric");
-    registry.registerBSDF<atcg::PerfectDielectricBSDF>("PerfectDielectric");
+    registry.registerMaterial<atcg::PerfectDielectric>(atcg::PerfectDielectric::TypeName);
+    registry.registerBSDF<atcg::PerfectDielectricBSDF>(atcg::PerfectDielectric::TypeName);
 }
 
 extern "C" ATCG_EXPORT void registerPythonBindings(pybind11::module& m) {}

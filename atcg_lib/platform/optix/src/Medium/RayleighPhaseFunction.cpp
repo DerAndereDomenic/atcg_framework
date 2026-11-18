@@ -9,7 +9,7 @@ RayleighPhaseFunction::~RayleighPhaseFunction() {}
 void RayleighPhaseFunction::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                                const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    const std::string ptx_bsdf_filename = "./bin/RayleighPhaseFunction_ptx.ptx";
+    const std::string ptx_bsdf_filename = "RayleighPhaseFunction_ptx";
     auto sample_prog_group =
         pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_rayleighphase"});
     auto eval_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_rayleighphase"});

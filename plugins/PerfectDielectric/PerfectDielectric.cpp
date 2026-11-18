@@ -34,7 +34,7 @@
 namespace atcg
 {
 
-PerfectDielectric::PerfectDielectric() : atcg::Material("PerfectDielectric")
+PerfectDielectric::PerfectDielectric() : atcg::Material(PerfectDielectric::TypeName)
 {
     atcg::TextureSpecification spec_ior;
     spec_ior.width  = 1;

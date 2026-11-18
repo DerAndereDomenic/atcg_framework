@@ -89,7 +89,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalMeshEmitterPDF(const atcg::AnyInter
     float light_ray_length_squared = glm::length2(si.position - last_si->position);
 
     // The probability of sampling any position on the surface of the mesh is the reciprocal of its surface area.
-    float light_position_pdf = sampler->evalShapePdf();
+    float light_position_pdf = sampler->evalShapePdf(last_si->position);
 
     // Probability of sampling this direction via light source sampling
     float cos_theta_on_light  = glm::abs(glm::dot(light_ray_dir, light_normal));
@@ -114,7 +114,7 @@ samplePhoton(const atcg::MeshEmitterData* sbt_data, const atcg::SampledWavelengt
     glm::vec3 local_dir = sampling_strategy.sample(rng.next2d());
     glm::vec3 world_dir = frame.toWorld(local_dir);
 
-    float position_pdf  = sbt_data->sampler->evalShapePdf();
+    float position_pdf  = sbt_data->sampler->evalShapePdf(light_position);
     float direction_pdf = sampling_strategy.pdf(local_dir);
     float pdf           = position_pdf * direction_pdf;
 

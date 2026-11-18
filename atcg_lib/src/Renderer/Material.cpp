@@ -150,7 +150,7 @@ void MicrofacetMaterial::setIor(const float ior_value)
     _ior_texture    = atcg::Texture2D::create(&ior_value, spec_ior);
 }
 
-OpaqueMaterial::OpaqueMaterial() : MicrofacetMaterial("Opaque")
+OpaqueMaterial::OpaqueMaterial() : MicrofacetMaterial(OpaqueMaterial::TypeName)
 {
     TextureSpecification spec_normal;
     spec_normal.width  = 1;
@@ -235,10 +235,10 @@ atcg::ref_ptr<Material> OpaqueMaterial::clone() const
 
 void OpaqueMaterial::registerMaterial(MaterialRegistry::Registry* registry)
 {
-    ATCG_REGISTER_MATERIAL(registry, "Opaque", OpaqueMaterial);
+    ATCG_REGISTER_MATERIAL(registry, OpaqueMaterial::TypeName, OpaqueMaterial);
 }
 
-DielectricMaterial::DielectricMaterial() : MicrofacetMaterial("Dielectric") {}
+DielectricMaterial::DielectricMaterial() : MicrofacetMaterial(DielectricMaterial::TypeName) {}
 
 void DielectricMaterial::uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader)
 {
@@ -289,10 +289,10 @@ atcg::ref_ptr<Material> DielectricMaterial::clone() const
 
 void DielectricMaterial::registerMaterial(MaterialRegistry::Registry* registry)
 {
-    ATCG_REGISTER_MATERIAL(registry, "Dielectric", DielectricMaterial);
+    ATCG_REGISTER_MATERIAL(registry, DielectricMaterial::TypeName, DielectricMaterial);
 }
 
-NullMaterial::NullMaterial() : Material("Null") {}
+NullMaterial::NullMaterial() : Material(NullMaterial::TypeName) {}
 
 void NullMaterial::uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader)
 {
@@ -340,7 +340,7 @@ atcg::ref_ptr<Material> NullMaterial::clone() const
 
 void NullMaterial::registerMaterial(MaterialRegistry::Registry* registry)
 {
-    ATCG_REGISTER_MATERIAL(registry, "Null", NullMaterial);
+    ATCG_REGISTER_MATERIAL(registry, NullMaterial::TypeName, NullMaterial);
 }
 
 

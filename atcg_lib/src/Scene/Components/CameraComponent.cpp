@@ -33,9 +33,15 @@ void ComponentRenderer<CameraComponent>::renderComponent(atcg::RendererSystem* _
         return;
     }
 
-    auto camera_frustum       = AssetManager::getCameraFrustumMesh();
-    auto quad                 = AssetManager::getQuadMesh();
-    auto shader               = _renderer->getShaderManager()->getShader("edge");
+    auto camera_frustum = AssetManager::getCameraFrustumMesh();
+    auto quad           = AssetManager::getQuadMesh();
+
+    // "override_shader" replaces the frustum shader (expects the vertex/geometry stages of edge.vs/edge.gs),
+    // "override_image_shader" replaces the shader of the image/preview quad (expects a regular M/V/P vertex stage).
+    auto shader       = auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader",
+                                                                    _renderer->getShaderManager()->getShader("edge"));
+    auto image_shader = _renderer->getShaderManager()->getShader("image_display");
+
     GraphicsPipeline pipeline = GraphicsPipeline()
                                     .setShader(shader)
                                     .setPrimitiveTopology(PrimitiveTopology::ATCG_POINTS)
@@ -61,7 +67,7 @@ void ComponentRenderer<CameraComponent>::renderComponent(atcg::RendererSystem* _
     {
         uint32_t id = _renderer->popTextureID();
 
-        auto shader = _renderer->getShaderManager()->getShader("image_display");
+        auto shader = image_shader;
 
         GraphicsPipeline pipeline = GraphicsPipeline()
                                         .setShader(shader)
@@ -77,7 +83,7 @@ void ComponentRenderer<CameraComponent>::renderComponent(atcg::RendererSystem* _
     }
     else if(comp.render_preview && comp.preview)
     {
-        auto shader = _renderer->getShaderManager()->getShader("image_display");
+        auto shader = image_shader;
 
         GraphicsPipeline pipeline = GraphicsPipeline()
                                         .setShader(shader)

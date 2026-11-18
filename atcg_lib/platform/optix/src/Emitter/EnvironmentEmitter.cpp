@@ -60,7 +60,7 @@ EnvironmentEmitter::~EnvironmentEmitter()
 void EnvironmentEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                             const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    const std::string ptx_emitter_filename = "./bin/EnvironmentEmitter_ptx.ptx";
+    const std::string ptx_emitter_filename = "EnvironmentEmitter_ptx";
     auto sample_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_environmentemitter"});
     auto eval_prog_group =

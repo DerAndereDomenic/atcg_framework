@@ -25,7 +25,7 @@ RenderPassReflection OutlinePass::reflect(const CompileData& ctx)
 
 
     reflection.addInput("input_color_buffer");
-    reflection.addInput("input_entity_buffer");
+    reflection.addInput("input_selection_mask");
 
 
     ResourceDescription desc_color;
@@ -46,8 +46,8 @@ void OutlinePass::execute(const RenderContext& ctx, const ResourceTable& resourc
 {
     auto renderer = ctx.renderer;
 
-    auto input_color  = resources.getTexture<Texture2D>("input_color_buffer");
-    auto input_entity = resources.getTexture<Texture2D>("input_entity_buffer");
+    auto input_color    = resources.getTexture<Texture2D>("input_color_buffer");
+    auto selection_mask = resources.getTexture<Texture2D>("input_selection_mask");
 
     auto target = resources.getTargetFBO();
 
@@ -63,20 +63,20 @@ void OutlinePass::execute(const RenderContext& ctx, const ResourceTable& resourc
             .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
             .setRasterizerState(RasterizerState().setDepthState(DepthState().enableDepthWrite(false)));
 
-    uint32_t color_id  = renderer->popTextureID();
-    uint32_t entity_id = renderer->popTextureID();
+    uint32_t color_id = renderer->popTextureID();
+    uint32_t mask_id  = renderer->popTextureID();
 
     shader->setInt("input_color_buffer", color_id);
-    shader->setInt("entity_ids", entity_id);
+    shader->setInt("selection_mask", mask_id);
     shader->setInt("selected_entity_id", ctx.scene->getSelectedEntity().entity_handle());
 
     GraphicsCommand::bindTexture(color_id, input_color);
-    GraphicsCommand::bindTexture(entity_id, input_entity);
+    GraphicsCommand::bindTexture(mask_id, selection_mask);
 
     renderer->drawVAO(_screen_quad->getVerticesArray(), {}, glm::mat4(1), pipeline, _screen_quad->n_vertices());
 
     renderer->pushTextureID(color_id);
-    renderer->pushTextureID(entity_id);
+    renderer->pushTextureID(mask_id);
 
     GraphicsCommand::endRenderPass();
 }

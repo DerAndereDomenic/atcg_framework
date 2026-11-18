@@ -15,7 +15,7 @@ NullBSDF::~NullBSDF() {}
 void NullBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                   const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    const std::string ptx_bsdf_filename = "./bin/NullBSDF_ptx.ptx";
+    const std::string ptx_bsdf_filename = "NullBSDF_ptx";
     auto sample_prog_group   = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_nullbsdf"});
     auto eval_prog_group     = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_nullbsdf"});
     auto eval_pdf_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__evalpdf_nullbsdf"});
@@ -36,6 +36,6 @@ void NullBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipel
 
 void NullBSDF::registerBSDF(BSDFRegistry::Registry* registry)
 {
-    ATCG_REGISTER_BSDF(registry, "Null", NullBSDF);
+    ATCG_REGISTER_BSDF(registry, NullMaterial::TypeName, NullBSDF);
 }
 }    // namespace atcg

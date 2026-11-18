@@ -60,7 +60,7 @@ MeshShapeSampler::~MeshShapeSampler() {}
 void MeshShapeSampler::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                           const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    const std::string ptx_bsdf_filename = "./bin/MeshShapeSampler_ptx.ptx";
+    const std::string ptx_bsdf_filename = "MeshShapeSampler_ptx";
     auto sample_point_prog_group =
         pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_point_mesh"});
     auto sample_edge_prog_group =

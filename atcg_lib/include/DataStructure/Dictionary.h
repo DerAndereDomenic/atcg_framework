@@ -1,15 +1,45 @@
 #pragma once
 
+#include <Core/Log.h>
 #include <Core/Memory.h>
 #include <Core/Platform.h>
 
 #include <torch/types.h>
 
-#include <unordered_map>
 #include <any>
+#include <cstdlib>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <typeinfo>
+#include <unordered_map>
+
+#ifdef __GNUG__
+    #include <cxxabi.h>
+#endif
 
 namespace atcg
 {
+namespace detail
+{
+/**
+ * @brief Get a human-readable name of a type (demangled on gcc/clang).
+ *
+ * @param info The type info
+ * @return The type name
+ */
+ATCG_INLINE std::string readableTypeName(const std::type_info& info)
+{
+#ifdef __GNUG__
+    int status = 0;
+    std::unique_ptr<char, void (*)(void*)> demangled(abi::__cxa_demangle(info.name(), nullptr, nullptr, &status),
+                                                     std::free);
+    if(status == 0 && demangled) return std::string(demangled.get());
+#endif
+    return std::string(info.name());
+}
+}    // namespace detail
+
 /**
  * @brief A class to model a dictionary
  */
@@ -45,7 +75,7 @@ public:
     ATCG_INLINE std::any getValueRaw(std::string_view key) const
     {
         auto it = _values.find(std::string(key));
-        if(it == _values.end()) throw std::out_of_range("Key not found");
+        if(it == _values.end()) throw std::out_of_range(keyNotFoundMessage(key));
 
         return it->second;
     }
@@ -53,7 +83,8 @@ public:
     /**
      * @brief Retrieve a value of a given type for a key.
      * Throws std::out_of_range if the key is not found.
-     * Throws std::bad_any_cast if the stored value type doesn't match T.
+     * Throws std::runtime_error if the stored value type doesn't match T. The message names the key, the stored type
+     * and the requested type.
      *
      * @tparam T The expected type of the stored value.
      * @param key The key to look up.
@@ -62,15 +93,21 @@ public:
     template<typename T>
     ATCG_INLINE T getValue(std::string_view key) const
     {
-        auto it = _values.find(std::string(key));
-        if(it == _values.end()) throw std::out_of_range("Key not found");
+        using U = std::remove_cv_t<std::remove_reference_t<T>>;
 
-        return std::any_cast<T>(it->second);
+        auto it = _values.find(std::string(key));
+        if(it == _values.end()) throw std::out_of_range(keyNotFoundMessage(key));
+
+        const U* value = std::any_cast<U>(&(it->second));
+        if(value == nullptr) throw std::runtime_error(typeMismatchMessage(key, it->second.type(), typeid(U)));
+
+        return *value;
     }
 
     /**
      * @brief Retrieve a value if it exists, or return a fallback value.
-     * Returns the fallback if the key is missing or if the stored value cannot be cast to T.
+     * Returns the fallback if the key is missing. If the key exists but holds a value of a different type, a warning is
+     * logged and the fallback is returned.
      *
      * @tparam T The expected type of the stored value.
      * @param key The key to look up.
@@ -87,6 +124,8 @@ public:
         {
             return *val;
         }
+
+        ATCG_WARN("{0}. Using the fallback value.", typeMismatchMessage(key, it->second.type(), typeid(T)));
         return out;
     }
 
@@ -144,6 +183,19 @@ public:
     ATCG_INLINE bool contains(std::string_view key) const { return _values.find(std::string(key)) != _values.end(); }
 
 private:
+    ATCG_INLINE static std::string keyNotFoundMessage(std::string_view key)
+    {
+        return "Dictionary: key '" + std::string(key) + "' not found";
+    }
+
+    ATCG_INLINE static std::string
+    typeMismatchMessage(std::string_view key, const std::type_info& stored, const std::type_info& requested)
+    {
+        return "Dictionary: key '" + std::string(key) + "' holds a value of type '" +
+               detail::readableTypeName(stored) + "' but type '" + detail::readableTypeName(requested) +
+               "' was requested";
+    }
+
     std::unordered_map<std::string, std::any> _values;
 };
 }    // namespace atcg

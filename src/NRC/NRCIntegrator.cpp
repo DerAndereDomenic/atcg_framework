@@ -42,7 +42,7 @@ NRCIntegrator::~NRCIntegrator() {}
 
 void NRCIntegrator::initializePipeline(const Dictionary& dict)
 {
-    _pipeline->addTrianglesHitGroupShader("MeshShape", 0, {"./bin/MeshShape_ptx.ptx", "__closesthit__mesh"}, {});
+    _pipeline->addTrianglesHitGroupShader("MeshShape", 0, {"MeshShape_ptx", "__closesthit__mesh"}, {});
 
     auto scene = dict.getValue<atcg::ref_ptr<Scene>>("scene");
 
@@ -53,7 +53,7 @@ void NRCIntegrator::initializePipeline(const Dictionary& dict)
     auto scene_aabb = adapter.getSceneAABB();
     _scene_aabb.upload(&scene_aabb);
 
-    const std::string ptx_raygen_filename = "./bin/NRCIntegrator_ptx.ptx";
+    const std::string ptx_raygen_filename = "NRCIntegrator_ptx";
     OptixProgramGroup raygen_prog_group   = _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__render"});
     OptixProgramGroup samplegen_prog_group =
         _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__sample_generation"});

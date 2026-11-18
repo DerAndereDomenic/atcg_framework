@@ -106,6 +106,11 @@ bool PluginManagerSystem::loadPlugin(const std::filesystem::path& path)
     PluginRegistry registry(handle);
     registerPlugin(registry);
 
+#ifdef ATCG_CUDA_BACKEND
+    // The plugin may have added materials without a matching BSDF
+    BSDFRegistry::validateMaterialCoverage();
+#endif
+
     _loaded_plugins[path] = handle;
 
     return true;

@@ -99,7 +99,8 @@ target_compile_definitions(atcg_lib PUBLIC _USE_MATH_DEFINES
                                             _CRT_NONSTDC_NO_WARNINGS
                                             ATCG_BASE_DIR="${ATCG_PROJECT_ROOT_DIR}"
                                             ATCG_SHADER_DIR="${ATCG_PROJECT_ROOT_DIR}/shader"
-                                            ATCG_RESOURCE_DIR="${ATCG_PROJECT_ROOT_DIR}/res")
+                                            ATCG_RESOURCE_DIR="${ATCG_PROJECT_ROOT_DIR}/res"
+                                            ATCG_PTX_DIR="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 target_precompile_headers(atcg_lib PRIVATE "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/include/atcgpch.h")
 
 target_include_directories(atcg_lib PUBLIC "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/include"

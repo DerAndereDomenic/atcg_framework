@@ -17,7 +17,7 @@ HenyeyGreensteinPhaseFunction::~HenyeyGreensteinPhaseFunction() {}
 void HenyeyGreensteinPhaseFunction::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                                        const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    const std::string ptx_bsdf_filename = "./bin/HenyeyGreensteinPhaseFunction_ptx.ptx";
+    const std::string ptx_bsdf_filename = "HenyeyGreensteinPhaseFunction_ptx";
     auto sample_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_hgphase"});
     auto eval_prog_group   = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_hgphase"});
     uint32_t sample_idx    = sbt->addCallableEntry(sample_prog_group, _data_buffer.get());

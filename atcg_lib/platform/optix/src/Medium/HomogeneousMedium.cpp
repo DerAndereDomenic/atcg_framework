@@ -27,7 +27,7 @@ void HomogeneousMedium::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
 
     auto phase_function = getPhaseFunction();
 
-    const std::string ptx_filename = "./bin/HomogeneousMedium_ptx.ptx";
+    const std::string ptx_filename = "HomogeneousMedium_ptx";
     OptixProgramGroup eval_transmittance_prog_group =
         pipeline->addCallableShader({ptx_filename, "__direct_callable__homogeneousMedium_evalTransmittance"});
     OptixProgramGroup sample_medium_event_prog_group =

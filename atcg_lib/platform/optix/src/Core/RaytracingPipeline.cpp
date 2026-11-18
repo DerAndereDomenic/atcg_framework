@@ -1,7 +1,9 @@
 #include <Core/RaytracingPipeline.h>
 
 #include <Core/Common.h>
+#include <Core/Path.h>
 
+#include <filesystem>
 #include <unordered_map>
 
 #include <optix_stubs.h>
@@ -123,6 +125,7 @@ public:
     OptixProgramGroupOptions program_group_options       = {};
 
     std::vector<char> readFile(const char* filename);
+    std::string resolvePTXPath(const std::string& ptx_name);
     OptixModule createNewModule(const std::string& ptx_filename);
     OptixModule getCachedModule(const std::string& ptx_filename);
     OptixProgramGroup createNewProgramGroup(const OptixProgramGroupDesc& prog_group_desc);
@@ -193,6 +196,58 @@ std::vector<char> RayTracingPipeline::Impl::readFile(const char* filename)
     return buffer;
 }
 
+std::string RayTracingPipeline::Impl::resolvePTXPath(const std::string& ptx_name)
+{
+    namespace fs = std::filesystem;
+
+    const fs::path requested(ptx_name);
+    const fs::path ptx_dir = atcg::ptx_directory();
+    std::vector<fs::path> candidates;
+
+    if(requested.is_absolute())
+    {
+        // Absolute paths are used as-is
+        candidates.push_back(requested);
+    }
+    else if(!requested.has_parent_path() && !requested.has_extension())
+    {
+        // Canonical form: bare module name, e.g. "PBRBSDF_ptx"
+        candidates.push_back(ptx_dir / (ptx_name + ".ptx"));
+    }
+    else
+    {
+        // Legacy form: path relative to the working directory, e.g. "./bin/PBRBSDF_ptx.ptx"
+
+        ATCG_WARN("PTX module given as path '{0}'. Paths relative to the working directory are deprecated; pass "
+                  "the module name '{1}' instead.",
+                  ptx_name,
+                  requested.stem().string());
+
+
+        candidates.push_back(requested);
+        candidates.push_back(ptx_dir / requested.filename());
+    }
+
+    std::error_code ec;
+    for(const auto& candidate: candidates)
+    {
+        if(fs::is_regular_file(candidate, ec))
+        {
+            return fs::absolute(candidate, ec).generic_string();
+        }
+    }
+
+    std::string tried;
+    for(const auto& candidate: candidates)
+    {
+        tried += "\n  " + candidate.generic_string();
+    }
+    std::string message = "Could not find PTX module '" + ptx_name + "'. Tried:" + tried +
+                          "\nSet the environment variable ATCG_PTX_DIR to override the PTX directory.";
+    ATCG_ERROR(message);
+    throw std::runtime_error(message);
+}
+
 OptixModule RayTracingPipeline::Impl::createNewModule(const std::string& ptx_filename)
 {
     char log[2048];
@@ -229,10 +284,18 @@ OptixModule RayTracingPipeline::Impl::createNewModule(const std::string& ptx_fil
 
 OptixModule RayTracingPipeline::Impl::getCachedModule(const std::string& ptx_filename)
 {
-    OptixModule& ptx_module = module_cache[ptx_filename];
+    // An empty name means "no program" (e.g. an unused any-hit shader)
+    if(ptx_filename.empty())
+    {
+        return nullptr;
+    }
+
+    const std::string resolved_path = resolvePTXPath(ptx_filename);
+
+    OptixModule& ptx_module = module_cache[resolved_path];
     if(ptx_module == nullptr)
     {
-        ptx_module = createNewModule(ptx_filename);
+        ptx_module = createNewModule(resolved_path);
     }
     return ptx_module;
 }
