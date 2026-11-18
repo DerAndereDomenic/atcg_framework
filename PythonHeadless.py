@@ -62,14 +62,18 @@ def main():
     if not torch.cuda.is_available():
         return
 
-    context = atcg.RaytracingContextManager.createContext(0)
-
-    integrator = atcg.IntegratorRegistry.createIntegrator("VolPathtracing", context, scene, width, height)
+    # The controller builds the integrator from the integrator settings of the active project on the first render call
+    # and draws the result into the framebuffer
+    controller = atcg.IntegratorController()
+    controller.setIntegratorType("VolPathtracing")
+    controller.start()
 
     for _ in range(1024):
-        render = integrator.generateRays()
+        controller.render(scene, framebuffer)
 
-    plt.imshow(render.cpu().flip(0))
+    render = framebuffer.getColorAttachement(0).getData(torch.device("cpu"), 0)
+
+    plt.imshow(render.flip(0))
     plt.axis("off")
     plt.show()
 
@@ -78,7 +82,7 @@ def main():
     ax[0].imshow(img.flip(0))
     ax[0].axis("off")
 
-    ax[1].imshow(render.cpu().flip(0))
+    ax[1].imshow(render.flip(0))
     ax[1].axis("off")
 
     plt.show()
