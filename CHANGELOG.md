@@ -85,6 +85,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added reusable `RenderSettingsPanel` and `IntegratorPanel` GUI panels with Python bindings
 - Added `Window::isVSync`, `SceneRenderer::getNumberMSAASamples` and `SceneRenderer::getShadowPassResolution`
 - Added `atcg::library_directory`, `atcg::executable_path` and `atcg::user_config_directory`
+- Added drag and drop of assets from the asset panel onto selection combo boxes, entities in the scene hierarchy and the viewport (dropping a mesh onto empty space creates a new entity)
+- Added `CompositeRevision` to record any combination of revisions as a single undo step, and `AssetDroppedEvent`
 
 ### Changed
 
@@ -177,6 +179,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Plugins are searched next to atcg_lib before the working directory
 - The ImGui layout is saved per user and application in the user config directory, and the default layout moved to `res/imgui_default.ini`
 - The python build writes its binaries into its own build directory
+- Replaced the unused `UnionRevision` with `CompositeRevision`
 
 ### Fixed
 
@@ -204,6 +207,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `Entity` comparison, which compared the entities' validity instead of their handles, so deleting any entity cleared the selection
 - Fixed the python and C++ builds overwriting each other's atcg_lib and plugins in `bin/`
 - Fixed plugin lookup by name on Linux, which searched for `.dll` files
+- Fixed redo of `ComponentEditedRevision` on entities that no longer have the component
 
 ## [0.2.1-beta]
 
