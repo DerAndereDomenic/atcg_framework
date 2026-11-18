@@ -11,6 +11,8 @@
 #include <Core/Path.h>
 
 #include <Renderer/Renderer.h>
+#include <Events/AssetEvent.h>
+#include <Utils/Utils.h>
 
 namespace atcg
 {
@@ -185,6 +187,20 @@ void ImGuiLayer::begin()
 
         uint64_t textureID = Renderer::getFramebuffer()->getColorAttachement(0)->getID();
         ImGui::Image((ImTextureID)textureID, viewportPanelSize, ImVec2 {0, 1}, ImVec2 {1, 0});
+
+        // Assets dropped onto the viewport are forwarded to the application as an event (with the position in viewport
+        // pixels, origin in the lower left corner as used by Utils::pickEntity). The application decides what to do.
+        AssetHandle dropped_asset;
+        if(Utils::acceptAssetDrop(dropped_asset))
+        {
+            ImVec2 mouse_pos  = ImGui::GetMousePos();
+            ImVec2 image_min  = ImGui::GetItemRectMin();
+            ImVec2 image_size = ImGui::GetItemRectSize();
+            AssetDroppedEvent event(dropped_asset,
+                                    mouse_pos.x - image_min.x,
+                                    image_size.y - (mouse_pos.y - image_min.y));
+            Application::get()->onEvent(&event);
+        }
 
         if((ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsWindowHovered()) ||
            (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()))

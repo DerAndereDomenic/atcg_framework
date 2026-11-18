@@ -10,6 +10,7 @@
 #include <portable-file-dialogs.h>
 
 #include <Scene/ComponentRegistry.h>
+#include <Utils/Utils.h>
 
 #define ATCG_CONCAT_ID(name, uuid) ((name + ("##" + uuid)).c_str())
 
@@ -26,6 +27,16 @@ void SceneHierarchyPanel::drawEntityNode(const atcg::ref_ptr<Scene>& scene, Enti
     ImGuiTreeNodeFlags flags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_Bullet;
     flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
     bool opened = ImGui::TreeNodeEx((void*)(uint64_t)entity.getComponent<IDComponent>().ID(), flags, tag.c_str());
+
+    // Assets can be dropped onto the entity. If the entity is selected, the asset is applied to the whole selection.
+    AssetHandle dropped_asset;
+    if(Utils::acceptAssetDrop(dropped_asset,
+                              [entity](AssetHandle handle) { return Utils::canApplyAsset(entity, handle); }))
+    {
+        _dropped_asset      = dropped_asset;
+        _asset_drop_targets = is_selected ? scene->getSelectedEntities() : std::vector<Entity> {entity};
+    }
+
     if(ImGui::IsItemClicked())
     {
         if(ImGui::GetIO().KeyCtrl)
@@ -150,6 +161,13 @@ void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene)
 
         selected_entity = scene->getActiveEntity();
         num_selected    = scene->getSelectedEntities().size();
+    }
+
+    if(!_asset_drop_targets.empty())
+    {
+        Utils::applyAssetToEntities(scene, _asset_drop_targets, _dropped_asset);
+        _asset_drop_targets.clear();
+        _dropped_asset = 0;
     }
 
 

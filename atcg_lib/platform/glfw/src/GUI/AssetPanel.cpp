@@ -840,6 +840,8 @@ void AssetPanel::drawAssetList()
             {
                 selectAsset(handle);
             }
+            // Assets can be dragged onto entities, selection combo boxes and the viewport
+            Utils::beginAssetDragSource(handle);
             ImGui::PopID();
 
             if(isSelected) ImGui::PopStyleColor();    // always pop if you pushed

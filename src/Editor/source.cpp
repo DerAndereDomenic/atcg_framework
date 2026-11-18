@@ -205,6 +205,7 @@ public:
         dispatcher.dispatch<atcg::MouseButtonPressedEvent>(ATCG_BIND_EVENT_FN(EditorLayer::onMousePressed));
         dispatcher.dispatch<atcg::KeyPressedEvent>(ATCG_BIND_EVENT_FN(EditorLayer::onKeyPressed));
         dispatcher.dispatch<atcg::FileDroppedEvent>(ATCG_BIND_EVENT_FN(EditorLayer::onFileDropped));
+        dispatcher.dispatch<atcg::AssetDroppedEvent>(ATCG_BIND_EVENT_FN(EditorLayer::onAssetDropped));
 #endif
         dispatcher.dispatch<atcg::ViewportResizeEvent>(ATCG_BIND_EVENT_FN(EditorLayer::onViewportResized));
     }
@@ -299,6 +300,15 @@ public:
             mouse_pos.x >= 0 && mouse_pos.y >= 0 && mouse_pos.y < height && mouse_pos.x < app->getViewportSize().x;
 
         return false;
+    }
+
+    bool onAssetDropped(atcg::AssetDroppedEvent* event)
+    {
+        // Apply the asset to the entity under the mouse (or its selection), or create a new entity from a mesh
+        atcg::Utils::handleViewportAssetDrop(atcg::Project::getActive()->getActiveScene(),
+                                             event->getHandle(),
+                                             glm::vec2(event->getX(), event->getY()));
+        return true;
     }
 
     bool onFileDropped(atcg::FileDroppedEvent* event)
