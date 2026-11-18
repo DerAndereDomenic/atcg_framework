@@ -1500,7 +1500,15 @@ inline void defineBindings(py::module_& m)
         .def("hasSkybox", &atcg::Scene::hasSkybox)
         .def("removeSkybox", &atcg::Scene::removeSkybox)
         .def("getSkyboxTexture", &atcg::Scene::getSkyboxTexture)
-        .def("getSkyboxCubeMap", &atcg::Scene::getSkyboxCubemap);
+        .def("getSkyboxCubeMap", &atcg::Scene::getSkyboxCubemap)
+        .def("getSelectedEntity", &atcg::Scene::getSelectedEntity)
+        .def("selectEntity", &atcg::Scene::selectEntity, "entity"_a, "additive"_a = false)
+        .def("deselectEntity", &atcg::Scene::deselectEntity, "entity"_a)
+        .def("toggleEntitySelection", &atcg::Scene::toggleEntitySelection, "entity"_a)
+        .def("clearSelection", &atcg::Scene::clearSelection)
+        .def("isSelected", &atcg::Scene::isSelected, "entity"_a)
+        .def("getSelectedEntities", &atcg::Scene::getSelectedEntities)
+        .def("getActiveEntity", &atcg::Scene::getActiveEntity);
 
     m_scene_renderer
         .def("render",
@@ -1976,7 +1984,7 @@ inline void defineBindings(py::module_& m)
         .value("SCALE", atcg::GuizmoOperation::SCALE)
         .export_values();
     m_guizmo_mode.value("LOCAL", atcg::GuizmoMode::LOCAL).value("WORLD", atcg::GuizmoMode::WORLD).export_values();
-    m_imgui.def("drawGuizmo", atcg::drawGuizmo);
+    m_imgui.def("drawGuizmo", &atcg::drawGuizmo, "scene"_a, "operation"_a, "mode"_a, "camera"_a);
 #endif
 
 #ifdef VERSION_INFO

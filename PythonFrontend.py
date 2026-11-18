@@ -114,6 +114,7 @@ class PythonLayer(atcg.Layer):
         self.create_instance()
 
         self.current_operation = atcg.ImGui.GuizmoOperation.TRANSLATE
+        self.current_mode = atcg.ImGui.GuizmoMode.LOCAL
 
     def onUpdate(self, dt):
         self.performance_panel.registerFrameTime(dt)
@@ -136,14 +137,13 @@ class PythonLayer(atcg.Layer):
 
         self.asset_panel.renderPanel()
 
-        selected_entity = self.panel.getSelectedEntity()
-
         self.performance_panel.renderPanel(True)
 
+        # Draws the guizmo for all selected entities of the scene
         atcg.ImGui.drawGuizmo(
             atcg.Project.getActive().getActiveScene(),
-            selected_entity,
             self.current_operation,
+            self.current_mode,
             self.camera_controller.getCamera(),
         )
 
