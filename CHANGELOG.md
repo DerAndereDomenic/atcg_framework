@@ -81,6 +81,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added multi-entity selection: Ctrl + Click in the viewport or the scene hierarchy adds or removes entities, with a new selection API on `Scene` and Python bindings for it
 - Added `MultiEntityRevision` to record changes to multiple entities as a single undo step
 - Added deleting all selected entities with the Delete key in the Editor and from the hierarchy context menu
+- Added `IntegratorController`, which creates, updates and renders an integrator from the active project's integrator settings
+- Added reusable `RenderSettingsPanel` and `IntegratorPanel` GUI panels with Python bindings
+- Added `Window::isVSync`, `SceneRenderer::getNumberMSAASamples` and `SceneRenderer::getShadowPassResolution`
 
 ### Changed
 
@@ -169,6 +172,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All selected entities are outlined, with the active (last selected) entity in a brighter color
 - `drawGuizmo` no longer takes an entity and draws the guizmo for the scene's selection, transforming multiple selected entities around the center of the selection
 - Removed `Scene::setSelectedEntity` in favor of `Scene::selectEntity`
+- The Editor, PBR and NRC samples use the shared render settings and integrator panels instead of their own copies
 
 ### Fixed
 
