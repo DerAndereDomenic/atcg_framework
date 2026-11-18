@@ -84,6 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `IntegratorController`, which creates, updates and renders an integrator from the active project's integrator settings
 - Added reusable `RenderSettingsPanel` and `IntegratorPanel` GUI panels with Python bindings
 - Added `Window::isVSync`, `SceneRenderer::getNumberMSAASamples` and `SceneRenderer::getShadowPassResolution`
+- Added `atcg::library_directory`, `atcg::executable_path` and `atcg::user_config_directory`
 
 ### Changed
 
@@ -173,6 +174,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `drawGuizmo` no longer takes an entity and draws the guizmo for the scene's selection, transforming multiple selected entities around the center of the selection
 - Removed `Scene::setSelectedEntity` in favor of `Scene::selectEntity`
 - The Editor, PBR and NRC samples use the shared render settings and integrator panels instead of their own copies
+- Plugins are searched next to atcg_lib before the working directory
+- The ImGui layout is saved per user and application in the user config directory, and the default layout moved to `res/imgui_default.ini`
+- The python build writes its binaries into its own build directory
 
 ### Fixed
 
@@ -198,6 +202,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the dielectric BSDF (refraction jacobian, half-vector orientation and transport mode at interfaces)
 - Fixed Russian roulette weights by tracking the relative index of refraction during BSDF sampling
 - Fixed `Entity` comparison, which compared the entities' validity instead of their handles, so deleting any entity cleared the selection
+- Fixed the python and C++ builds overwriting each other's atcg_lib and plugins in `bin/`
+- Fixed plugin lookup by name on Linux, which searched for `.dll` files
 
 ## [0.2.1-beta]
 
