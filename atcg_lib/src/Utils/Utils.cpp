@@ -937,14 +937,8 @@ Entity createEntityFromAsset(const atcg::ref_ptr<Scene>& scene, AssetHandle hand
 
     Entity entity = scene->createEntity(data.name);
 
-    // The entity and its components are recorded together, so that redo also restores the components
-    auto revision = atcg::make_ref<CompositeRevision>();
-    revision->add(atcg::make_ref<EntityAddedRevision>(scene, entity));
-    revision->add(atcg::make_ref<ComponentAddedRevision<TransformComponent>>(scene, entity));
-    revision->add(atcg::make_ref<ComponentAddedRevision<GeometryComponent>>(scene, entity));
-    revision->add(atcg::make_ref<ComponentAddedRevision<MeshRenderComponent>>(scene, entity));
-
-    RevisionStack::startRecording(revision);
+    // EntityAddedRevision stores the components added during the recording, so that redo also restores them
+    RevisionStack::startRecording<EntityAddedRevision>(scene, entity);
     entity.addComponent<TransformComponent>();
     entity.addComponent<GeometryComponent>(handle);
     entity.addComponent<MeshRenderComponent>();
