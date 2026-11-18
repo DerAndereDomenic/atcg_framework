@@ -121,6 +121,7 @@
 #include <Scene/ComponentRenderer.h>
 #include <Scene/ComponentRegistry.h>
 #include <Scene/SceneRenderer.h>
+#include <Scene/Clipboard.h>
 
 //-------- Torch ------------
 #include <DataStructure/TorchUtils.h>

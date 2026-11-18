@@ -10,6 +10,7 @@
 #include <Scene/ComponentRenderer.h>
 #include <GUI/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
+#include <Scene/ComponentCopier.h>
 
 #include <json.hpp>
 #include <filesystem>
@@ -28,6 +29,9 @@ using DisplayAddComponentFn = std::function<void(const atcg::ref_ptr<Scene>&, En
 using StoreComponentFn      = std::function<void(Entity, std::unordered_map<entt::id_type, std::shared_ptr<void>>&)>;
 using RestoreComponentFn    = std::function<void(Entity, const entt::id_type, const std::shared_ptr<void>&)>;
 using RenderComponentFn = std::function<void(RendererSystem*, Entity, const atcg::ref_ptr<Camera>&, atcg::Dictionary&)>;
+using CopyComponentFn   = std::function<std::shared_ptr<void>(const entt::id_type, const std::shared_ptr<void>&)>;
+using PasteComponentFn =
+    std::function<void(const atcg::ref_ptr<Scene>&, Entity, const entt::id_type, const std::shared_ptr<void>&)>;
 
 struct ComponentFunctions
 {
@@ -38,6 +42,8 @@ struct ComponentFunctions
     StoreComponentFn store;
     RestoreComponentFn restore;
     RenderComponentFn render;
+    CopyComponentFn copy;
+    PasteComponentFn paste;
 };
 
 using Registry = atcg::Registry<ComponentFunctions>;
@@ -130,6 +136,31 @@ void renderAllComponents(Registry* registry,
                          Entity entity,
                          const atcg::ref_ptr<Camera>& camera,
                          atcg::Dictionary& auxiliary);
+
+/**
+ * @brief Create independent copies of all components of an entity (see ComponentCopier).
+ * The IDComponent, NameComponent and EditorCameraComponent are not copied.
+ *
+ * @param registry The component registry
+ * @param entity The entity to copy
+ * @param components The output components as generic pointers
+ */
+ATCG_API void copyAllComponents(Registry* registry,
+                                Entity entity,
+                                std::unordered_map<entt::id_type, std::shared_ptr<void>>& components);
+
+/**
+ * @brief Paste copies of components onto an entity (see ComponentCopier)
+ *
+ * @param registry The component registry
+ * @param scene The scene of the entity
+ * @param entity The entity
+ * @param components The components created by copyAllComponents
+ */
+ATCG_API void pasteAllComponents(Registry* registry,
+                                 const atcg::ref_ptr<Scene>& scene,
+                                 Entity entity,
+                                 const std::unordered_map<entt::id_type, std::shared_ptr<void>>& components);
 
 ATCG_INLINE Registry* getRegistry()
 {
@@ -230,6 +261,32 @@ ATCG_INLINE void renderAllComponents(RendererSystem* renderer,
 {
     renderAllComponents(getRegistry(), renderer, entity, camera, auxiliary);
 }
+
+/**
+ * @brief Create independent copies of all components of an entity (see ComponentCopier).
+ * The IDComponent, NameComponent and EditorCameraComponent are not copied.
+ *
+ * @param entity The entity to copy
+ * @param components The output components as generic pointers
+ */
+ATCG_INLINE void copyAllComponents(Entity entity, std::unordered_map<entt::id_type, std::shared_ptr<void>>& components)
+{
+    copyAllComponents(getRegistry(), entity, components);
+}
+
+/**
+ * @brief Paste copies of components onto an entity (see ComponentCopier)
+ *
+ * @param scene The scene of the entity
+ * @param entity The entity
+ * @param components The components created by copyAllComponents
+ */
+ATCG_INLINE void pasteAllComponents(const atcg::ref_ptr<Scene>& scene,
+                                    Entity entity,
+                                    const std::unordered_map<entt::id_type, std::shared_ptr<void>>& components)
+{
+    pasteAllComponents(getRegistry(), scene, entity, components);
+}
 }    // namespace ComponentRegistry
 }    // namespace atcg
 
@@ -242,8 +299,17 @@ ATCG_INLINE void renderAllComponents(RendererSystem* renderer,
         auto store_fn       = &atcg::storeComponent<ComponentClass>;                                                   \
         auto restore_fn     = &atcg::restoreComponent<ComponentClass>;                                                 \
         auto render_fn      = &atcg::renderComponent<ComponentClass>;                                                  \
-        atcg::ComponentRegistry::ComponentFunctions                                                                    \
-            functions {serialize_fn, deserialize_fn, draw_fn, display_add_fn, store_fn, restore_fn, render_fn};        \
+        auto copy_fn        = &atcg::copyComponent<ComponentClass>;                                                    \
+        auto paste_fn       = &atcg::pasteComponent<ComponentClass>;                                                   \
+        atcg::ComponentRegistry::ComponentFunctions functions {serialize_fn,                                           \
+                                                               deserialize_fn,                                         \
+                                                               draw_fn,                                                \
+                                                               display_add_fn,                                         \
+                                                               store_fn,                                               \
+                                                               restore_fn,                                             \
+                                                               render_fn,                                              \
+                                                               copy_fn,                                                \
+                                                               paste_fn};                                              \
         registry->registerType(ComponentType, std::move(functions));                                                   \
     }
 
@@ -256,7 +322,16 @@ ATCG_INLINE void renderAllComponents(RendererSystem* renderer,
         auto store_fn       = &atcg::storeComponent<ComponentClass>;                                                   \
         auto restore_fn     = &atcg::restoreComponent<ComponentClass>;                                                 \
         auto render_fn      = &atcg::renderComponent<ComponentClass>;                                                  \
-        atcg::ComponentRegistry::ComponentFunctions                                                                    \
-            functions {serialize_fn, deserialize_fn, draw_fn, display_add_fn, store_fn, restore_fn, render_fn};        \
+        auto copy_fn        = &atcg::copyComponent<ComponentClass>;                                                    \
+        auto paste_fn       = &atcg::pasteComponent<ComponentClass>;                                                   \
+        atcg::ComponentRegistry::ComponentFunctions functions {serialize_fn,                                           \
+                                                               deserialize_fn,                                         \
+                                                               draw_fn,                                                \
+                                                               display_add_fn,                                         \
+                                                               store_fn,                                               \
+                                                               restore_fn,                                             \
+                                                               render_fn,                                              \
+                                                               copy_fn,                                                \
+                                                               paste_fn};                                              \
         registry->registerType(handle, ComponentType, std::move(functions));                                           \
     }
