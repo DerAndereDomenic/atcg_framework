@@ -10,6 +10,7 @@
 #include <portable-file-dialogs.h>
 
 #include <Scene/ComponentRegistry.h>
+#include <Scene/Clipboard.h>
 #include <Utils/Utils.h>
 
 #define ATCG_CONCAT_ID(name, uuid) ((name + ("##" + uuid)).c_str())
@@ -27,6 +28,18 @@ void SceneHierarchyPanel::drawEntityNode(const atcg::ref_ptr<Scene>& scene, Enti
     ImGuiTreeNodeFlags flags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_Bullet;
     flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
     bool opened = ImGui::TreeNodeEx((void*)(uint64_t)entity.getComponent<IDComponent>().ID(), flags, tag.c_str());
+
+    // Selected entities have a gray background (ImGuiCol_Header), the active entity is additionally outlined in the same
+    // color as in the viewport (shader/outline.fs) if the entity selection is the most recent selection
+    if(_entity_selection_active && is_selected && entity == scene->getActiveEntity())
+    {
+        ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(),
+                                            ImGui::GetItemRectMax(),
+                                            ImGui::GetColorU32(ImVec4(1.0f, 0.69f, 0.0f, 1.0f)),
+                                            ImGui::GetStyle().FrameRounding,
+                                            0,
+                                            2.0f);
+    }
 
     // Assets can be dropped onto the entity. If the entity is selected, the asset is applied to the whole selection.
     AssetHandle dropped_asset;
@@ -56,6 +69,12 @@ void SceneHierarchyPanel::drawEntityNode(const atcg::ref_ptr<Scene>& scene, Enti
     bool entityDeleted = false;
     if(ImGui::BeginPopupContextItem())
     {
+        // Copying does not change the scene, so it is done immediately (the selection if the entity is selected)
+        if(ImGui::MenuItem(ATCG_CONCAT_ID(std::string("Copy"), _uuid), "Ctrl+C"))
+        {
+            Clipboard::copyEntities(is_selected ? selected_entities : std::vector<Entity> {entity});
+        }
+
         std::string label =
             delete_selection ? "Delete " + std::to_string(selected_entities.size()) + " Entities" : "Delete Entity";
         if(ImGui::MenuItem(ATCG_CONCAT_ID(label, _uuid))) entityDeleted = true;
@@ -141,6 +160,10 @@ void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene)
         scene->clearSelection();
     }
 
+    // Pasting from the context menu is done after the iteration over all entities. The copy & paste shortcuts are
+    // handled by the application, independent of the focused window.
+    bool paste_entities = false;
+
     for(auto e: scene->getAllEntitiesWith<NameComponent>())
     {
         Entity entity(e, scene.get());
@@ -180,7 +203,19 @@ void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene)
             atcg::RevisionStack::endRecording();
             selectEntity(entity);
         }
+        if(ImGui::MenuItem(ATCG_CONCAT_ID("Paste", _uuid), "Ctrl+V", false, Clipboard::hasEntities()))
+        {
+            paste_entities = true;
+        }
         ImGui::EndPopup();
+    }
+
+    if(paste_entities)
+    {
+        // The pasted entities become the selection
+        Clipboard::pasteEntities(scene);
+        selected_entity = scene->getActiveEntity();
+        num_selected    = scene->getSelectedEntities().size();
     }
 
     ImGui::End();

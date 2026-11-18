@@ -31,6 +31,14 @@ public:
      */
     void renderPanel(const atcg::ref_ptr<Scene>& scene);
 
+    /**
+     * @brief Set whether the entity selection is the most recent selection of the application.
+     * Only then the active entity is outlined. If something else was selected afterwards (e.g. an asset in the
+     * AssetPanel, see AssetPanel::isAssetSelectionActive), the selected entities are only highlighted.
+     *
+     * @param active If the entity selection is the most recent selection (default: true)
+     */
+    ATCG_INLINE void setEntitySelectionActive(bool active) { _entity_selection_active = active; }
 
 private:
     void selectEntity(Entity entity);
@@ -40,6 +48,8 @@ private:
     void drawComponents(const atcg::ref_ptr<Scene>& scene, Entity entity);
 
     bool _focues_components = false;
+
+    bool _entity_selection_active = true;
 
     // Entities are deleted after iterating over the scene's entities
     std::vector<Entity> _entities_to_delete;
