@@ -78,6 +78,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a check that warns about material types without a matching BSDF at startup and after loading a plugin
 - Added SelectionMaskPass that renders the selected entity into a separate id mask without lighting
 - Added `override_shader` support to the CameraComponent and PointLightComponent renderers
+- Added multi-entity selection: Ctrl + Click in the viewport or the scene hierarchy adds or removes entities, with a new selection API on `Scene` and Python bindings for it
+- Added `MultiEntityRevision` to record changes to multiple entities as a single undo step
+- Added deleting all selected entities with the Delete key in the Editor and from the hierarchy context menu
 
 ### Changed
 
@@ -163,6 +166,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dictionary errors now name the key and the stored and requested types, and `getValueOr` warns on a type mismatch
 - Registering an already registered type in a registry now logs a warning
 - The selection outline is now computed from the selection mask and drawn outside the silhouette, so occluding objects no longer produce outline edges
+- All selected entities are outlined, with the active (last selected) entity in a brighter color
+- `drawGuizmo` no longer takes an entity and draws the guizmo for the scene's selection, transforming multiple selected entities around the center of the selection
+- Removed `Scene::setSelectedEntity` in favor of `Scene::selectEntity`
 
 ### Fixed
 
@@ -187,6 +193,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed clamping of the specular color
 - Fixed the dielectric BSDF (refraction jacobian, half-vector orientation and transport mode at interfaces)
 - Fixed Russian roulette weights by tracking the relative index of refraction during BSDF sampling
+- Fixed `Entity` comparison, which compared the entities' validity instead of their handles, so deleting any entity cleared the selection
 
 ## [0.2.1-beta]
 
