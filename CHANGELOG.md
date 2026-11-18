@@ -87,6 +87,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `atcg::library_directory`, `atcg::executable_path` and `atcg::user_config_directory`
 - Added drag and drop of assets from the asset panel onto selection combo boxes, entities in the scene hierarchy and the viewport (dropping a mesh onto empty space creates a new entity)
 - Added `CompositeRevision` to record any combination of revisions as a single undo step, and `AssetDroppedEvent`
+- Added copy & paste of entities (hierarchy and viewport) and assets (asset panel) with Ctrl+C / Ctrl+V and context menus, based on a new `Clipboard` system
+- Key presses with Ctrl held (shortcuts) are no longer blocked by focused ImGui windows, unless text is typed
+- Added `ComponentCopier` to define how components are copied, e.g. to give copies their own camera, instance buffers or script behavior
 
 ### Changed
 
@@ -180,6 +183,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The ImGui layout is saved per user and application in the user config directory, and the default layout moved to `res/imgui_default.ini`
 - The python build writes its binaries into its own build directory
 - Replaced the unused `UnionRevision` with `CompositeRevision`
+- The asset editor keeps the selected asset open when entities are selected. Selected assets and entities have a gray background in the asset panel and scene hierarchy, and the most recent selection is outlined
 
 ### Fixed
 
@@ -208,6 +212,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the python and C++ builds overwriting each other's atcg_lib and plugins in `bin/`
 - Fixed plugin lookup by name on Linux, which searched for `.dll` files
 - Fixed redo of `ComponentEditedRevision` on entities that no longer have the component
+- Fixed redo of `EntityAddedRevision`, which recreated the entity without its components
+- Fixed the component registry not being registered as a system in builds without the CUDA backend
 
 ## [0.2.1-beta]
 
