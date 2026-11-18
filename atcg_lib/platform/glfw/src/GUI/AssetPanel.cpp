@@ -680,7 +680,9 @@ void AssetPanel::displayScene(AssetHandle handle)
 
     if(ImGui::Button("Make active"))
     {
+        auto old_active_scene = Project::getActive()->getActiveScene();
         Project::getActive()->setActiveScene(handle);
+        Project::getActive()->getActiveScene()->setCamera(old_active_scene->getCamera());
     }
 }
 
