@@ -224,8 +224,7 @@ public:
                     }
                     atcg::RevisionStack::clearChache();
 
-                    selected_entity = atcg::Entity();
-                    saved           = true;
+                    saved = true;
                 }
             }
 
@@ -357,13 +356,10 @@ public:
         performance_panel.renderPanel(show_performance);
         panel.renderPanel(atcg::Project::getActive()->getActiveScene());
         plugin_panel.renderPanel();
-        selected_entity = atcg::Project::getActive()->getActiveScene()->getSelectedEntity();
-        // atcg::Project::getActive()->getActiveScene()->setSelectedEntity(selected_entity);
 
         asset_panel.renderPanel();
 
         atcg::drawGuizmo(atcg::Project::getActive()->getActiveScene(),
-                         selected_entity,
                          current_operation,
                          current_mode,
                          camera_controller->getCamera());
@@ -433,6 +429,23 @@ public:
                 (current_mode == atcg::GuizmoMode::LOCAL) ? atcg::GuizmoMode::WORLD : atcg::GuizmoMode::LOCAL;
         }
 
+        if(event->getKeyCode() == ATCG_KEY_DELETE && !atcg::RevisionStack::isRecording())
+        {
+            // Delete all selected entities in one revision. Removing an entity also removes it from the selection.
+            auto scene                          = atcg::Project::getActive()->getActiveScene();
+            std::vector<atcg::Entity> to_delete = scene->getSelectedEntities();
+            if(!to_delete.empty())
+            {
+                atcg::RevisionStack::startRecording<atcg::MultiEntityRevision<atcg::EntityRemovedRevision>>(scene,
+                                                                                                            to_delete);
+                for(auto entity: to_delete)
+                {
+                    scene->removeEntity(entity);
+                }
+                atcg::RevisionStack::endRecording();
+            }
+        }
+
         // if(event->getKeyCode() == ATCG_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
         return true;
@@ -442,9 +455,19 @@ public:
     {
         if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !atcg::isOverGuizmo())
         {
-            selected_entity = atcg::Utils::pickEntity(mouse_pos);
-            // panel.selectEntity(selected_entity);
-            atcg::Project::getActive()->getActiveScene()->setSelectedEntity(selected_entity);
+            auto scene          = atcg::Project::getActive()->getActiveScene();
+            atcg::Entity picked = atcg::Utils::pickEntity(mouse_pos);
+
+            if(atcg::Input::isKeyPressed(ATCG_KEY_LEFT_CONTROL) || atcg::Input::isKeyPressed(ATCG_KEY_RIGHT_CONTROL))
+            {
+                // Ctrl + Click adds or removes the entity. Clicking into empty space keeps the selection.
+                if(picked) scene->toggleEntitySelection(picked);
+            }
+            else
+            {
+                // Clears the selection if no entity was hit
+                scene->selectEntity(picked);
+            }
         }
         return true;
     }
@@ -502,8 +525,6 @@ public:
 
 private:
     bool saved = false;
-
-    atcg::Entity selected_entity;
 
     atcg::ref_ptr<atcg::CameraController> camera_controller;
 

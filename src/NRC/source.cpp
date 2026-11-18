@@ -186,8 +186,7 @@ public:
                     }
                     atcg::RevisionStack::clearChache();
 
-                    hovered_entity = atcg::Entity();
-                    saved          = true;
+                    saved = true;
                 }
             }
 
@@ -254,12 +253,10 @@ public:
 
         performance_panel.renderPanel(show_performance);
         panel.renderPanel(atcg::Project::getActive()->getActiveScene());
-        hovered_entity = panel.getSelectedEntity();
 
         asset_panel.renderPanel();
 
         atcg::drawGuizmo(atcg::Project::getActive()->getActiveScene(),
-                         hovered_entity,
                          current_operation,
                          atcg::GuizmoMode::LOCAL,
                          camera_controller->getCamera());
@@ -322,8 +319,7 @@ public:
     {
         if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !atcg::isOverGuizmo())
         {
-            hovered_entity = atcg::Utils::pickEntity(mouse_pos);
-            panel.selectEntity(hovered_entity);
+            atcg::Project::getActive()->getActiveScene()->selectEntity(atcg::Utils::pickEntity(mouse_pos));
         }
         return true;
     }
@@ -344,8 +340,6 @@ public:
 
 private:
     bool saved = false;
-
-    atcg::Entity hovered_entity;
 
     atcg::ref_ptr<atcg::CameraController> camera_controller;
 
