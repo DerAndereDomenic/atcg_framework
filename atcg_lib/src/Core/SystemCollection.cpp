@@ -12,6 +12,7 @@
 #include <Renderer/VRSystem.h>
 #include <Renderer/RenderPassRegistry.h>
 #include <Scene/ComponentRegistry.h>
+#include <Scene/Clipboard.h>
 #include <Scene/Components.h>
 #include <Scene/RevisionStack.h>
 #include <Scene/SceneRenderer.h>
@@ -83,6 +84,7 @@ public:
     atcg::ref_ptr<RevisionSystem> _revision_system;
     atcg::ref_ptr<GraphicsAPI> _graphics_api;
     atcg::ref_ptr<ComponentRegistry::Registry> _component_registry_v2;
+    atcg::ref_ptr<ClipboardSystem> _clipboard;
     atcg::ref_ptr<PluginManagerSystem> _plugin_manager;
 };
 
@@ -165,8 +167,11 @@ void SystemCollection::Impl::initSystems(const WindowProps& props, const Window:
     MediumComponent::registerComponent(_component_registry_v2.get());
     PhaseFunctionComponent::registerComponent(_component_registry_v2.get());
     ShapeComponent::registerComponent(_component_registry_v2.get());
-    SystemRegistry::instance()->registerSystem(_component_registry_v2.get());
 #endif
+    SystemRegistry::instance()->registerSystem(_component_registry_v2.get());
+
+    _clipboard = atcg::make_ref<ClipboardSystem>();
+    SystemRegistry::instance()->registerSystem(_clipboard.get());
 
     _script_engine = atcg::make_ref<PythonScriptEngine>();
     _script_engine->init();
@@ -206,6 +211,8 @@ void SystemCollection::Impl::initSystems(const WindowProps& props, const Window:
 
 void SystemCollection::Impl::shutdownSystems()
 {
+    // The clipboard holds copies of components and assets (possibly from plugins), so it is cleared first
+    if(_clipboard) _clipboard->clear();
     _revision_system->clearChache();
     if(_asset_manager) _asset_manager->destroy();
     if(_script_engine) _script_engine->destroy();
