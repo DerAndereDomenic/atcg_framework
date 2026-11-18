@@ -49,6 +49,11 @@ struct ATCG_API ScriptComponent
         return _behavior;
     }
 
+    /**
+     * @brief Drop the behavior. A new behavior is created the next time it is requested.
+     */
+    ATCG_INLINE void resetBehavior() { _behavior = nullptr; }
+
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Script"; }
 
     static void registerComponent(ComponentRegistry::Registry* registry);
@@ -58,6 +63,9 @@ struct ATCG_API ScriptComponent
 private:
     atcg::ref_ptr<Behavior> _behavior = nullptr;
 };
+
+// The behavior is bound to the entity, so copies get their own behavior
+ATCG_DECLARE_COMPONENT_COPIER(ScriptComponent);
 
 namespace Serialization
 {

@@ -110,6 +110,23 @@ void ComponentRenderer<InstanceRenderComponent>::renderComponent(atcg::RendererS
     }
 }
 
+InstanceRenderComponent ComponentCopier<InstanceRenderComponent>::copy(const InstanceRenderComponent& component)
+{
+    InstanceRenderComponent result = component;
+    for(auto& vbo: result.instance_vbos)
+    {
+        if(vbo) vbo = vbo->clone();
+    }
+    return result;
+}
+
+void ComponentCopier<InstanceRenderComponent>::paste(const atcg::ref_ptr<Scene>& scene,
+                                                     Entity entity,
+                                                     const InstanceRenderComponent& component)
+{
+    entity.addOrReplaceComponent<InstanceRenderComponent>(copy(component));
+}
+
 namespace Serialization
 {
 void ComponentSerializer<InstanceRenderComponent>::serialize_component(const std::string& file_path,

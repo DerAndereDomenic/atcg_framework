@@ -41,6 +41,9 @@ struct ATCG_API InstanceRenderComponent : public RenderComponent
 
 ATCG_DECLARE_COMPONENT_RENDERER(InstanceRenderComponent);
 
+// The instance buffers are owned by the component and are not shared with copies
+ATCG_DECLARE_COMPONENT_COPIER(InstanceRenderComponent);
+
 namespace Serialization
 {
 ATCG_DECLARE_COMPONENT_SERIALIZER(InstanceRenderComponent);

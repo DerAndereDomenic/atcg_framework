@@ -7,6 +7,26 @@
 namespace atcg
 {
 
+ScriptComponent ComponentCopier<ScriptComponent>::copy(const ScriptComponent& component)
+{
+    ScriptComponent result = component;
+    result.resetBehavior();
+    return result;
+}
+
+void ComponentCopier<ScriptComponent>::paste(const atcg::ref_ptr<Scene>& scene,
+                                             Entity entity,
+                                             const ScriptComponent& component)
+{
+    // Same as assigning a script in the GUI: create the behavior for the new entity and attach it
+    auto& script = entity.addOrReplaceComponent<ScriptComponent>(copy(component));
+    if(script.script())
+    {
+        auto behavior = script.behavior(scene, entity, true);
+        if(behavior) behavior->onAttach();
+    }
+}
+
 namespace Serialization
 {
 void ComponentSerializer<ScriptComponent>::serialize_component(const std::string& file_path,

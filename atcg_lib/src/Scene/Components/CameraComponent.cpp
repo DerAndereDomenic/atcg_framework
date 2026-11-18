@@ -101,6 +101,21 @@ void ComponentRenderer<CameraComponent>::renderComponent(atcg::RendererSystem* _
     }
 }
 
+CameraComponent ComponentCopier<CameraComponent>::copy(const CameraComponent& component)
+{
+    CameraComponent result = component;
+    result.camera          = component.camera ? component.camera->copy() : nullptr;
+    result.preview         = nullptr;    // Recreated lazily by the GUI if the preview is rendered
+    return result;
+}
+
+void ComponentCopier<CameraComponent>::paste(const atcg::ref_ptr<Scene>& scene,
+                                             Entity entity,
+                                             const CameraComponent& component)
+{
+    entity.addOrReplaceComponent<CameraComponent>(copy(component));
+}
+
 namespace Serialization
 {
 void ComponentSerializer<CameraComponent>::serialize_component(const std::string& file_path,
