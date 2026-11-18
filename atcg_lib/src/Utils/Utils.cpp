@@ -3,6 +3,7 @@
 #include <Asset/Project.h>
 #include <Renderer/Renderer.h>
 #include <Scene/SceneRenderer.h>
+#include <Scene/RevisionStack.h>
 
 #include <fstream>
 
@@ -297,7 +298,11 @@ AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle,
 
     AssetHandle current_item = handle;
 
-    if(ImGui::BeginCombo(("Select Material##" + key).c_str(), tag.c_str()))
+    // Materials can be dropped onto the (closed) combo box
+    bool combo_open = ImGui::BeginCombo(("Select Material##" + key).c_str(), tag.c_str());
+    if(!combo_open) acceptAssetDrop(AssetType::Material, current_item);
+
+    if(combo_open)
     {
         // No Selection
         {
@@ -351,7 +356,11 @@ AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle, bo
 
     AssetHandle current_item = handle;
 
-    if(ImGui::BeginCombo(("Select Graph##" + key).c_str(), tag.c_str()))
+    // Graphs can be dropped onto the (closed) combo box
+    bool combo_open = ImGui::BeginCombo(("Select Graph##" + key).c_str(), tag.c_str());
+    if(!combo_open) acceptAssetDrop(AssetType::Graph, current_item);
+
+    if(combo_open)
     {
         // No Selection
         {
@@ -405,7 +414,11 @@ AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle, b
 
     AssetHandle current_item = handle;
 
-    if(ImGui::BeginCombo(("Select Script##" + key).c_str(), tag.c_str()))
+    // Scripts can be dropped onto the (closed) combo box
+    bool combo_open = ImGui::BeginCombo(("Select Script##" + key).c_str(), tag.c_str());
+    if(!combo_open) acceptAssetDrop(AssetType::Script, current_item);
+
+    if(combo_open)
     {
         // No Selection
         {
@@ -462,7 +475,20 @@ AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle, b
 
     AssetHandle current_item = handle;
 
-    if(ImGui::BeginCombo(("Select Shader##" + key).c_str(), tag.c_str()))
+    // Shaders can be dropped onto the (closed) combo box. Compute shaders are not listed and can't be dropped.
+    bool combo_open = ImGui::BeginCombo(("Select Shader##" + key).c_str(), tag.c_str());
+    if(!combo_open)
+    {
+        acceptAssetDrop(current_item,
+                        [](AssetHandle dropped)
+                        {
+                            if(AssetManager::getMetaData(dropped).type != AssetType::Shader) return false;
+                            auto shader = AssetManager::getAsset<Shader>(dropped);
+                            return !(shader && shader->isComputeShader());
+                        });
+    }
+
+    if(combo_open)
     {
         // No Selection
         {
@@ -522,7 +548,11 @@ AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle
 
     AssetHandle current_item = handle;
 
-    if(ImGui::BeginCombo(("Select Image##" + key).c_str(), tag.c_str()))
+    // Textures can be dropped onto the (closed) combo box
+    bool combo_open = ImGui::BeginCombo(("Select Image##" + key).c_str(), tag.c_str());
+    if(!combo_open) acceptAssetDrop(AssetType::Texture2D, current_item);
+
+    if(combo_open)
     {
         // No Selection
         {
@@ -579,7 +609,11 @@ AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle
 
     AssetHandle current_item = handle;
 
-    if(ImGui::BeginCombo(("Select Image##" + key).c_str(), tag.c_str()))
+    // Textures can be dropped onto the (closed) combo box
+    bool combo_open = ImGui::BeginCombo(("Select Image##" + key).c_str(), tag.c_str());
+    if(!combo_open) acceptAssetDrop(AssetType::Texture3D, current_item);
+
+    if(combo_open)
     {
         // No Selection
         {
@@ -657,6 +691,291 @@ CullMode displayCullModeSelection(const std::string& key, CullMode cull_mode, bo
 #else
     return cull_mode;
 #endif
+}
+
+bool beginAssetDragSource(AssetHandle handle)
+{
+#ifndef ATCG_HEADLESS
+    if(!ImGui::BeginDragDropSource())
+    {
+        return false;
+    }
+
+    ImGui::SetDragDropPayload(ATCG_ASSET_PAYLOAD, &handle, sizeof(AssetHandle));
+    ImGui::TextUnformatted(AssetManager::getMetaData(handle).name.c_str());
+    ImGui::EndDragDropSource();
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool acceptAssetDrop(AssetHandle& handle, const std::function<bool(AssetHandle)>& filter)
+{
+#ifndef ATCG_HEADLESS
+    if(!ImGui::BeginDragDropTarget())
+    {
+        return false;
+    }
+
+    bool dropped = false;
+
+    // Peek first, so that the target is only highlighted (and only accepts) if the asset is valid for it
+    const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ATCG_ASSET_PAYLOAD, ImGuiDragDropFlags_AcceptPeekOnly);
+    if(payload && payload->DataSize == sizeof(AssetHandle))
+    {
+        AssetHandle dropped_handle = *(const AssetHandle*)payload->Data;
+        if(AssetManager::isAssetHandleValid(dropped_handle) && (!filter || filter(dropped_handle)))
+        {
+            if(ImGui::AcceptDragDropPayload(ATCG_ASSET_PAYLOAD))
+            {
+                handle  = dropped_handle;
+                dropped = true;
+            }
+        }
+    }
+
+    ImGui::EndDragDropTarget();
+    return dropped;
+#else
+    return false;
+#endif
+}
+
+bool acceptAssetDrop(AssetType type, AssetHandle& handle)
+{
+    return acceptAssetDrop(handle,
+                           [type](AssetHandle dropped) { return AssetManager::getMetaData(dropped).type == type; });
+}
+
+namespace detail
+{
+/**
+ * @brief Collects the revisions and the changes of an asset assignment, so that all changes are recorded as one
+ * revision. The revisions have to be created before the recording starts and the changes are applied afterwards.
+ */
+struct AssetAssignment
+{
+    atcg::ref_ptr<CompositeRevision> revision = atcg::make_ref<CompositeRevision>();
+    std::vector<std::function<void()>> changes;
+
+    /**
+     * @brief Edit a component of the entity if it has the component
+     *
+     * @return True if the entity has the component
+     */
+    template<typename T, typename Func>
+    bool edit(const atcg::ref_ptr<Scene>& scene, Entity entity, Func func)
+    {
+        if(!entity.hasComponent<T>()) return false;
+
+        revision->add(atcg::make_ref<ComponentEditedRevision<T>>(scene, entity));
+        changes.push_back([entity, func]() mutable { func(entity.getComponent<T>()); });
+        return true;
+    }
+
+    /**
+     * @brief Add a component to the entity
+     */
+    template<typename T, typename Func>
+    void add(const atcg::ref_ptr<Scene>& scene, Entity entity, Func func)
+    {
+        revision->add(atcg::make_ref<ComponentAddedRevision<T>>(scene, entity));
+        changes.push_back([entity, func]() mutable { func(entity.addComponent<T>()); });
+    }
+
+    /**
+     * @brief Record and apply all changes as one revision
+     *
+     * @return True if anything was changed
+     */
+    bool commit()
+    {
+        if(revision->empty()) return false;
+
+        if(RevisionStack::isRecording())
+        {
+            ATCG_WARN("Cannot apply the asset while another revision is recorded");
+            return false;
+        }
+
+        RevisionStack::startRecording(revision);
+        for(auto& change: changes)
+        {
+            change();
+        }
+        RevisionStack::endRecording();
+        return true;
+    }
+};
+
+void setScript(const atcg::ref_ptr<Scene>& scene, Entity entity, ScriptComponent& component, AssetHandle handle)
+{
+    // Same as in the GUI of the ScriptComponent: detach the old behavior and attach a new one
+    if(component.script())
+    {
+        auto behavior = component.behavior(scene, entity);
+        if(behavior) behavior->onDetach();
+    }
+
+    component.script_handle = handle;
+
+    if(component.script())
+    {
+        auto behavior = component.behavior(scene, entity, true);
+        if(behavior) behavior->onAttach();
+    }
+}
+}    // namespace detail
+
+bool canApplyAsset(Entity entity, AssetHandle handle)
+{
+    if(!entity || !AssetManager::isAssetHandleValid(handle)) return false;
+
+    switch(AssetManager::getMetaData(handle).type)
+    {
+        case AssetType::Material:
+            return entity.hasAnyComponent<MeshRenderComponent,
+                                          PointSphereRenderComponent,
+                                          InstanceRenderComponent,
+                                          EdgeCylinderRenderComponent>();
+        case AssetType::Shader:
+        {
+            auto shader = AssetManager::getAsset<Shader>(handle);
+            if(shader && shader->isComputeShader()) return false;
+            return entity.hasAnyComponent<MeshRenderComponent,
+                                          PointRenderComponent,
+                                          PointSphereRenderComponent,
+                                          InstanceRenderComponent>();
+        }
+        case AssetType::Graph:
+        case AssetType::Script:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool applyAssetToEntities(const atcg::ref_ptr<Scene>& scene, const std::vector<Entity>& entities, AssetHandle handle)
+{
+    if(!scene || !AssetManager::isAssetHandleValid(handle)) return false;
+
+    const AssetType type = AssetManager::getMetaData(handle).type;
+
+    detail::AssetAssignment assignment;
+
+    for(Entity entity: entities)
+    {
+        if(!canApplyAsset(entity, handle)) continue;
+
+        if(type == AssetType::Material)
+        {
+            auto set_material = [handle](auto& component) { component.material_handle = handle; };
+            assignment.edit<MeshRenderComponent>(scene, entity, set_material);
+            assignment.edit<PointSphereRenderComponent>(scene, entity, set_material);
+            assignment.edit<InstanceRenderComponent>(scene, entity, set_material);
+            assignment.edit<EdgeCylinderRenderComponent>(scene, entity, set_material);
+        }
+        else if(type == AssetType::Shader)
+        {
+            auto set_shader = [handle](auto& component) { component.shader_handle = handle; };
+            assignment.edit<MeshRenderComponent>(scene, entity, set_shader);
+            assignment.edit<PointRenderComponent>(scene, entity, set_shader);
+            assignment.edit<PointSphereRenderComponent>(scene, entity, set_shader);
+            assignment.edit<InstanceRenderComponent>(scene, entity, set_shader);
+        }
+        else if(type == AssetType::Graph)
+        {
+            // The forward pass only renders entities with a transform
+            if(!entity.hasComponent<TransformComponent>())
+            {
+                assignment.add<TransformComponent>(scene, entity, [](TransformComponent&) {});
+            }
+
+            auto set_graph = [handle](GeometryComponent& component) { component.graph_handle = handle; };
+            if(!assignment.edit<GeometryComponent>(scene, entity, set_graph))
+            {
+                assignment.add<GeometryComponent>(scene, entity, set_graph);
+            }
+
+            if(!entity.hasAnyComponent<MeshRenderComponent,
+                                       PointRenderComponent,
+                                       PointSphereRenderComponent,
+                                       InstanceRenderComponent,
+                                       EdgeRenderComponent,
+                                       EdgeCylinderRenderComponent>())
+            {
+                assignment.add<MeshRenderComponent>(scene, entity, [](MeshRenderComponent&) {});
+            }
+        }
+        else if(type == AssetType::Script)
+        {
+            auto set_script = [scene, entity, handle](ScriptComponent& component)
+            { detail::setScript(scene, entity, component, handle); };
+            if(!assignment.edit<ScriptComponent>(scene, entity, set_script))
+            {
+                assignment.add<ScriptComponent>(scene, entity, set_script);
+            }
+        }
+    }
+
+    return assignment.commit();
+}
+
+Entity createEntityFromAsset(const atcg::ref_ptr<Scene>& scene, AssetHandle handle)
+{
+    if(!scene || !AssetManager::isAssetHandleValid(handle)) return Entity();
+
+    const auto& data = AssetManager::getMetaData(handle);
+    if(data.type != AssetType::Graph) return Entity();
+
+    if(RevisionStack::isRecording())
+    {
+        ATCG_WARN("Cannot create an entity while another revision is recorded");
+        return Entity();
+    }
+
+    Entity entity = scene->createEntity(data.name);
+
+    // The entity and its components are recorded together, so that redo also restores the components
+    auto revision = atcg::make_ref<CompositeRevision>();
+    revision->add(atcg::make_ref<EntityAddedRevision>(scene, entity));
+    revision->add(atcg::make_ref<ComponentAddedRevision<TransformComponent>>(scene, entity));
+    revision->add(atcg::make_ref<ComponentAddedRevision<GeometryComponent>>(scene, entity));
+    revision->add(atcg::make_ref<ComponentAddedRevision<MeshRenderComponent>>(scene, entity));
+
+    RevisionStack::startRecording(revision);
+    entity.addComponent<TransformComponent>();
+    entity.addComponent<GeometryComponent>(handle);
+    entity.addComponent<MeshRenderComponent>();
+    RevisionStack::endRecording();
+
+    return entity;
+}
+
+bool handleViewportAssetDrop(const atcg::ref_ptr<Scene>& scene, AssetHandle handle, const glm::vec2& mouse_pos)
+{
+    if(!scene || !AssetManager::isAssetHandleValid(handle)) return false;
+
+    // pickEntity reads the entity buffer of the main framebuffer
+    auto fbo = Renderer::getFramebuffer();
+    bool in_viewport =
+        mouse_pos.x >= 0 && mouse_pos.y >= 0 && mouse_pos.x < fbo->width() && mouse_pos.y < fbo->height();
+
+    Entity target = in_viewport ? pickEntity(mouse_pos) : Entity();
+    if(target && target.scene() == scene.get())
+    {
+        // Dropping onto a selected entity applies the asset to the whole selection
+        std::vector<Entity> targets =
+            scene->isSelected(target) ? scene->getSelectedEntities() : std::vector<Entity> {target};
+        return applyAssetToEntities(scene, targets, handle);
+    }
+
+    Entity created = createEntityFromAsset(scene, handle);
+    if(!created) return false;
+
+    scene->selectEntity(created);
+    return true;
 }
 
 void serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
