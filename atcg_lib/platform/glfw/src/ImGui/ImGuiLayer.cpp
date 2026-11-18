@@ -8,6 +8,8 @@
 
 #include <GLFW/glfw3.h>
 #include <Core/Application.h>
+#include <Core/Input.h>
+#include <Core/KeyCodes.h>
 #include <Core/Path.h>
 
 #include <Renderer/Renderer.h>
@@ -137,7 +139,12 @@ void ImGuiLayer::onEvent(Event* event)
     {
         ImGuiIO& io = ImGui::GetIO();
         event->handled |= event->isInCategory(EventCategoryMouse) & io.WantCaptureMouse;
-        event->handled |= event->isInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+
+        // Shortcuts (Ctrl + key, e.g. copy & paste) reach the application independent of the focused window, unless
+        // text is typed into an ImGui widget
+        bool shortcut       = Input::isKeyPressed(ATCG_KEY_LEFT_CONTROL) || Input::isKeyPressed(ATCG_KEY_RIGHT_CONTROL);
+        bool block_keyboard = io.WantCaptureKeyboard && (io.WantTextInput || !shortcut);
+        event->handled |= event->isInCategory(EventCategoryKeyboard) & block_keyboard;
     }
 }
 
