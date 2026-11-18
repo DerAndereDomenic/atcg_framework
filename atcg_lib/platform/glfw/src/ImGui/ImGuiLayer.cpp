@@ -45,19 +45,37 @@ void ImGuiLayer::onAttach()
     float xscale;
     glfwGetWindowContentScale(window, &xscale, NULL);
 
-    if(!std::filesystem::exists("imgui.ini"))
+    // The layout is stored per user and per application (e.g. %APPDATA%/atcg/Editor/imgui.ini), independent of the
+    // working directory.
+    std::filesystem::path ini_path = atcg::user_config_directory() / atcg::executable_path().stem() / "imgui.ini";
+    std::error_code error;
+    std::filesystem::create_directories(ini_path.parent_path(), error);
+    _ini_path = ini_path.string();
+
+    // Load order: the user's layout, a layout in the working directory (from earlier versions), the default layout
+    const std::filesystem::path legacy_ini_path  = "imgui.ini";
+    const std::filesystem::path default_ini_path = atcg::resource_directory() / "imgui_default.ini";
+    if(std::filesystem::exists(ini_path, error))
     {
-        ImGui::LoadIniSettingsFromDisk("imgui_default.ini");
+        ImGui::LoadIniSettingsFromDisk(_ini_path.c_str());
+    }
+    else if(std::filesystem::exists(legacy_ini_path, error))
+    {
+        ImGui::LoadIniSettingsFromDisk(legacy_ini_path.string().c_str());
+    }
+    else if(std::filesystem::exists(default_ini_path, error))
+    {
+        ImGui::LoadIniSettingsFromDisk(default_ini_path.string().c_str());
     }
     else
     {
-        ImGui::LoadIniSettingsFromDisk("imgui.ini");
+        ATCG_WARN("Could not find the default ImGui layout {}", default_ini_path.string());
     }
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
-    io.IniFilename = "imgui.ini";
+    io.IniFilename = _ini_path.c_str();
 
     io.FontGlobalScale = xscale;
     style.ScaleAllSizes(xscale);
@@ -104,7 +122,7 @@ void ImGuiLayer::onAttach()
 
 void ImGuiLayer::onDetach()
 {
-    ImGui::SaveIniSettingsToDisk("imgui.ini");
+    ImGui::SaveIniSettingsToDisk(_ini_path.c_str());
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImPlot::DestroyContext();

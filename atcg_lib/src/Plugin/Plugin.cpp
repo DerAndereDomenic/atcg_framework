@@ -1,4 +1,5 @@
 #include <Plugin/Plugin.h>
+#include <Core/Path.h>
 #if ATCG_PLATFORM_WINDOWS
     #include <Windows.h>    // TODO
 #else
@@ -126,20 +127,24 @@ bool PluginManagerSystem::loadPluginFromName(const std::string& name)
     const std::string build_dir_name = "RelWithDebInfo";
 #endif
 
-#ifdef ATCG_PLATFORM_WINDOWS
-    const std::filesystem::path candidate_paths[] = {std::filesystem::path(name + ".dll"),
-                                                     std::filesystem::path("bin") / (name + ".dll"),
-                                                     std::filesystem::path("bin") / build_dir_name / (name + ".dll"),
-                                                     std::filesystem::path("lib") / (name + ".dll"),
-                                                     std::filesystem::path("lib") / build_dir_name / (name + ".dll")};
+#if ATCG_PLATFORM_WINDOWS
+    const std::string file_name     = name + ".dll";
+    const std::string lib_file_name = file_name;
 #else
-    const std::filesystem::path candidate_paths[] = {std::filesystem::path(name + ".so"),
-                                                     std::filesystem::path("bin") / (name + ".so"),
-                                                     std::filesystem::path("bin") / build_dir_name / (name + ".so"),
-                                                     std::filesystem::path("lib") / (name + ".so"),
-                                                     std::filesystem::path("lib") / build_dir_name / (name + ".so")};
-
+    const std::string file_name      = name + ".so";
+    const std::string lib_file_name  = "lib" + name + ".so";    // Default name of shared libraries built by CMake
 #endif
+
+    // Plugins next to atcg_lib come first. This ensures that a build of the library (e.g. the python and the C++ build)
+    // loads the plugins that were built against it. The working directory is used as a fallback.
+    const std::filesystem::path library_dir       = atcg::library_directory();
+    const std::filesystem::path candidate_paths[] = {library_dir / file_name,
+                                                     library_dir / lib_file_name,
+                                                     std::filesystem::path(file_name),
+                                                     std::filesystem::path("bin") / file_name,
+                                                     std::filesystem::path("bin") / build_dir_name / file_name,
+                                                     std::filesystem::path("lib") / file_name,
+                                                     std::filesystem::path("lib") / build_dir_name / file_name};
 
     for(const auto& path: candidate_paths)
     {
