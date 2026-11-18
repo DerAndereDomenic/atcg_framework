@@ -11,17 +11,6 @@ list(PREPEND CMAKE_MODULE_PATH "${ATCG_PROJECT_ROOT_DIR}/cmake")
 
 include(ATCGFunctions)
 
-# Create bin and lib directories if not exist
-file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
-file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/lib")
-
-# Configure C++
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
-set(CMAKE_C_STANDARD 99)
-set(CMAKE_CXX_STANDARD 20)
-
 # Manage options
 option(ATCG_CUDA_BACKEND "Compile cuda backend" ON)
 option(ATCG_PYTHON_MODULE "Build atcg_lib as python binding" OFF)
@@ -30,6 +19,25 @@ option(ATCG_BUILD_TESTS "Build tests" OFF)
 option(ATCG_HEADLESS "Build in headless mode (cuda and linux only)" OFF)
 option(ATCG_BUILD_EXAMPLES "Build atcg examples" ON)
 option(ATCG_SPECTRAL_RENDERING "Use spectral renderer" OFF)
+
+# The python module (charonload) configures the same source tree as the C++ build. Its binaries go into its own build
+# tree, so that both builds do not overwrite each other's atcg_lib, plugins, etc. in <repo>/bin.
+if(ATCG_PYTHON_MODULE)
+    set(ATCG_OUTPUT_ROOT "${CMAKE_BINARY_DIR}")
+else()
+    set(ATCG_OUTPUT_ROOT "${CMAKE_SOURCE_DIR}")
+endif()
+
+# Create bin and lib directories if not exist
+file(MAKE_DIRECTORY "${ATCG_OUTPUT_ROOT}/bin")
+file(MAKE_DIRECTORY "${ATCG_OUTPUT_ROOT}/lib")
+
+# Configure C++
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${ATCG_OUTPUT_ROOT}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${ATCG_OUTPUT_ROOT}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${ATCG_OUTPUT_ROOT}/lib)
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 20)
 
 # OpenMesh and OpenVR use Cmake < 3.10
 set(CMAKE_POLICY_VERSION_MINIMUM 3.10)
