@@ -70,6 +70,7 @@ inline void defineBindings(py::module_& m)
     auto m_key_released_event    = py::class_<atcg::KeyReleasedEvent, atcg::KeyEvent>(m, "KeyReleasedEvent");
     auto m_key_typed_event       = py::class_<atcg::KeyTypedEvent, atcg::KeyEvent>(m, "KeyTypedEvent");
     auto m_viewport_resize_event = py::class_<atcg::ViewportResizeEvent, atcg::Event>(m, "ViewportResizeEvent");
+    auto m_asset_dropped_event   = py::class_<atcg::AssetDroppedEvent, atcg::Event>(m, "AssetDroppedEvent");
     auto m_timer                 = py::class_<atcg::Timer>(m, "Timer");
     auto m_vertex_specification  = py::class_<atcg::VertexSpecification>(m, "VertexSpecification");
     auto m_edge_specification    = py::class_<atcg::EdgeSpecification>(m, "EdgeSpecification");
@@ -256,6 +257,10 @@ inline void defineBindings(py::module_& m)
     m_viewport_resize_event.def(py::init<unsigned int, unsigned int>(), "width"_a, "height"_a)
         .def("getWidth", &atcg::ViewportResizeEvent::getWidth)
         .def("getHeight", &atcg::ViewportResizeEvent::getHeight);
+    m_asset_dropped_event.def(py::init<atcg::AssetHandle, float, float>(), "handle"_a, "x"_a, "y"_a)
+        .def("getHandle", &atcg::AssetDroppedEvent::getHandle)
+        .def("getX", &atcg::AssetDroppedEvent::getX)
+        .def("getY", &atcg::AssetDroppedEvent::getY);
 
     m.def("width",
           []()
@@ -1585,6 +1590,10 @@ inline void defineBindings(py::module_& m)
               return std::make_tuple(result_hit, result_p, result_idx);
           });
 
+    m_utils.def("canApplyAsset", &atcg::Utils::canApplyAsset, "entity"_a, "handle"_a);
+    m_utils.def("applyAssetToEntities", &atcg::Utils::applyAssetToEntities, "scene"_a, "entities"_a, "handle"_a);
+    m_utils.def("createEntityFromAsset", &atcg::Utils::createEntityFromAsset, "scene"_a, "handle"_a);
+    m_utils.def("handleViewportAssetDrop", &atcg::Utils::handleViewportAssetDrop, "scene"_a, "handle"_a, "mouse_pos"_a);
     m_utils.def("AEMap", &atcg::Utils::AEMap, "groundtruth"_a, "prediction"_a, "channel_reduction"_a = "mean");
     m_utils.def("relAEMap",
                 &atcg::Utils::relAEMap,

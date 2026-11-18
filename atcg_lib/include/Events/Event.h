@@ -28,6 +28,7 @@ enum class EventType
     MouseMoved,
     MouseScrolled,
     FileDropped,
+    AssetDropped,
     VRButtonPressed,
     VRButtonReleased,
     VRButtonTouched,

@@ -32,6 +32,7 @@
 #include <Events/WindowEvent.h>
 #include <Events/KeyEvent.h>
 #include <Events/VREvent.h>
+#include <Events/AssetEvent.h>
 
 //-------- Renderer ------
 #include <Renderer/Context.h>
