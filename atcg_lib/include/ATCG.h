@@ -90,6 +90,8 @@
 #include <GUI/ComponentGUIHandler.h>
 #include <GUI/PerformancePanel.h>
 #include <GUI/PluginPanel.h>
+#include <GUI/RenderSettingsPanel.h>
+#include <GUI/IntegratorPanel.h>
 
 
 //-------- Utils -----------
@@ -129,6 +131,7 @@
     #include <Integrator/PathtracingIntegrator.h>
     #include <Integrator/VolPathtracingIntegrator.h>
     #include <Integrator/PhotonMapIntegrator.h>
+    #include <Integrator/IntegratorController.h>
     #include <Core/RaytracingContextManager.h>
 #endif
 
