@@ -133,6 +133,7 @@ inline void defineBindings(py::module_& m)
     auto m_tcp_server            = py::class_<atcg::TCPServer>(m_network, "TCPServer");
     auto m_tcp_client            = py::class_<atcg::TCPClient>(m_network, "TCPClient");
     auto m_performance_panel     = py::class_<atcg::GUI::PerformancePanel>(m, "PerformancePanel");
+    auto m_render_settings_panel = py::class_<atcg::GUI::RenderSettingsPanel>(m, "RenderSettingsPanel");
     auto m_scriptengine =
         py::class_<atcg::PythonScriptEngine, atcg::ref_ptr<atcg::PythonScriptEngine>>(m, "ScriptEngine");
     auto m_script      = py::class_<atcg::PythonScript, atcg::ref_ptr<atcg::PythonScript>>(m, "Script");
@@ -168,6 +169,9 @@ inline void defineBindings(py::module_& m)
                                                                                                           "egrator");
     auto m_integrator_registry = m.def_submodule("IntegratorRegistry");
     auto m_bsdf_registry       = m.def_submodule("BSDFRegistry");
+    auto m_integrator_controller =
+        py::class_<atcg::IntegratorController, atcg::ref_ptr<atcg::IntegratorController>>(m, "IntegratorController");
+    auto m_integrator_panel = py::class_<atcg::GUI::IntegratorPanel>(m, "IntegratorPanel");
 #endif
 
 #ifndef ATCG_HEADLESS
@@ -703,6 +707,16 @@ inline void defineBindings(py::module_& m)
             },
             "show_window"_a)
         .def("registerFrameTime", &atcg::GUI::PerformancePanel::registerFrameTime);
+
+    m_render_settings_panel.def(py::init<>())
+        .def(
+            "renderPanel",
+            [](atcg::GUI::RenderSettingsPanel& panel, bool show_window)
+            {
+                panel.renderPanel(show_window);
+                return show_window;
+            },
+            "show_window"_a);
 
     m_dictionary.def(py::init<>())
         .def("setInt8", &atcg::Dictionary::setInt8, "key"_a, "value"_a)
@@ -1517,7 +1531,9 @@ inline void defineBindings(py::module_& m)
                 const atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
              { atcg::SceneRenderer::render(scene, camera, framebuffer); })
         .def("setNumberMSAASamples", &atcg::SceneRenderer::setNumberMSAASamples, "samples"_a)
-        .def("setShadowPassResolution", &atcg::SceneRenderer::setShadowPassResolution, "resolution"_a);
+        .def("setShadowPassResolution", &atcg::SceneRenderer::setShadowPassResolution, "resolution"_a)
+        .def("getNumberMSAASamples", &atcg::SceneRenderer::getNumberMSAASamples)
+        .def("getShadowPassResolution", &atcg::SceneRenderer::getShadowPassResolution);
 
     m_scene_hierarchy_panel.def(py::init<>())
         .def(py::init<>())
@@ -1850,6 +1866,34 @@ inline void defineBindings(py::module_& m)
         "createIntegrator",
         [](const std::string& type, const atcg::ref_ptr<atcg::RaytracingContext>& context, const atcg::Dictionary& dict)
         { return atcg::IntegratorRegistry::createIntegrator(type, context, dict); });
+
+    m_integrator_controller
+        .def(py::init([](const atcg::ref_ptr<atcg::RaytracingContext>& context)
+                      { return atcg::make_ref<atcg::IntegratorController>(context); }),
+             "context"_a = nullptr)
+        .def("start", &atcg::IntegratorController::start)
+        .def("stop", &atcg::IntegratorController::stop)
+        .def("isRunning", &atcg::IntegratorController::isRunning)
+        .def("setIntegratorType", &atcg::IntegratorController::setIntegratorType, "type"_a)
+        .def("getIntegratorType", &atcg::IntegratorController::getIntegratorType)
+        .def("requestRebuild", &atcg::IntegratorController::requestRebuild)
+        .def("reset", &atcg::IntegratorController::reset)
+        .def("release", &atcg::IntegratorController::release)
+        .def("getIntegrator", &atcg::IntegratorController::getIntegrator)
+        .def("render", &atcg::IntegratorController::render, "scene"_a, "target"_a)
+        .def("getOutputTexture", &atcg::IntegratorController::getOutputTexture)
+        .def("getOutputEntityTexture", &atcg::IntegratorController::getOutputEntityTexture);
+
+    m_integrator_panel.def(py::init<>())
+        .def(py::init<const atcg::ref_ptr<atcg::IntegratorController>&>(), "controller"_a)
+        .def(
+            "renderPanel",
+            [](atcg::GUI::IntegratorPanel& panel, bool show_window)
+            {
+                panel.renderPanel(show_window);
+                return show_window;
+            },
+            "show_window"_a);
 #endif
     // IMGUI BINDINGS
 
