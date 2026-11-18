@@ -174,18 +174,64 @@ public:
     atcg::ref_ptr<Skybox> getSkybox() const;
 
     /**
-     * @brief Get the currently selected entity
+     * @brief Get the active entity, i.e., the entity that was added to the selection last.
+     * Equivalent to getActiveEntity().
      *
-     * @return The selected entity
-     */
-    void setSelectedEntity(Entity entity);
-
-    /**
-     * @brief Get the currently selected entity
-     *
-     * @return The selected entity
+     * @return The active entity or an invalid entity if nothing is selected
      */
     Entity getSelectedEntity() const;
+
+    /**
+     * @brief Select an entity.
+     * The entity becomes the active entity. If it is already selected, it is only made active.
+     *
+     * @param entity The entity to select. If it is invalid and additive is false, the selection is cleared.
+     * @param additive If false, the current selection is cleared first
+     */
+    void selectEntity(Entity entity, bool additive = false);
+
+    /**
+     * @brief Remove an entity from the selection
+     *
+     * @param entity The entity to deselect
+     */
+    void deselectEntity(Entity entity);
+
+    /**
+     * @brief Toggle the selection state of an entity.
+     * A selected entity is removed from the selection, an unselected entity is added as the active entity.
+     *
+     * @param entity The entity
+     */
+    void toggleEntitySelection(Entity entity);
+
+    /**
+     * @brief Clear the selection
+     */
+    void clearSelection();
+
+    /**
+     * @brief Check if an entity is selected
+     *
+     * @param entity The entity
+     *
+     * @return True if the entity is part of the selection
+     */
+    bool isSelected(Entity entity) const;
+
+    /**
+     * @brief Get all selected entities in selection order. The active entity is the last element.
+     *
+     * @return The selected entities
+     */
+    std::vector<Entity> getSelectedEntities() const;
+
+    /**
+     * @brief Get the active entity, i.e., the entity that was added to the selection last.
+     *
+     * @return The active entity or an invalid entity if nothing is selected
+     */
+    Entity getActiveEntity() const;
 
     static AssetType getStaticType() { return AssetType::Scene; }
 

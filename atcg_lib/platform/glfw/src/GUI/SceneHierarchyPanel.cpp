@@ -20,25 +20,34 @@ namespace GUI
 
 void SceneHierarchyPanel::drawEntityNode(const atcg::ref_ptr<Scene>& scene, Entity entity)
 {
-    auto selected_entity = scene->getSelectedEntity();
-    auto& tag            = entity.getComponent<NameComponent>().name();
+    auto& tag        = entity.getComponent<NameComponent>().name();
+    bool is_selected = scene->isSelected(entity);
 
-    ImGuiTreeNodeFlags flags = ((selected_entity && selected_entity.getComponent<IDComponent>().ID() ==
-                                                        entity.getComponent<IDComponent>().ID())
-                                    ? ImGuiTreeNodeFlags_Selected
-                                    : 0) |
-                               ImGuiTreeNodeFlags_Bullet;
+    ImGuiTreeNodeFlags flags = (is_selected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_Bullet;
     flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
     bool opened = ImGui::TreeNodeEx((void*)(uint64_t)entity.getComponent<IDComponent>().ID(), flags, tag.c_str());
     if(ImGui::IsItemClicked())
     {
-        selectEntity(entity);
+        if(ImGui::GetIO().KeyCtrl)
+        {
+            scene->toggleEntitySelection(entity);
+        }
+        else
+        {
+            selectEntity(entity);
+        }
     }
+
+    // If the entity is part of a multi selection, the whole selection is deleted
+    std::vector<Entity> selected_entities = scene->getSelectedEntities();
+    bool delete_selection                 = is_selected && selected_entities.size() > 1;
 
     bool entityDeleted = false;
     if(ImGui::BeginPopupContextItem())
     {
-        if(ImGui::MenuItem(ATCG_CONCAT_ID("Delete Entity", _uuid))) entityDeleted = true;
+        std::string label =
+            delete_selection ? "Delete " + std::to_string(selected_entities.size()) + " Entities" : "Delete Entity";
+        if(ImGui::MenuItem(ATCG_CONCAT_ID(label, _uuid))) entityDeleted = true;
 
         ImGui::EndPopup();
     }
@@ -50,10 +59,8 @@ void SceneHierarchyPanel::drawEntityNode(const atcg::ref_ptr<Scene>& scene, Enti
 
     if(entityDeleted)
     {
-        atcg::RevisionStack::startRecording<EntityRemovedRevision>(scene, entity);
-        if(selected_entity == entity) scene->setSelectedEntity({});
-        scene->removeEntity(entity);
-        atcg::RevisionStack::endRecording();
+        // The entities are removed in renderPanel after the iteration over all entities has finished
+        _entities_to_delete = delete_selection ? selected_entities : std::vector<Entity> {entity};
     }
 }
 
@@ -61,8 +68,6 @@ void SceneHierarchyPanel::drawComponents(const atcg::ref_ptr<Scene>& scene, Enti
 {
     std::string id = std::to_string(entity.getComponent<IDComponent>().ID());
     std::stringstream label;
-
-    float content_scale = atcg::Application::get()->getWindow()->getContentScale();
 
     NameComponent& component = entity.getComponent<NameComponent>();
     const std::string& tag   = component.name();
@@ -104,7 +109,7 @@ void SceneHierarchyPanel::selectEntity(Entity entity)
 
     if(entity && entity.scene())
     {
-        entity.scene()->setSelectedEntity(entity);
+        entity.scene()->selectEntity(entity);
     }
 }
 
@@ -114,13 +119,15 @@ void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene)
     // {
     //     _selected_entity = {};
     // }
-    auto selected_entity = scene->getSelectedEntity();
+    auto selected_entity = scene->getActiveEntity();
+    auto num_selected    = scene->getSelectedEntities().size();
 
     ImGui::Begin(ATCG_CONCAT_ID("Scene Hierarchy", _uuid));
 
-    if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive())
+    if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive() &&
+       !ImGui::GetIO().KeyCtrl)
     {
-        scene->setSelectedEntity({});
+        scene->clearSelection();
     }
 
     for(auto e: scene->getAllEntitiesWith<NameComponent>())
@@ -128,6 +135,21 @@ void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene)
         Entity entity(e, scene.get());
         if(entity.getComponent<NameComponent>().name() == "EditorCamera") continue;
         drawEntityNode(scene, entity);
+    }
+
+    if(!_entities_to_delete.empty())
+    {
+        // Removing an entity also removes it from the selection
+        atcg::RevisionStack::startRecording<MultiEntityRevision<EntityRemovedRevision>>(scene, _entities_to_delete);
+        for(auto entity: _entities_to_delete)
+        {
+            scene->removeEntity(entity);
+        }
+        atcg::RevisionStack::endRecording();
+        _entities_to_delete.clear();
+
+        selected_entity = scene->getActiveEntity();
+        num_selected    = scene->getSelectedEntities().size();
     }
 
 
@@ -160,6 +182,10 @@ void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene)
         {
             if(selected_entity)
             {
+                if(num_selected > 1)
+                {
+                    ImGui::TextDisabled("%d entities selected (showing active)", (int)num_selected);
+                }
                 drawComponents(scene, selected_entity);
             }
             ImGui::EndTabItem();

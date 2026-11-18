@@ -40,6 +40,9 @@ private:
 
     bool _focues_components = false;
 
+    // Entities are deleted after iterating over the scene's entities
+    std::vector<Entity> _entities_to_delete;
+
     std::string _uuid = "Main";
 };
 }    // namespace GUI

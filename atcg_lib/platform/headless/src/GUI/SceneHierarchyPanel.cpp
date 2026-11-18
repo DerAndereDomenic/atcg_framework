@@ -1,5 +1,7 @@
 #include <GUI/SceneHierarchyPanel.h>
 
+#include <Scene/Scene.h>
+
 namespace atcg
 {
 namespace GUI
@@ -10,8 +12,12 @@ void SceneHierarchyPanel::drawComponents(const atcg::ref_ptr<Scene>& scene, Enti
 
 void SceneHierarchyPanel::selectEntity(Entity entity)
 {
-    _selected_entity   = entity;
     _focues_components = true;
+
+    if(entity && entity.scene())
+    {
+        entity.scene()->selectEntity(entity);
+    }
 }
 
 void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene) {}
