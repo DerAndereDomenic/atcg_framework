@@ -70,8 +70,7 @@ inline void defineBindings(py::module_& m)
     auto m_key_released_event    = py::class_<atcg::KeyReleasedEvent, atcg::KeyEvent>(m, "KeyReleasedEvent");
     auto m_key_typed_event       = py::class_<atcg::KeyTypedEvent, atcg::KeyEvent>(m, "KeyTypedEvent");
     auto m_viewport_resize_event = py::class_<atcg::ViewportResizeEvent, atcg::Event>(m, "ViewportResizeEvent");
-    auto m_asset_dropped_event   = py::class_<atcg::AssetDroppedEvent, atcg::Event>(m, "AssetDroppedEvent");
-    auto m_timer                 = py::class_<atcg::Timer>(m, "Timer");
+    auto m_asset_dropped_event   = py::class_<atcg::AssetDroppedEvent, atcg::Event>(m, "AssetDroppedEvent");    auto m_timer                 = py::class_<atcg::Timer>(m, "Timer");
     auto m_vertex_specification  = py::class_<atcg::VertexSpecification>(m, "VertexSpecification");
     auto m_edge_specification    = py::class_<atcg::EdgeSpecification>(m, "EdgeSpecification");
     auto m_graph                 = py::class_<atcg::Graph, atcg::Asset, atcg::ref_ptr<atcg::Graph>>(m, "Graph");
@@ -123,6 +122,7 @@ inline void defineBindings(py::module_& m)
     auto m_scene_hierarchy_panel = py::class_<atcg::GUI::SceneHierarchyPanel>(m, "SceneHierarchyPanel");
     auto m_hit_info              = py::class_<atcg::Tracing::HitInfo>(m, "HitInfo");
     auto m_utils                 = m.def_submodule("Utils");
+    auto m_clipboard             = m.def_submodule("Clipboard");
     auto m_cull_mode             = py::enum_<atcg::CullMode>(m, "CullMode");
     auto m_primitive_topology    = py::enum_<atcg::PrimitiveTopology>(m, "PrimitiveTopology");
     auto m_depth_function        = py::enum_<atcg::DepthFunction>(m, "DepthFunction");
@@ -261,7 +261,6 @@ inline void defineBindings(py::module_& m)
         .def("getHandle", &atcg::AssetDroppedEvent::getHandle)
         .def("getX", &atcg::AssetDroppedEvent::getX)
         .def("getY", &atcg::AssetDroppedEvent::getY);
-
     m.def("width",
           []()
           {
@@ -548,7 +547,9 @@ inline void defineBindings(py::module_& m)
 
     m_asset_panel.def(py::init<>())
         .def("renderPanel", &atcg::GUI::AssetPanel::renderPanel)
-        .def("selectAsset", &atcg::GUI::AssetPanel::selectAsset);
+        .def("selectAsset", &atcg::GUI::AssetPanel::selectAsset)
+        .def("getSelectedAsset", &atcg::GUI::AssetPanel::getSelectedAsset)
+        .def("isAssetSelectionActive", &atcg::GUI::AssetPanel::isAssetSelectionActive);
 
     m_project.def_static("create", &atcg::Project::create)
         .def_static("load", [](const std::string& path) { return atcg::Project::load(path); })
@@ -1542,7 +1543,8 @@ inline void defineBindings(py::module_& m)
 
     m_scene_hierarchy_panel.def(py::init<>())
         .def(py::init<>())
-        .def("renderPanel", &atcg::GUI::SceneHierarchyPanel::renderPanel);
+        .def("renderPanel", &atcg::GUI::SceneHierarchyPanel::renderPanel)
+        .def("setEntitySelectionActive", &atcg::GUI::SceneHierarchyPanel::setEntitySelectionActive, "active"_a);
 
     m_hit_info.def_readonly("position", &atcg::Tracing::HitInfo::position)
         .def_readonly("incoming_direction", &atcg::Tracing::HitInfo::incoming_direction)
@@ -1589,6 +1591,14 @@ inline void defineBindings(py::module_& m)
 
               return std::make_tuple(result_hit, result_p, result_idx);
           });
+
+    m_clipboard.def("copyEntities", &atcg::Clipboard::copyEntities, "entities"_a)
+        .def("pasteEntities", &atcg::Clipboard::pasteEntities, "scene"_a)
+        .def("copyAsset", &atcg::Clipboard::copyAsset, "handle"_a)
+        .def("pasteAsset", &atcg::Clipboard::pasteAsset)
+        .def("hasEntities", &atcg::Clipboard::hasEntities)
+        .def("hasAsset", &atcg::Clipboard::hasAsset)
+        .def("clear", &atcg::Clipboard::clear);
 
     m_utils.def("canApplyAsset", &atcg::Utils::canApplyAsset, "entity"_a, "handle"_a);
     m_utils.def("applyAssetToEntities", &atcg::Utils::applyAssetToEntities, "scene"_a, "entities"_a, "handle"_a);
