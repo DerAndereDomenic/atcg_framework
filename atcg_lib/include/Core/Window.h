@@ -178,6 +178,13 @@ public:
     ATCG_INLINE bool isFullScreen() const { return _data.fullscreen; }
 
     /**
+     * @brief Check if vsync is enabled
+     *
+     * @return True if vsync is enabled
+     */
+    ATCG_INLINE bool isVSync() const { return _data.vsync; }
+
+    /**
      * @brief Get the context
      *
      * @return The context
@@ -197,6 +204,7 @@ private:
         uint32_t fullscreen_height;
         int32_t fullscreen_x;
         int32_t fullscreen_y;
+        bool vsync = false;
     };
 
     WindowData _data;

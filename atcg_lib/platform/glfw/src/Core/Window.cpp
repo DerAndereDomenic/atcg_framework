@@ -244,6 +244,7 @@ void Window::resize(const uint32_t& _width, const uint32_t& _height)
 
 void Window::toggleVSync(bool vsync)
 {
+    _data.vsync = vsync;
     glfwSwapInterval(vsync);
 }
 
