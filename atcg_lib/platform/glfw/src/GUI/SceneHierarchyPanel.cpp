@@ -5,6 +5,12 @@
 
 #include <Scene/Components/NameComponent.h>
 #include <Scene/Components/IDComponent.h>
+#include <Scene/Components/TransformComponent.h>
+#include <Scene/Components/GeometryComponent.h>
+#include <Scene/Components/MeshRenderComponent.h>
+#include <Scene/Components/PointLightComponent.h>
+#include <Scene/Components/MeshLightComponent.h>
+#include <Scene/Components/CameraComponent.h>
 
 #include <imgui.h>
 #include <portable-file-dialogs.h>
@@ -143,6 +149,26 @@ void SceneHierarchyPanel::selectEntity(Entity entity)
     }
 }
 
+void SceneHierarchyPanel::createEntity(const atcg::ref_ptr<Scene>& scene,
+                                       const std::string& name,
+                                       const std::function<void(Entity)>& add_components)
+{
+    if(RevisionStack::isRecording())
+    {
+        ATCG_WARN("Cannot create an entity while another revision is recorded");
+        return;
+    }
+
+    Entity entity = scene->createEntity(name);
+
+    // EntityAddedRevision stores the components added during the recording, so that redo also restores them
+    RevisionStack::startRecording<EntityAddedRevision>(scene, entity);
+    add_components(entity);
+    RevisionStack::endRecording();
+
+    selectEntity(entity);
+}
+
 void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene)
 {
     // if(_selected_entity.scene() != scene.get())
@@ -196,14 +222,94 @@ void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene)
 
     if(ImGui::BeginPopupContextWindow(0, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverExistingPopup))
     {
-        if(ImGui::MenuItem(ATCG_CONCAT_ID("Create Empty Entity", _uuid)))
+        if(ImGui::MenuItem(ATCG_CONCAT_ID(std::string("Create Empty Entity"), _uuid)))
         {
-            Entity entity = scene->createEntity("Empty Entity");
-            atcg::RevisionStack::startRecording<EntityAddedRevision>(scene, entity);
-            atcg::RevisionStack::endRecording();
-            selectEntity(entity);
+            createEntity(scene, "Empty Entity", [](Entity entity) {});
         }
-        if(ImGui::MenuItem(ATCG_CONCAT_ID("Paste", _uuid), "Ctrl+V", false, Clipboard::hasEntities()))
+
+        if(ImGui::BeginMenu(ATCG_CONCAT_ID(std::string("Meshes"), _uuid)))
+        {
+            auto add_mesh = [](const atcg::ref_ptr<Graph>& mesh)
+            {
+                return [mesh](Entity entity)
+                {
+                    entity.addComponent<TransformComponent>();
+                    entity.addComponent<GeometryComponent>(mesh->handle);
+                    entity.addComponent<MeshRenderComponent>();
+                };
+            };
+
+            if(ImGui::MenuItem(ATCG_CONCAT_ID(std::string("Cube"), _uuid)))
+            {
+                createEntity(scene, "Cube", add_mesh(AssetManager::getCubeMesh()));
+            }
+            if(ImGui::MenuItem(ATCG_CONCAT_ID(std::string("Quad"), _uuid)))
+            {
+                createEntity(scene, "Quad", add_mesh(AssetManager::getQuadMesh()));
+            }
+            if(ImGui::MenuItem(ATCG_CONCAT_ID(std::string("Sphere"), _uuid)))
+            {
+                createEntity(scene, "Sphere", add_mesh(AssetManager::getSphereMesh()));
+            }
+            if(ImGui::MenuItem(ATCG_CONCAT_ID(std::string("Cylinder"), _uuid)))
+            {
+                createEntity(scene, "Cylinder", add_mesh(AssetManager::getCylinderMesh()));
+            }
+            ImGui::EndMenu();
+        }
+
+        if(ImGui::BeginMenu(ATCG_CONCAT_ID(std::string("Emitter"), _uuid)))
+        {
+            // Mesh lights render their geometry themselves, so no render component is added
+            auto add_mesh_light = [](const atcg::ref_ptr<Graph>& mesh)
+            {
+                return [mesh](Entity entity)
+                {
+                    entity.addComponent<TransformComponent>();
+                    entity.addComponent<GeometryComponent>(mesh->handle);
+                    entity.addComponent<MeshLightComponent>();
+                };
+            };
+
+            if(ImGui::MenuItem(ATCG_CONCAT_ID(std::string("Point Light"), _uuid)))
+            {
+                createEntity(scene,
+                             "Point Light",
+                             [](Entity entity)
+                             {
+                                 entity.addComponent<TransformComponent>();
+                                 entity.addComponent<PointLightComponent>();
+                             });
+            }
+            if(ImGui::MenuItem(ATCG_CONCAT_ID(std::string("Area Light"), _uuid)))
+            {
+                createEntity(scene, "Area Light", add_mesh_light(AssetManager::getQuadMesh()));
+            }
+            if(ImGui::MenuItem(ATCG_CONCAT_ID(std::string("Mesh Light"), _uuid)))
+            {
+                createEntity(scene, "Mesh Light", add_mesh_light(AssetManager::getCubeMesh()));
+            }
+            ImGui::EndMenu();
+        }
+
+        if(ImGui::MenuItem(ATCG_CONCAT_ID(std::string("Camera"), _uuid)))
+        {
+            createEntity(scene,
+                         "Camera",
+                         [](Entity entity)
+                         {
+                             // Same as adding the camera component in the properties panel: the view matches the
+                             // transform of the entity
+                             auto& transform = entity.addComponent<TransformComponent>();
+                             auto camera     = atcg::make_ref<PerspectiveCamera>();
+                             camera->setView(glm::inverse(transform.getModel()));
+                             entity.addComponent<CameraComponent>(camera);
+                         });
+        }
+
+        ImGui::Separator();
+
+        if(ImGui::MenuItem(ATCG_CONCAT_ID(std::string("Paste"), _uuid), "Ctrl+V", false, Clipboard::hasEntities()))
         {
             paste_entities = true;
         }

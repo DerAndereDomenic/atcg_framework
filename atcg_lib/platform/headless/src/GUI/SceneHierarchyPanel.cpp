@@ -20,6 +20,12 @@ void SceneHierarchyPanel::selectEntity(Entity entity)
     }
 }
 
+void SceneHierarchyPanel::createEntity(const atcg::ref_ptr<Scene>& scene,
+                                       const std::string& name,
+                                       const std::function<void(Entity)>& add_components)
+{
+}
+
 void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene) {}
 }    // namespace GUI
 }    // namespace atcg

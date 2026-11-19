@@ -43,6 +43,11 @@ public:
 private:
     void selectEntity(Entity entity);
 
+    // Creates and selects an entity. The components are added by the callback and recorded as one undo step.
+    void createEntity(const atcg::ref_ptr<Scene>& scene,
+                      const std::string& name,
+                      const std::function<void(Entity)>& add_components);
+
     void drawEntityNode(const atcg::ref_ptr<Scene>& scene, Entity entity);
 
     void drawComponents(const atcg::ref_ptr<Scene>& scene, Entity entity);
