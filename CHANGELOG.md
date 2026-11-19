@@ -87,6 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `atcg::library_directory`, `atcg::executable_path` and `atcg::user_config_directory`
 - Added drag and drop of assets from the asset panel onto selection combo boxes, entities in the scene hierarchy and the viewport (dropping a mesh onto empty space creates a new entity)
 - Added `CompositeRevision` to record any combination of revisions as a single undo step, and `AssetDroppedEvent`
+- Added entries to the context menu of the scene hierarchy to create standard meshes (cube, quad, sphere, cylinder), emitters (point light, area light, mesh light) and cameras
 - Added copy & paste of entities (hierarchy and viewport) and assets (asset panel) with Ctrl+C / Ctrl+V and context menus, based on a new `Clipboard` system
 - Key presses with Ctrl held (shortcuts) are no longer blocked by focused ImGui windows, unless text is typed
 - Added `ComponentCopier` to define how components are copied, e.g. to give copies their own camera, instance buffers or script behavior
