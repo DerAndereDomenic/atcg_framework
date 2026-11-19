@@ -19,12 +19,7 @@ void ComponentCopier<ScriptComponent>::paste(const atcg::ref_ptr<Scene>& scene,
                                              const ScriptComponent& component)
 {
     // Same as assigning a script in the GUI: create the behavior for the new entity and attach it
-    auto& script = entity.addOrReplaceComponent<ScriptComponent>(copy(component));
-    if(script.script())
-    {
-        auto behavior = script.behavior(scene, entity, true);
-        if(behavior) behavior->onAttach();
-    }
+    entity.addOrReplaceComponent<ScriptComponent>(copy(component));
 }
 
 namespace Serialization

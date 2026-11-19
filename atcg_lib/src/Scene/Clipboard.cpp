@@ -161,6 +161,22 @@ std::vector<Entity> ClipboardSystem::pasteEntities(const atcg::ref_ptr<Scene>& s
     }
     RevisionStack::endRecording();
 
+    // Script components expect the whole entity to be created before the behavior is created, so we create the
+    // behaviors after the recording
+    for(auto entity: pasted)
+    {
+        if(!entity) continue;
+        if(entity.hasComponent<ScriptComponent>())
+        {
+            auto& script = entity.getComponent<ScriptComponent>();
+            if(script.script())
+            {
+                auto behavior = script.behavior(scene, entity, true);
+                if(behavior) behavior->onAttach();
+            }
+        }
+    }
+
     for(size_t i = 0; i < pasted.size(); ++i)
     {
         scene->selectEntity(pasted[i], i > 0);
