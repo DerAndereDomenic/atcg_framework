@@ -187,8 +187,10 @@ void Project::deserializeProjectInformation()
         }
         else
         {
-            // Load default settings
+// Load default settings
+#ifdef ATCG_CUDA_BACKEND
             _integrator_settings = atcg::IntegratorRegistry::createIntegratorSettings("VolPathtracing");
+#endif
         }
 
         if(std::filesystem::exists(_project_path / "Plugins.json"))
