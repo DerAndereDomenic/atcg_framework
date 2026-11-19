@@ -41,20 +41,23 @@ extern "C" __global__ void __raygen__rg()
 
     float eta = 1.0f;
 
-    for(int n = 0; n < 512; ++n)
+    for(int n = 0; n < params.max_depth; ++n)
     {
         if(!next_ray_valid) break;
         next_ray_valid = false;
 
-        float rr_prob = glm::min(camera_ray.importance.maxComponent() / (eta * eta), 0.95f);
-        if(rng.nextFloat() < rr_prob)
+        if(params.use_rr)
         {
-            camera_ray.importance /= rr_prob;
-        }
-        else
-        {
-            next_ray_valid = false;
-            break;
+            float rr_prob = glm::min(camera_ray.importance.maxComponent() / (eta * eta), 0.95f);
+            if(rng.nextFloat() < rr_prob)
+            {
+                camera_ray.importance /= rr_prob;
+            }
+            else
+            {
+                next_ray_valid = false;
+                break;
+            }
         }
 
         atcg::SurfaceInteraction si;
@@ -182,7 +185,7 @@ extern "C" __global__ void __raygen__rg()
 
         if(!si.isValid())
         {
-            if(params.environment_emitter)
+            if(params.environment_emitter && (!params.hide_emitters || n > 0))
             {
                 bool mis_valid              = last_ai->isValid();
                 float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
@@ -202,7 +205,7 @@ extern "C" __global__ void __raygen__rg()
         }
 
         // Check for light source
-        if(si.emitter)
+        if(si.emitter && (!params.hide_emitters || n > 0))
         {
             bool mis_valid              = last_ai->isValid();
             float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);

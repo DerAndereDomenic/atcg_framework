@@ -201,6 +201,18 @@ public:
      */
     operator bool() const { return (_entity_handle != entt::null && _scene->_registry.valid(_entity_handle)); }
 
+    /**
+     * @brief Check if two entities refer to the same entity of the same scene
+     *
+     * @param other The other entity
+     *
+     * @return True if both entities have the same handle and scene
+     */
+    ATCG_INLINE bool operator==(const Entity& other) const
+    {
+        return _entity_handle == other._entity_handle && _scene == other._scene;
+    }
+
 private:
     friend class Scene;
     friend class RendererSystem;

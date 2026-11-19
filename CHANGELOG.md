@@ -78,6 +78,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a check that warns about material types without a matching BSDF at startup and after loading a plugin
 - Added SelectionMaskPass that renders the selected entity into a separate id mask without lighting
 - Added `override_shader` support to the CameraComponent and PointLightComponent renderers
+- Added multi-entity selection: Ctrl + Click in the viewport or the scene hierarchy adds or removes entities, with a new selection API on `Scene` and Python bindings for it
+- Added `MultiEntityRevision` to record changes to multiple entities as a single undo step
+- Added deleting all selected entities with the Delete key in the Editor and from the hierarchy context menu
+- Added `IntegratorController`, which creates, updates and renders an integrator from the active project's integrator settings
+- Added reusable `RenderSettingsPanel` and `IntegratorPanel` GUI panels with Python bindings
+- Added `Window::isVSync`, `SceneRenderer::getNumberMSAASamples` and `SceneRenderer::getShadowPassResolution`
+- Added `atcg::library_directory`, `atcg::executable_path` and `atcg::user_config_directory`
+- Added drag and drop of assets from the asset panel onto selection combo boxes, entities in the scene hierarchy and the viewport (dropping a mesh onto empty space creates a new entity)
+- Added `CompositeRevision` to record any combination of revisions as a single undo step, and `AssetDroppedEvent`
+- Added entries to the context menu of the scene hierarchy to create standard meshes (cube, quad, sphere, cylinder), emitters (point light, area light, mesh light) and cameras
+- Added copy & paste of entities (hierarchy and viewport) and assets (asset panel) with Ctrl+C / Ctrl+V and context menus, based on a new `Clipboard` system
+- Key presses with Ctrl held (shortcuts) are no longer blocked by focused ImGui windows, unless text is typed
+- Added `ComponentCopier` to define how components are copied, e.g. to give copies their own camera, instance buffers or script behavior
 
 ### Changed
 
@@ -163,6 +176,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dictionary errors now name the key and the stored and requested types, and `getValueOr` warns on a type mismatch
 - Registering an already registered type in a registry now logs a warning
 - The selection outline is now computed from the selection mask and drawn outside the silhouette, so occluding objects no longer produce outline edges
+- All selected entities are outlined, with the active (last selected) entity in a brighter color
+- `drawGuizmo` no longer takes an entity and draws the guizmo for the scene's selection, transforming multiple selected entities around the center of the selection
+- Removed `Scene::setSelectedEntity` in favor of `Scene::selectEntity`
+- The Editor, PBR and NRC samples use the shared render settings and integrator panels instead of their own copies
+- Plugins are searched next to atcg_lib before the working directory
+- The ImGui layout is saved per user and application in the user config directory, and the default layout moved to `res/imgui_default.ini`
+- The python build writes its binaries into its own build directory
+- Replaced the unused `UnionRevision` with `CompositeRevision`
+- The asset editor keeps the selected asset open when entities are selected. Selected assets and entities have a gray background in the asset panel and scene hierarchy, and the most recent selection is outlined
 
 ### Fixed
 
@@ -187,6 +209,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed clamping of the specular color
 - Fixed the dielectric BSDF (refraction jacobian, half-vector orientation and transport mode at interfaces)
 - Fixed Russian roulette weights by tracking the relative index of refraction during BSDF sampling
+- Fixed `Entity` comparison, which compared the entities' validity instead of their handles, so deleting any entity cleared the selection
+- Fixed the python and C++ builds overwriting each other's atcg_lib and plugins in `bin/`
+- Fixed plugin lookup by name on Linux, which searched for `.dll` files
+- Fixed redo of `ComponentEditedRevision` on entities that no longer have the component
+- Fixed redo of `EntityAddedRevision`, which recreated the entity without its components
+- Fixed the component registry not being registered as a system in builds without the CUDA backend
 
 ## [0.2.1-beta]
 

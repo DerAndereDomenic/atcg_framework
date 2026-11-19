@@ -140,6 +140,39 @@ public:
     }
 
     /**
+     * @brief Start recording a revision that affects multiple entities (see MultiEntityRevision).
+     * Each revision that should be handled by the system has to be recorded. There can always be only one recording at
+     * a time. The recording has to be stopped using RevisionSystem::endRecording before a new recording can be started.
+     *
+     * @tparam RevisionType The type of the revision that should be recorded
+     * @param scene The scene
+     * @param entities The entities
+     */
+    template<typename RevisionType>
+    ATCG_INLINE void startRecording(const atcg::ref_ptr<atcg::Scene>& scene, const std::vector<atcg::Entity>& entities)
+    {
+        ATCG_ASSERT(_current_revision == nullptr, "Can only have one revision at a time");
+
+        _current_revision = atcg::make_ref<RevisionType>(scene, entities);
+        _current_revision->record_start_state();
+    }
+
+    /**
+     * @brief Start recording an already constructed revision (for example a CompositeRevision).
+     * Each revision that should be handled by the system has to be recorded. There can always be only one recording at
+     * a time. The recording has to be stopped using RevisionSystem::endRecording before a new recording can be started.
+     *
+     * @param revision The revision
+     */
+    ATCG_INLINE void startRecording(const atcg::ref_ptr<Revision>& revision)
+    {
+        ATCG_ASSERT(_current_revision == nullptr, "Can only have one revision at a time");
+
+        _current_revision = revision;
+        _current_revision->record_start_state();
+    }
+
+    /**
      * @brief Start recording a revision.
      * Each revision that should be handled by the system has to be recorded. There can always be only one recording at
      * a time. The recording has to be stopped using RevisionSystem::endRecording before a new recording can be started.
@@ -233,9 +266,14 @@ public:
     EntityAddedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : EntityRevision(scene, entity) {}
 
     /**
-     * @brief Callback that is called on a redo
+     * @brief Callback that is called on a redo. The entity is recreated with the components it had at the end of the
+     * recording.
      */
-    virtual void apply() override { auto entity = _scene->createEntity((entt::entity)_entity_handle, _uuid, _name); }
+    virtual void apply() override
+    {
+        auto entity = _scene->createEntity((entt::entity)_entity_handle, _uuid, _name);
+        restoreComponents(entity);
+    }
 
     /**
      * @brief Callback that is called on a rollback
@@ -249,14 +287,20 @@ public:
     virtual void record_start_state() override;
 
     /**
-     * @brief Function that is called at the end of a capture. This should store all relevant information after the
-     * scene element was changed.
+     * @brief Function that is called at the end of a capture. This stores the components that were added to the entity
+     * during the recording.
      */
-    virtual void record_end_state() override {}
+    virtual void record_end_state() override;
+
+private:
+    // These functions are implemented in a cpp unit because they rely on the ComponentRegistry which also relies on the
+    // RevisionStack and therefore, we get a circular dependency.
+    void restoreComponents(atcg::Entity entity);
 
 private:
     UUID _uuid;
     std::string _name;
+    std::unordered_map<entt::id_type, std::shared_ptr<void>> _components;
 };
 
 /**
@@ -455,6 +499,7 @@ public:
     virtual void apply() override
     {
         atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
+        if(!entity.hasComponent<Component>()) return;
         entity.replaceComponent<Component>(_new_component);
     }
     /**
@@ -495,44 +540,60 @@ private:
 };
 
 /**
- * @brief A tuple of two revisions.
- * This can be used if multiple components update in one revision step (for example if transform and geometry change by
- * normalization).
+ * @brief A revision that combines an arbitrary number of revisions into one revision step.
+ * This can be used if multiple components or entities change in one step (for example if an entity is created together
+ * with its components, or if an asset is assigned to the components of multiple entities). The revisions are recorded
+ * and applied in the order they were added and rolled back in reverse order.
  *
- * @tparam RevisionType1 The revision type of the first revision
- * @tparam RevisionType2 The revision type of the second revision
+ * As the sub-revisions have to be created before the recording starts, a composite revision is recorded with
+ * RevisionStack::startRecording(revision):
+ *
+ * @code
+ * auto revision = atcg::make_ref<CompositeRevision>();
+ * revision->add(atcg::make_ref<ComponentEditedRevision<MeshRenderComponent>>(scene, entity));
+ * revision->add(atcg::make_ref<ComponentAddedRevision<GeometryComponent>>(scene, entity));
+ * RevisionStack::startRecording(revision);
+ * // ... change the scene ...
+ * RevisionStack::endRecording();
+ * @endcode
  */
-template<typename RevisionType1, typename RevisionType2>
-class UnionRevision : public EntityRevision
+class ATCG_API CompositeRevision : public Revision
 {
 public:
     /**
-     * @brief Constructor
+     * @brief Add a revision. This has to be done before the recording starts.
      *
-     * @param scene The scene
-     * @param entity The entity
+     * @param revision The revision
      */
-    UnionRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : EntityRevision(scene, entity)
-    {
-        _revision1 = atcg::make_ref<RevisionType1>(scene, entity);
-        _revision2 = atcg::make_ref<RevisionType2>(scene, entity);
-    }
+    ATCG_INLINE void add(const atcg::ref_ptr<Revision>& revision) { _revisions.push_back(revision); }
+
+    /**
+     * @brief Check if the composite revision contains any revision
+     *
+     * @return True if no revision was added
+     */
+    ATCG_INLINE bool empty() const { return _revisions.empty(); }
 
     /**
      * @brief Callback that is called on a redo
      */
     virtual void apply() override
     {
-        _revision1->apply();
-        _revision2->apply();
+        for(auto& revision: _revisions)
+        {
+            revision->apply();
+        }
     }
+
     /**
      * @brief Callback that is called on a rollback
      */
     virtual void rollback() override
     {
-        _revision1->rollback();
-        _revision2->rollback();
+        for(auto it = _revisions.rbegin(); it != _revisions.rend(); ++it)
+        {
+            (*it)->rollback();
+        }
     }
 
     /**
@@ -541,8 +602,10 @@ public:
      */
     virtual void record_start_state() override
     {
-        _revision1->record_start_state();
-        _revision2->record_start_state();
+        for(auto& revision: _revisions)
+        {
+            revision->record_start_state();
+        }
     }
 
     /**
@@ -551,13 +614,90 @@ public:
      */
     virtual void record_end_state() override
     {
-        _revision1->record_end_state();
-        _revision2->record_end_state();
+        for(auto& revision: _revisions)
+        {
+            revision->record_end_state();
+        }
     }
 
 private:
-    atcg::ref_ptr<RevisionType1> _revision1;
-    atcg::ref_ptr<RevisionType2> _revision2;
+    std::vector<atcg::ref_ptr<Revision>> _revisions;
+};
+
+/**
+ * @brief A revision that applies the same revision type to multiple entities in one step.
+ * This can be used if multiple entities change at once (for example if multiple selected entities are deleted or
+ * transformed). It is recorded with RevisionStack::startRecording(scene, entities).
+ *
+ * @tparam RevisionType The revision type that is recorded for each entity
+ */
+template<typename RevisionType>
+class MultiEntityRevision : public Revision
+{
+public:
+    /**
+     * @brief Constructor
+     *
+     * @param scene The scene
+     * @param entities The entities
+     */
+    MultiEntityRevision(const atcg::ref_ptr<atcg::Scene>& scene, const std::vector<atcg::Entity>& entities)
+    {
+        _revisions.reserve(entities.size());
+        for(auto entity: entities)
+        {
+            _revisions.push_back(atcg::make_ref<RevisionType>(scene, entity));
+        }
+    }
+
+    /**
+     * @brief Callback that is called on a redo
+     */
+    virtual void apply() override
+    {
+        for(auto& revision: _revisions)
+        {
+            revision->apply();
+        }
+    }
+
+    /**
+     * @brief Callback that is called on a rollback
+     */
+    virtual void rollback() override
+    {
+        for(auto it = _revisions.rbegin(); it != _revisions.rend(); ++it)
+        {
+            (*it)->rollback();
+        }
+    }
+
+    /**
+     * @brief Function that is called at the start of a capture. This should store all relevant information before any
+     * changes to the scene elements were made.
+     */
+    virtual void record_start_state() override
+    {
+        for(auto& revision: _revisions)
+        {
+            revision->record_start_state();
+        }
+    }
+
+    /**
+     * @brief Function that is called at the end of a capture. This should store all relevant information after the
+     * scene element was changed.
+     */
+    virtual void record_end_state() override
+    {
+        for(auto& revision: _revisions)
+        {
+            revision->record_end_state();
+        }
+    }
+
+private:
+    std::vector<atcg::ref_ptr<RevisionType>> _revisions;
 };
 
 class AssetRevision : public Revision
@@ -739,6 +879,35 @@ ATCG_INLINE void startRecording(const atcg::ref_ptr<atcg::Scene>& scene, atcg::E
 {
     RevisionSystem* system = atcg::SystemRegistry::instance()->getSystem<atcg::RevisionSystem>();
     system->startRecording<RevisionType>(scene, entity);
+}
+
+/**
+ * @brief Start recording a revision that affects multiple entities (see MultiEntityRevision).
+ * Each revision that should be handled by the system has to be recorded. There can always be only one recording at
+ * a time. The recording has to be stopped using RevisionSystem::endRecording before a new recording can be started.
+ *
+ * @tparam RevisionType The type of the revision that should be recorded
+ * @param scene The scene
+ * @param entities The entities
+ */
+template<typename RevisionType>
+ATCG_INLINE void startRecording(const atcg::ref_ptr<atcg::Scene>& scene, const std::vector<atcg::Entity>& entities)
+{
+    RevisionSystem* system = atcg::SystemRegistry::instance()->getSystem<atcg::RevisionSystem>();
+    system->startRecording<RevisionType>(scene, entities);
+}
+
+/**
+ * @brief Start recording an already constructed revision (for example a CompositeRevision).
+ * Each revision that should be handled by the system has to be recorded. There can always be only one recording at
+ * a time. The recording has to be stopped using RevisionSystem::endRecording before a new recording can be started.
+ *
+ * @param revision The revision
+ */
+ATCG_INLINE void startRecording(const atcg::ref_ptr<Revision>& revision)
+{
+    RevisionSystem* system = atcg::SystemRegistry::instance()->getSystem<atcg::RevisionSystem>();
+    system->startRecording(revision);
 }
 
 /**

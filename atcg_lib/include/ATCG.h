@@ -24,7 +24,6 @@
 #include <Asset/AssetImporter.h>
 #include <Asset/AssetExporter.h>
 #include <Asset/AssetManagerSystem.h>
-#include <Asset/AssetPanel.h>
 #include <Asset/Project.h>
 
 //-------- EVENTS -------
@@ -33,6 +32,7 @@
 #include <Events/WindowEvent.h>
 #include <Events/KeyEvent.h>
 #include <Events/VREvent.h>
+#include <Events/AssetEvent.h>
 
 //-------- Renderer ------
 #include <Renderer/Context.h>
@@ -69,7 +69,6 @@
 #include <DataStructure/Image.h>
 #include <DataStructure/Worker.h>
 #include <DataStructure/WorkerPool.h>
-#include <DataStructure/PerformancePanel.h>
 #include <DataStructure/Dictionary.h>
 #include <DataStructure/Skybox.h>
 #include <DataStructure/TextureBuilder.h>
@@ -85,6 +84,15 @@
 #include <Utils/HostDevice.h>
 #include <Math/Tracing.h>
 #include <Math/Color.h>
+
+//-------- GUI -----------
+#include <GUI/SceneHierarchyPanel.h>
+#include <GUI/AssetPanel.h>
+#include <GUI/ComponentGUIHandler.h>
+#include <GUI/PerformancePanel.h>
+#include <GUI/PluginPanel.h>
+#include <GUI/RenderSettingsPanel.h>
+#include <GUI/IntegratorPanel.h>
 
 
 //-------- Utils -----------
@@ -108,13 +116,12 @@
 #include <Scene/Scene.h>
 #include <Scene/Entity.h>
 #include <Scene/Serializer.h>
-#include <Scene/SceneHierarchyPanel.h>
-#include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
 #include <Scene/RevisionStack.h>
 #include <Scene/ComponentRenderer.h>
 #include <Scene/ComponentRegistry.h>
 #include <Scene/SceneRenderer.h>
+#include <Scene/Clipboard.h>
 
 //-------- Torch ------------
 #include <DataStructure/TorchUtils.h>
@@ -126,6 +133,7 @@
     #include <Integrator/PathtracingIntegrator.h>
     #include <Integrator/VolPathtracingIntegrator.h>
     #include <Integrator/PhotonMapIntegrator.h>
+    #include <Integrator/IntegratorController.h>
     #include <Core/RaytracingContextManager.h>
 #endif
 

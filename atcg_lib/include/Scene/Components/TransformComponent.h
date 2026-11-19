@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/glm.h>
-#include <Scene/ComponentGUIHandler.h>
+#include <GUI/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
 
 #include <Scene/ComponentRegistry.h>

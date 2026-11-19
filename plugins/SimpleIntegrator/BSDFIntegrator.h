@@ -50,6 +50,8 @@ public:
      */
     virtual void reset() override;
 
+    static std::string getType() { return "BSDFIntegrator"; }
+
 private:
     /**
      * @brief Initialize a pipeline.

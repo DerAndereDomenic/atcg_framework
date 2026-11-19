@@ -70,7 +70,7 @@ inline void defineBindings(py::module_& m)
     auto m_key_released_event    = py::class_<atcg::KeyReleasedEvent, atcg::KeyEvent>(m, "KeyReleasedEvent");
     auto m_key_typed_event       = py::class_<atcg::KeyTypedEvent, atcg::KeyEvent>(m, "KeyTypedEvent");
     auto m_viewport_resize_event = py::class_<atcg::ViewportResizeEvent, atcg::Event>(m, "ViewportResizeEvent");
-    auto m_timer                 = py::class_<atcg::Timer>(m, "Timer");
+    auto m_asset_dropped_event   = py::class_<atcg::AssetDroppedEvent, atcg::Event>(m, "AssetDroppedEvent");    auto m_timer                 = py::class_<atcg::Timer>(m, "Timer");
     auto m_vertex_specification  = py::class_<atcg::VertexSpecification>(m, "VertexSpecification");
     auto m_edge_specification    = py::class_<atcg::EdgeSpecification>(m, "EdgeSpecification");
     auto m_graph                 = py::class_<atcg::Graph, atcg::Asset, atcg::ref_ptr<atcg::Graph>>(m, "Graph");
@@ -122,6 +122,7 @@ inline void defineBindings(py::module_& m)
     auto m_scene_hierarchy_panel = py::class_<atcg::GUI::SceneHierarchyPanel>(m, "SceneHierarchyPanel");
     auto m_hit_info              = py::class_<atcg::Tracing::HitInfo>(m, "HitInfo");
     auto m_utils                 = m.def_submodule("Utils");
+    auto m_clipboard             = m.def_submodule("Clipboard");
     auto m_cull_mode             = py::enum_<atcg::CullMode>(m, "CullMode");
     auto m_primitive_topology    = py::enum_<atcg::PrimitiveTopology>(m, "PrimitiveTopology");
     auto m_depth_function        = py::enum_<atcg::DepthFunction>(m, "DepthFunction");
@@ -133,6 +134,7 @@ inline void defineBindings(py::module_& m)
     auto m_tcp_server            = py::class_<atcg::TCPServer>(m_network, "TCPServer");
     auto m_tcp_client            = py::class_<atcg::TCPClient>(m_network, "TCPClient");
     auto m_performance_panel     = py::class_<atcg::GUI::PerformancePanel>(m, "PerformancePanel");
+    auto m_render_settings_panel = py::class_<atcg::GUI::RenderSettingsPanel>(m, "RenderSettingsPanel");
     auto m_scriptengine =
         py::class_<atcg::PythonScriptEngine, atcg::ref_ptr<atcg::PythonScriptEngine>>(m, "ScriptEngine");
     auto m_script      = py::class_<atcg::PythonScript, atcg::ref_ptr<atcg::PythonScript>>(m, "Script");
@@ -168,11 +170,15 @@ inline void defineBindings(py::module_& m)
                                                                                                           "egrator");
     auto m_integrator_registry = m.def_submodule("IntegratorRegistry");
     auto m_bsdf_registry       = m.def_submodule("BSDFRegistry");
+    auto m_integrator_controller =
+        py::class_<atcg::IntegratorController, atcg::ref_ptr<atcg::IntegratorController>>(m, "IntegratorController");
+    auto m_integrator_panel = py::class_<atcg::GUI::IntegratorPanel>(m, "IntegratorPanel");
 #endif
 
 #ifndef ATCG_HEADLESS
     auto m_imgui            = m.def_submodule("ImGui");
     auto m_guizmo_operation = py::enum_<atcg::GuizmoOperation>(m_imgui, "GuizmoOperation");
+    auto m_guizmo_mode      = py::enum_<atcg::GuizmoMode>(m_imgui, "GuizmoMode");
 #endif
 
 // On module initialization and destruction
@@ -251,7 +257,10 @@ inline void defineBindings(py::module_& m)
     m_viewport_resize_event.def(py::init<unsigned int, unsigned int>(), "width"_a, "height"_a)
         .def("getWidth", &atcg::ViewportResizeEvent::getWidth)
         .def("getHeight", &atcg::ViewportResizeEvent::getHeight);
-
+    m_asset_dropped_event.def(py::init<atcg::AssetHandle, float, float>(), "handle"_a, "x"_a, "y"_a)
+        .def("getHandle", &atcg::AssetDroppedEvent::getHandle)
+        .def("getX", &atcg::AssetDroppedEvent::getX)
+        .def("getY", &atcg::AssetDroppedEvent::getY);
     m.def("width",
           []()
           {
@@ -538,7 +547,9 @@ inline void defineBindings(py::module_& m)
 
     m_asset_panel.def(py::init<>())
         .def("renderPanel", &atcg::GUI::AssetPanel::renderPanel)
-        .def("selectAsset", &atcg::GUI::AssetPanel::selectAsset);
+        .def("selectAsset", &atcg::GUI::AssetPanel::selectAsset)
+        .def("getSelectedAsset", &atcg::GUI::AssetPanel::getSelectedAsset)
+        .def("isAssetSelectionActive", &atcg::GUI::AssetPanel::isAssetSelectionActive);
 
     m_project.def_static("create", &atcg::Project::create)
         .def_static("load", [](const std::string& path) { return atcg::Project::load(path); })
@@ -702,6 +713,16 @@ inline void defineBindings(py::module_& m)
             },
             "show_window"_a)
         .def("registerFrameTime", &atcg::GUI::PerformancePanel::registerFrameTime);
+
+    m_render_settings_panel.def(py::init<>())
+        .def(
+            "renderPanel",
+            [](atcg::GUI::RenderSettingsPanel& panel, bool show_window)
+            {
+                panel.renderPanel(show_window);
+                return show_window;
+            },
+            "show_window"_a);
 
     m_dictionary.def(py::init<>())
         .def("setInt8", &atcg::Dictionary::setInt8, "key"_a, "value"_a)
@@ -1499,7 +1520,15 @@ inline void defineBindings(py::module_& m)
         .def("hasSkybox", &atcg::Scene::hasSkybox)
         .def("removeSkybox", &atcg::Scene::removeSkybox)
         .def("getSkyboxTexture", &atcg::Scene::getSkyboxTexture)
-        .def("getSkyboxCubeMap", &atcg::Scene::getSkyboxCubemap);
+        .def("getSkyboxCubeMap", &atcg::Scene::getSkyboxCubemap)
+        .def("getSelectedEntity", &atcg::Scene::getSelectedEntity)
+        .def("selectEntity", &atcg::Scene::selectEntity, "entity"_a, "additive"_a = false)
+        .def("deselectEntity", &atcg::Scene::deselectEntity, "entity"_a)
+        .def("toggleEntitySelection", &atcg::Scene::toggleEntitySelection, "entity"_a)
+        .def("clearSelection", &atcg::Scene::clearSelection)
+        .def("isSelected", &atcg::Scene::isSelected, "entity"_a)
+        .def("getSelectedEntities", &atcg::Scene::getSelectedEntities)
+        .def("getActiveEntity", &atcg::Scene::getActiveEntity);
 
     m_scene_renderer
         .def("render",
@@ -1508,13 +1537,14 @@ inline void defineBindings(py::module_& m)
                 const atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
              { atcg::SceneRenderer::render(scene, camera, framebuffer); })
         .def("setNumberMSAASamples", &atcg::SceneRenderer::setNumberMSAASamples, "samples"_a)
-        .def("setShadowPassResolution", &atcg::SceneRenderer::setShadowPassResolution, "resolution"_a);
+        .def("setShadowPassResolution", &atcg::SceneRenderer::setShadowPassResolution, "resolution"_a)
+        .def("getNumberMSAASamples", &atcg::SceneRenderer::getNumberMSAASamples)
+        .def("getShadowPassResolution", &atcg::SceneRenderer::getShadowPassResolution);
 
     m_scene_hierarchy_panel.def(py::init<>())
         .def(py::init<>())
         .def("renderPanel", &atcg::GUI::SceneHierarchyPanel::renderPanel)
-        .def("selectEntity", &atcg::GUI::SceneHierarchyPanel::selectEntity, "entity"_a)
-        .def("getSelectedEntity", &atcg::GUI::SceneHierarchyPanel::getSelectedEntity);
+        .def("setEntitySelectionActive", &atcg::GUI::SceneHierarchyPanel::setEntitySelectionActive, "active"_a);
 
     m_hit_info.def_readonly("position", &atcg::Tracing::HitInfo::position)
         .def_readonly("incoming_direction", &atcg::Tracing::HitInfo::incoming_direction)
@@ -1562,6 +1592,18 @@ inline void defineBindings(py::module_& m)
               return std::make_tuple(result_hit, result_p, result_idx);
           });
 
+    m_clipboard.def("copyEntities", &atcg::Clipboard::copyEntities, "entities"_a)
+        .def("pasteEntities", &atcg::Clipboard::pasteEntities, "scene"_a)
+        .def("copyAsset", &atcg::Clipboard::copyAsset, "handle"_a)
+        .def("pasteAsset", &atcg::Clipboard::pasteAsset)
+        .def("hasEntities", &atcg::Clipboard::hasEntities)
+        .def("hasAsset", &atcg::Clipboard::hasAsset)
+        .def("clear", &atcg::Clipboard::clear);
+
+    m_utils.def("canApplyAsset", &atcg::Utils::canApplyAsset, "entity"_a, "handle"_a);
+    m_utils.def("applyAssetToEntities", &atcg::Utils::applyAssetToEntities, "scene"_a, "entities"_a, "handle"_a);
+    m_utils.def("createEntityFromAsset", &atcg::Utils::createEntityFromAsset, "scene"_a, "handle"_a);
+    m_utils.def("handleViewportAssetDrop", &atcg::Utils::handleViewportAssetDrop, "scene"_a, "handle"_a, "mouse_pos"_a);
     m_utils.def("AEMap", &atcg::Utils::AEMap, "groundtruth"_a, "prediction"_a, "channel_reduction"_a = "mean");
     m_utils.def("relAEMap",
                 &atcg::Utils::relAEMap,
@@ -1843,6 +1885,34 @@ inline void defineBindings(py::module_& m)
         "createIntegrator",
         [](const std::string& type, const atcg::ref_ptr<atcg::RaytracingContext>& context, const atcg::Dictionary& dict)
         { return atcg::IntegratorRegistry::createIntegrator(type, context, dict); });
+
+    m_integrator_controller
+        .def(py::init([](const atcg::ref_ptr<atcg::RaytracingContext>& context)
+                      { return atcg::make_ref<atcg::IntegratorController>(context); }),
+             "context"_a = nullptr)
+        .def("start", &atcg::IntegratorController::start)
+        .def("stop", &atcg::IntegratorController::stop)
+        .def("isRunning", &atcg::IntegratorController::isRunning)
+        .def("setIntegratorType", &atcg::IntegratorController::setIntegratorType, "type"_a)
+        .def("getIntegratorType", &atcg::IntegratorController::getIntegratorType)
+        .def("requestRebuild", &atcg::IntegratorController::requestRebuild)
+        .def("reset", &atcg::IntegratorController::reset)
+        .def("release", &atcg::IntegratorController::release)
+        .def("getIntegrator", &atcg::IntegratorController::getIntegrator)
+        .def("render", &atcg::IntegratorController::render, "scene"_a, "target"_a)
+        .def("getOutputTexture", &atcg::IntegratorController::getOutputTexture)
+        .def("getOutputEntityTexture", &atcg::IntegratorController::getOutputEntityTexture);
+
+    m_integrator_panel.def(py::init<>())
+        .def(py::init<const atcg::ref_ptr<atcg::IntegratorController>&>(), "controller"_a)
+        .def(
+            "renderPanel",
+            [](atcg::GUI::IntegratorPanel& panel, bool show_window)
+            {
+                panel.renderPanel(show_window);
+                return show_window;
+            },
+            "show_window"_a);
 #endif
     // IMGUI BINDINGS
 
@@ -1976,7 +2046,8 @@ inline void defineBindings(py::module_& m)
         .value("ROTATE", atcg::GuizmoOperation::ROTATE)
         .value("SCALE", atcg::GuizmoOperation::SCALE)
         .export_values();
-    m_imgui.def("drawGuizmo", atcg::drawGuizmo);
+    m_guizmo_mode.value("LOCAL", atcg::GuizmoMode::LOCAL).value("WORLD", atcg::GuizmoMode::WORLD).export_values();
+    m_imgui.def("drawGuizmo", &atcg::drawGuizmo, "scene"_a, "operation"_a, "mode"_a, "camera"_a);
 #endif
 
 #ifdef VERSION_INFO

@@ -7,7 +7,7 @@
 #include <Renderer/PerspectiveCamera.h>
 #include <Scene/ComponentRegistry.h>
 #include <Scene/Components/TransformComponent.h>
-#include <Scene/ComponentGUIHandler.h>
+#include <GUI/ComponentGUIHandler.h>
 #include <Scene/ComponentRenderer.h>
 #include <Scene/ComponentSerializer.h>
 
@@ -50,6 +50,9 @@ struct ATCG_API CameraComponent
 };
 
 ATCG_DECLARE_COMPONENT_RENDERER(CameraComponent);
+
+// The camera and the preview framebuffer are owned by the component and are not shared with copies
+ATCG_DECLARE_COMPONENT_COPIER(CameraComponent);
 
 namespace Serialization
 {

@@ -2,7 +2,7 @@
 
 #include <Asset/AssetManagerSystem.h>
 #include <DataStructure/Graph.h>
-#include <Scene/ComponentGUIHandler.h>
+#include <GUI/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
 #include <Scene/ComponentRenderer.h>
 #include <Scene/ComponentRegistry.h>

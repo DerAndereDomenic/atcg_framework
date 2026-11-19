@@ -8,6 +8,7 @@
 #include <Emitter/PointEmitter.h>
 #include <Scene/OptixScene.h>
 #include <cuBQL/bvh.h>
+#include <Integrator/IntegratorSettings.h>
 
 namespace atcg
 {
@@ -53,6 +54,8 @@ public:
 
     static void registerIntegrator(IntegratorRegistry::Registry* registry);
 
+    static std::string getType() { return "PhotonMapping"; }
+
 private:
     /**
      * @brief Initialize a pipeline.
@@ -81,5 +84,31 @@ private:
     atcg::dref_ptr<int> _photon_index;
     atcg::dref_ptr<cuBQL::bvh3f> _device_photon_bvh;
     cuBQL::bvh3f _photon_bvh;
+
+    float _reduction_factor    = 0.7f;
+    float _gather_radius       = 0.25f;
+    uint32_t _max_photon_depth = 16;
+    uint32_t _max_camera_depth = 16;
+    uint32_t _max_num_photons  = 1000000;
+};
+
+template<>
+struct IntegratorSettings<PhotonMapIntegrator> : public IntegratorSettingsBase
+{
+    std::string getType() const override { return PhotonMapIntegrator::getType(); }
+
+    bool renderSettings() override;
+
+    atcg::Dictionary toDictionary() const override;
+
+    nlohmann::json toJson() const override;
+
+    void fromJson(const nlohmann::json& j) override;
+
+    float _reduction_factor    = 0.7f;
+    float _gather_radius       = 0.25f;
+    uint32_t _max_photon_depth = 16;
+    uint32_t _max_camera_depth = 16;
+    uint32_t _max_num_photons  = 1000000;
 };
 }    // namespace atcg

@@ -3,7 +3,7 @@
 #include <Asset/AssetManagerSystem.h>
 #include <DataStructure/BoundingBox.h>
 #include <Renderer/Texture.h>
-#include <Scene/ComponentGUIHandler.h>
+#include <GUI/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
 #include <Scene/ComponentRenderer.h>
 #include <Scene/ComponentRegistry.h>

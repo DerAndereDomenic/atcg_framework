@@ -1,6 +1,6 @@
 #include <Scene/Components/IDComponent.h>
 #include <Scene/ComponentRegistry.h>
-#include <Scene/ComponentGUIHandler.h>
+#include <GUI/ComponentGUIHandler.h>
 
 #define ID_KEY "ID"
 

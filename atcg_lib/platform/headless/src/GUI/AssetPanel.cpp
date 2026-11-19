@@ -1,17 +1,4 @@
-#include <Asset/AssetPanel.h>
-
-#ifndef ATCG_HEADLESS
-    #include <implot.h>
-#endif
-
-#include <Core/Application.h>
-#include <Core/glm.h>
-#include <Asset/AssetManagerSystem.h>
-#include <portable-file-dialogs.h>
-#include <Scene/ComponentGUIHandler.h>
-#include <Asset/Project.h>
-#include <Scene/Scene.h>
-#include <Core/Path.h>
+#include <GUI/AssetPanel.h>
 
 namespace atcg
 {
@@ -38,6 +25,8 @@ void AssetPanel::displayScene(AssetHandle handle) {}
 void AssetPanel::drawAssetList() {}
 
 void AssetPanel::drawAdd() {}
+
+void AssetPanel::pasteAsset() {}
 
 void AssetPanel::drawAssetPanel() {}
 

@@ -25,6 +25,10 @@ PathtracingIntegrator::PathtracingIntegrator(const atcg::ref_ptr<RaytracingConte
     : Integrator(context, dict)
 {
     initializePipeline(dict);
+
+    _use_rr        = dict.getValueOr<bool>("use_rr", true);
+    _max_depth     = dict.getValueOr<uint32_t>("max_depth", 8);
+    _hide_emitters = dict.getValueOr<bool>("hide_emitters", false);
 }
 
 PathtracingIntegrator::~PathtracingIntegrator() {}
@@ -92,6 +96,10 @@ void PathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
     auto environment_emitter   = _optix_scene->getEnvironmentEmitter();
     params.environment_emitter = environment_emitter ? environment_emitter->getVPtrTable() : nullptr;
 
+    params.hide_emitters = _hide_emitters;
+    params.use_rr        = _use_rr;
+    params.max_depth     = _max_depth;
+
     params.surface_trace_params = _pipeline->getRay(0, _surface_miss_index, false);
 
     _launch_params.upload(&params);
@@ -114,7 +122,44 @@ void PathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
 
 void PathtracingIntegrator::registerIntegrator(IntegratorRegistry::Registry* registry)
 {
-    ATCG_REGISTER_INTEGRATOR(registry, "Pathtracing", PathtracingIntegrator);
+    ATCG_REGISTER_INTEGRATOR(registry, PathtracingIntegrator::getType(), PathtracingIntegrator);
+}
+
+
+bool IntegratorSettings<PathtracingIntegrator>::renderSettings()
+{
+    bool updated = false;
+#ifndef ATCG_HEADLESS
+    updated = ImGui::DragInt("Max Depth", (int*)&_max_depth, 1.0f, 1, INT_MAX) || updated;
+    updated = ImGui::Checkbox("Use Russian Roulette", &_use_rr) || updated;
+    updated = ImGui::Checkbox("Hide Emitters", &_hide_emitters) || updated;
+#endif
+    return updated;
+}
+
+atcg::Dictionary IntegratorSettings<PathtracingIntegrator>::toDictionary() const
+{
+    atcg::Dictionary dict;
+    dict.setValue("use_rr", _use_rr);
+    dict.setValue("max_depth", _max_depth);
+    dict.setValue("hide_emitters", _hide_emitters);
+    return dict;
+}
+
+nlohmann::json IntegratorSettings<PathtracingIntegrator>::toJson() const
+{
+    static nlohmann::json j;
+    j["use_rr"]        = _use_rr;
+    j["max_depth"]     = _max_depth;
+    j["hide_emitters"] = _hide_emitters;
+    return j;
+}
+
+void IntegratorSettings<PathtracingIntegrator>::fromJson(const nlohmann::json& j)
+{
+    _use_rr        = j.value("use_rr", true);
+    _max_depth     = j.value("max_depth", 8);
+    _hide_emitters = j.value("hide_emitters", false);
 }
 
 }    // namespace atcg

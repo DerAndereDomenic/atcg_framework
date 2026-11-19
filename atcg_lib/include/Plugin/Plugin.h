@@ -41,11 +41,19 @@ public:
 
     bool loadPlugin(const std::filesystem::path& path);
 
+    bool loadPluginFromName(const std::string& name);
+
     bool releasePlugin(const std::filesystem::path& path);
+
+    bool releasePluginFromName(const std::string& name);
 
     bool releaseAllPlugins();
 
-private:
+    ATCG_INLINE const std::unordered_map<std::filesystem::path, PluginHandle>& getLoadedPlugins() const
+    {
+        return _loaded_plugins;
+    }
+
 private:
     std::unordered_map<std::filesystem::path, PluginHandle> _loaded_plugins;
 };
@@ -106,14 +114,29 @@ ATCG_INLINE bool loadPlugin(const std::filesystem::path& path)
     return SystemRegistry::instance()->getSystem<PluginManagerSystem>()->loadPlugin(path);
 }
 
+ATCG_INLINE bool loadPluginFromName(const std::string& name)
+{
+    return SystemRegistry::instance()->getSystem<PluginManagerSystem>()->loadPluginFromName(name);
+}
+
 ATCG_INLINE bool releasePlugin(const std::filesystem::path& path)
 {
     return SystemRegistry::instance()->getSystem<PluginManagerSystem>()->releasePlugin(path);
 }
 
+ATCG_INLINE bool releasePluginFromName(const std::string& name)
+{
+    return SystemRegistry::instance()->getSystem<PluginManagerSystem>()->releasePluginFromName(name);
+}
+
 ATCG_INLINE bool releaseAllPlugins()
 {
     return SystemRegistry::instance()->getSystem<PluginManagerSystem>()->releaseAllPlugins();
+}
+
+ATCG_INLINE const std::unordered_map<std::filesystem::path, PluginHandle>& getLoadedPlugins()
+{
+    return SystemRegistry::instance()->getSystem<PluginManagerSystem>()->getLoadedPlugins();
 }
 }    // namespace PluginManager
 

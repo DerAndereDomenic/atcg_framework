@@ -3,7 +3,7 @@
 #include <Asset/AssetManagerSystem.h>
 #include <Renderer/Material.h>
 #include <Scene/Components/RenderComponent.h>
-#include <Scene/ComponentGUIHandler.h>
+#include <GUI/ComponentGUIHandler.h>
 #include <Scene/ComponentRegistry.h>
 #include <Scene/ComponentRenderer.h>
 #include <Scene/ComponentSerializer.h>

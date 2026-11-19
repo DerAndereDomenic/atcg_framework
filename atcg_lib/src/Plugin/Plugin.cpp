@@ -1,4 +1,6 @@
 #include <Plugin/Plugin.h>
+#include <Core/Path.h>
+#include <Scene/Clipboard.h>
 #if ATCG_PLATFORM_WINDOWS
     #include <Windows.h>    // TODO
 #else
@@ -52,7 +54,6 @@ bool PluginManagerSystem::loadPlugin(const std::filesystem::path& path)
     temp_path.replace_extension(".temp");
     std::filesystem::copy(path, temp_path, std::filesystem::copy_options::overwrite_existing);
 
-    // TODO Platform-specific implementation for loading plugin using LoadLibrary (Windows) or dlopen (Linux)
     // Implementation for loading plugin
 
     auto handle = detail::loadLibrary(temp_path.string().c_str());
@@ -117,11 +118,71 @@ bool PluginManagerSystem::loadPlugin(const std::filesystem::path& path)
     return true;
 }
 
+bool PluginManagerSystem::loadPluginFromName(const std::string& name)
+{
+#ifdef ATCG_BUILD_DEBUG
+    const std::string build_dir_name = "Debug";
+#elif defined(ATCG_BUILD_RELEASE)
+    const std::string build_dir_name = "Release";
+#else
+    const std::string build_dir_name = "RelWithDebInfo";
+#endif
+
+#if ATCG_PLATFORM_WINDOWS
+    const std::string file_name     = name + ".dll";
+    const std::string lib_file_name = file_name;
+#else
+    const std::string file_name      = name + ".so";
+    const std::string lib_file_name  = "lib" + name + ".so";    // Default name of shared libraries built by CMake
+#endif
+
+    // Plugins next to atcg_lib come first. This ensures that a build of the library (e.g. the python and the C++ build)
+    // loads the plugins that were built against it. The working directory is used as a fallback.
+    const std::filesystem::path library_dir       = atcg::library_directory();
+    const std::filesystem::path candidate_paths[] = {library_dir / file_name,
+                                                     library_dir / lib_file_name,
+                                                     std::filesystem::path(file_name),
+                                                     std::filesystem::path("bin") / file_name,
+                                                     std::filesystem::path("bin") / build_dir_name / file_name,
+                                                     std::filesystem::path("lib") / file_name,
+                                                     std::filesystem::path("lib") / build_dir_name / file_name};
+
+    for(const auto& path: candidate_paths)
+    {
+        if(std::filesystem::exists(path))
+        {
+            bool loaded = loadPlugin(path);
+            if(loaded)
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+bool PluginManagerSystem::releasePluginFromName(const std::string& name)
+{
+    for(const auto& [path, handle]: _loaded_plugins)
+    {
+        if(path.stem() == name)
+        {
+            return releasePlugin(path);
+        }
+    }
+    return false;
+}
+
 bool PluginManagerSystem::releasePlugin(const std::filesystem::path& path)
 {
     auto it = _loaded_plugins.find(path);
     if(it != _loaded_plugins.end())
     {
+        // The clipboard may hold copies of components or assets whose code lives in the plugin
+        ClipboardSystem* clipboard = SystemRegistry::instance()->getSystem<ClipboardSystem>();
+        if(clipboard) clipboard->clear();
+
         // Remove all classes registered by this plugin
         MaterialRegistry::Registry* material_registry = MaterialRegistry::getRegistry();
         material_registry->unregisterPlugin(it->second);
@@ -140,14 +201,12 @@ bool PluginManagerSystem::releasePlugin(const std::filesystem::path& path)
         integrator_registry->unregisterPlugin(it->second);
 #endif
 
-
-        // TODO Platform-specific implementation for releasing plugin using FreeLibrary (Windows) or dlclose (Linux)
         detail::freeLibrary(it->second);
-        _loaded_plugins.erase(it);
 
         std::filesystem::path temp_path = path;
         temp_path.replace_extension(".temp");
         std::filesystem::remove(temp_path);
+        _loaded_plugins.erase(it);
 
         return true;
     }
@@ -176,7 +235,6 @@ bool PluginManagerSystem::releaseAllPlugins()
         integrator_registry->unregisterPlugin(handle);
 #endif
 
-        // TODO Platform-specific implementation for releasing plugin using FreeLibrary (Windows) or dlclose (Linux)
         if(!detail::freeLibrary(handle))
         {
             success = false;

@@ -151,7 +151,7 @@ public:
         light_entity.addComponent<atcg::TransformComponent>();
         light_entity.addComponent<atcg::CustomRenderComponent>(ATCG_BIND_EVENT_FN(SandboxLayer::drawLightSource));
 
-        selected_entity = light_entity;
+        scene->selectEntity(light_entity);
     }
 
     // This gets called each frame
@@ -215,18 +215,18 @@ public:
 
         if(ImGui::Button("Light"))
         {
-            selected_entity = light_entity;
+            scene->selectEntity(light_entity);
         }
 
         if(ImGui::Button("Volume"))
         {
-            selected_entity = cube_entity;
+            scene->selectEntity(cube_entity);
         }
 
         ImGui::End();
 
         // Gizmo test
-        atcg::drawGuizmo(scene, selected_entity, current_operation, camera_controller->getCamera());
+        atcg::drawGuizmo(scene, current_operation, atcg::GuizmoMode::LOCAL, camera_controller->getCamera());
 
         // if(atcg::GuizmoOperation::IsUsing()) { sphere->setModel(transform); }
     }
@@ -268,7 +268,6 @@ private:
     atcg::ref_ptr<atcg::Scene> scene;
     atcg::Entity cube_entity;
     atcg::Entity light_entity;
-    atcg::Entity selected_entity;
     atcg::ref_ptr<atcg::FocusedController> camera_controller;
     atcg::ref_ptr<atcg::Graph> cube;
 

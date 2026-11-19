@@ -3,7 +3,7 @@
 #include <Medium/Medium.h>
 #include <Medium/HomogeneousMediumData.cuh>
 
-#include <Scene/ComponentGUIHandler.h>
+#include <GUI/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
 
 namespace atcg

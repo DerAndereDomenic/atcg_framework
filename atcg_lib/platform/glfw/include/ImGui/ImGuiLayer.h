@@ -102,5 +102,8 @@ private:
     bool _enable_dock_space       = false;
     glm::ivec2 _viewport_size     = glm::vec2(0);
     glm::ivec2 _viewport_position = glm::vec2(0);
+
+    // Per-user layout file. ImGui keeps the raw pointer, so the string has to live as long as the context.
+    std::string _ini_path;
 };
 }    // namespace atcg

@@ -10,40 +10,13 @@
 
 #include <Core/Common.h>
 
+#include <Integrator/IntegratorRegistry.h>
+
 #include "NRCIntegrator.h"
 
 class NRCLayer : public atcg::Layer
 {
 public:
-    void createOutputTexture(int width, int height)
-    {
-#ifdef ATCG_CUDA_BACKEND
-        atcg::TextureSpecification spec;
-        spec.width     = width;
-        spec.height    = height;
-        spec.format    = atcg::TextureFormat::RGBA;
-        output_texture = atcg::Texture2D::create(spec);
-
-        atcg::TextureSpecification spec_int;
-        spec_int.width        = width;
-        spec_int.height       = height;
-        spec_int.format       = atcg::TextureFormat::RINT;
-        output_entity_texture = atcg::Texture2D::create(spec_int);
-#endif
-    }
-
-    void initializePathtracer()
-    {
-#ifdef ATCG_CUDA_BACKEND
-        atcg::Dictionary dict;
-        dict.setValue<atcg::ref_ptr<atcg::Scene>>("scene", atcg::Project::getActive()->getActiveScene());
-        dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width());
-        dict.setValue<uint32_t>("height", atcg::Renderer::getFramebuffer()->height());
-
-        integrator = atcg::make_ref<atcg::NRCIntegrator>(optx_context, dict);
-#endif
-    }
-
     NRCLayer(const std::string& name) : atcg::Layer(name) {}
 
     // This is run at the start of the program
@@ -66,68 +39,34 @@ public:
 
         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
 
-#ifdef ATCG_CUDA_BACKEND
-        optx_context = atcg::RaytracingContextManager::createContext();
-        if(enable_pathtracing) initializePathtracer();
-#endif
+        // The NRC integrator is local to this application, so it is registered here to be usable by the controller
+        ATCG_REGISTER_INTEGRATOR(atcg::IntegratorRegistry::getRegistry(),
+                                 atcg::NRCIntegrator::getType(),
+                                 atcg::NRCIntegrator);
 
-        createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
-
-        atcg::SceneRenderer::setNumberMSAASamples(msaa_samples[current_msaa_selection_index]);
+        integrator_controller = atcg::make_ref<atcg::IntegratorController>();
+        integrator_panel      = atcg::GUI::IntegratorPanel(integrator_controller);
+        integrator_controller->setIntegratorType(atcg::NRCIntegrator::getType());
+        integrator_controller->start();
     }
 
     // This gets called each frame
     virtual void onUpdate(float delta_time) override
     {
         performance_panel.registerFrameTime(delta_time);
-        bool updated = camera_controller->onUpdate(delta_time);
-
-#ifdef ATCG_CUDA_BACKEND
-        if(enable_pathtracing && updated)
-        {
-            integrator->reset();
-        }
-#endif
+        camera_controller->onUpdate(delta_time);
 
         atcg::Scripting::handleScriptUpdates(atcg::Project::getActive()->getActiveScene(), delta_time);
 
-
-        // atcg::Renderer::clear();
-
-        if(enable_pathtracing)
+        // The controller rebuilds or resets the integrator itself if the scene, camera or viewport changed
+        auto scene = atcg::Project::getActive()->getActiveScene();
+        if(!integrator_controller->render(scene, atcg::Renderer::getFramebuffer()))
         {
-#ifdef ATCG_CUDA_BACKEND
-            atcg::Dictionary dict;
-            integrator->generateRays(dict);
-            torch::Tensor output_tensor   = dict.getValue<torch::Tensor>("output");
-            torch::Tensor output_entities = dict.getValue<torch::Tensor>("entity_ids");
-            output_texture->setData(output_tensor);
-            output_entity_texture->setData(output_entities);
+            atcg::SceneRenderer::render(scene, camera_controller->getCamera(), atcg::Renderer::getFramebuffer());
 
             atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
-            atcg::GraphicsCommand::clear();
-            atcg::Renderer::drawImage(output_texture, output_entity_texture);
-            atcg::GraphicsCommand::endRenderPass();
-#endif
-        }
-        else
-        {
-            atcg::SceneRenderer::render(atcg::Project::getActive()->getActiveScene(),
-                                        camera_controller->getCamera(),
-                                        atcg::Renderer::getFramebuffer());
-
-            atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
-
             atcg::Renderer::drawCADGrid(camera_controller->getCamera());
             atcg::GraphicsCommand::endRenderPass();
-        }
-
-
-        uint32_t current_revision = atcg::RevisionStack::numUndos();
-        if(current_revision != last_revision)
-        {
-            last_revision = current_revision;
-            if(enable_pathtracing) initializePathtracer();
         }
     }
 
@@ -145,6 +84,9 @@ public:
                 atcg::RevisionStack::clearChache();
 
                 atcg::Project::getActive()->setActiveScene(atcg::make_ref<atcg::Scene>());
+                atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
+                // This application always uses the NRC integrator
+                integrator_controller->setIntegratorType(atcg::NRCIntegrator::getType());
                 saved = false;
             }
 
@@ -182,12 +124,12 @@ public:
                     if(atcg::Project::getActive()->getActiveScene())
                     {
                         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
-                        initializePathtracer();
                     }
+                    // This application always uses the NRC integrator
+                    integrator_controller->setIntegratorType(atcg::NRCIntegrator::getType());
                     atcg::RevisionStack::clearChache();
 
-                    hovered_entity = atcg::Entity();
-                    saved          = true;
+                    saved = true;
                 }
             }
 
@@ -203,64 +145,23 @@ public:
         if(ImGui::BeginMenu("Rendering"))
         {
             ImGui::MenuItem("Show Render Settings", nullptr, &show_render_settings);
+            ImGui::MenuItem("Show Integrator Settings", nullptr, &show_integrator_settings);
             ImGui::EndMenu();
         }
 
         ImGui::EndMainMenuBar();
 
-        if(show_render_settings)
-        {
-            ImGui::Begin("Settings", &show_render_settings);
-            if(ImGui::Checkbox("VSync", &vsync))
-            {
-                atcg::Application::get()->getWindow()->toggleVSync(vsync);
-            }
-
-            const char* combo_preview_value = msaa_samples_str[current_msaa_selection_index];
-
-            if(msaa_enabled)
-            {
-                if(ImGui::BeginCombo("MSAA Samples", combo_preview_value))
-                {
-                    for(int n = 0; n < IM_ARRAYSIZE(msaa_samples); n++)
-                    {
-                        const bool is_selected = (current_msaa_selection_index == n);
-                        if(ImGui::Selectable(msaa_samples_str[n], is_selected))
-                        {
-                            current_msaa_selection_index = n;
-                            atcg::SceneRenderer::setNumberMSAASamples(msaa_samples[current_msaa_selection_index]);
-                        }
-
-                        // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-                        if(is_selected) ImGui::SetItemDefaultFocus();
-                    }
-                    ImGui::EndCombo();
-                }
-            }
-
-    #ifdef ATCG_CUDA_BACKEND
-            if(ImGui::Checkbox("Path Tracing", &enable_pathtracing))
-            {
-                if(enable_pathtracing) initializePathtracer();
-            }
-    #endif
-
-            ImGui::End();
-        }
-
-    #ifdef ATCG_CUDA_BACKEND
-        if(enable_pathtracing) integrator->onImGuiRender();
-    #endif
+        render_settings_panel.renderPanel(show_render_settings);
+        integrator_panel.renderPanel(show_integrator_settings);
 
         performance_panel.renderPanel(show_performance);
         panel.renderPanel(atcg::Project::getActive()->getActiveScene());
-        hovered_entity = panel.getSelectedEntity();
 
         asset_panel.renderPanel();
 
         atcg::drawGuizmo(atcg::Project::getActive()->getActiveScene(),
-                         hovered_entity,
                          current_operation,
+                         atcg::GuizmoMode::LOCAL,
                          camera_controller->getCamera());
     }
 #endif
@@ -285,8 +186,6 @@ public:
     {
         atcg::WindowResizeEvent resize_event(event->getWidth(), event->getHeight());
         camera_controller->onEvent(&resize_event);
-        createOutputTexture(event->getWidth(), event->getHeight());
-        if(enable_pathtracing) initializePathtracer();
         return false;
     }
 
@@ -321,8 +220,7 @@ public:
     {
         if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !atcg::isOverGuizmo())
         {
-            hovered_entity = atcg::Utils::pickEntity(mouse_pos);
-            panel.selectEntity(hovered_entity);
+            atcg::Project::getActive()->getActiveScene()->selectEntity(atcg::Utils::pickEntity(mouse_pos));
         }
         return true;
     }
@@ -344,8 +242,6 @@ public:
 private:
     bool saved = false;
 
-    atcg::Entity hovered_entity;
-
     atcg::ref_ptr<atcg::CameraController> camera_controller;
 
     atcg::ref_ptr<atcg::Graph> plane;
@@ -360,28 +256,16 @@ private:
 
     glm::vec2 mouse_pos;
 
-    bool show_render_settings = false;
-    bool vsync                = true;
+    atcg::GUI::RenderSettingsPanel render_settings_panel;
+    bool show_render_settings     = false;
+    bool show_integrator_settings = true;
 
-    bool enable_pathtracing = true;
-
-    uint32_t msaa_samples[6]              = {1, 2, 4, 8, 16, 32};
-    const char* msaa_samples_str[6]       = {"1", "2", "4", "8", "16", "32"};
-    uint32_t current_msaa_selection_index = 0;
-    bool msaa_enabled                     = true;
 #ifndef ATCG_HEADLESS
     atcg::GuizmoOperation current_operation = atcg::GuizmoOperation::TRANSLATE;
 #endif
 
-#ifdef ATCG_CUDA_BACKEND
-    atcg::ref_ptr<atcg::RaytracingContext> optx_context;
-    atcg::ref_ptr<atcg::Integrator> integrator;
-#endif
-
-    atcg::ref_ptr<atcg::Texture2D> output_texture;
-    atcg::ref_ptr<atcg::Texture2D> output_entity_texture;
-
-    uint32_t last_revision = 0;
+    atcg::ref_ptr<atcg::IntegratorController> integrator_controller;
+    atcg::GUI::IntegratorPanel integrator_panel;
 };
 
 class NRCApp : public atcg::Application

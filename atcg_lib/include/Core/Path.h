@@ -1,57 +1,56 @@
 #pragma once
 
-#include <Core/Platform.h>
+#include <Core/API.h>
 
-#include <cstdlib>
 #include <filesystem>
 
 namespace atcg
 {
 /**
- * @brief Get the absolute path to the default shader directory
+ * @brief Get the directory that contains the atcg_lib shared library (atcg_lib.dll / libatcg_lib.so).
+ * Plugins are searched in this directory first, so that each build of the library loads the plugins built against it.
  *
  * @return The path
  */
-ATCG_INLINE ATCG_CONST std::filesystem::path shader_directory()
-{
-    const char* env_dir = std::getenv("ATCG_SHADER_DIR");
-    if(env_dir != nullptr && env_dir[0] != '\0')
-    {
-        return std::filesystem::path(env_dir);
-    }
-    return std::filesystem::path(ATCG_SHADER_DIR);
-}
+ATCG_API std::filesystem::path library_directory();
 
 /**
- * @brief Get the absolute path to the default resource directory
+ * @brief Get the path of the executable of the current process
  *
  * @return The path
  */
-ATCG_INLINE ATCG_CONST std::filesystem::path resource_directory()
-{
-    const char* env_dir = std::getenv("ATCG_RESOURCE_DIR");
-    if(env_dir != nullptr && env_dir[0] != '\0')
-    {
-        return std::filesystem::path(env_dir);
-    }
-    return std::filesystem::path(ATCG_RESOURCE_DIR);
-}
+ATCG_API std::filesystem::path executable_path();
+
+/**
+ * @brief Get the per-user configuration directory of the framework.
+ * This is %APPDATA%/atcg on Windows and $XDG_CONFIG_HOME/atcg (or ~/.config/atcg) on Linux. The directory is created if
+ * it does not exist yet.
+ *
+ * @return The path
+ */
+ATCG_API std::filesystem::path user_config_directory();
+
+/**
+ * @brief Get the absolute path to the default shader directory.
+ * This is the shader directory of the source tree, unless the environment variable ATCG_SHADER_DIR is set.
+ *
+ * @return The path
+ */
+ATCG_API std::filesystem::path shader_directory();
+
+/**
+ * @brief Get the absolute path to the default resource directory.
+ * This is the resource directory of the source tree, unless the environment variable ATCG_RESOURCE_DIR is set.
+ *
+ * @return The path
+ */
+ATCG_API std::filesystem::path resource_directory();
 
 /**
  * @brief Get the absolute path to the directory that holds the compiled PTX modules.
- *
- * If the environment variable ATCG_PTX_DIR is set, its value is returned. Otherwise, the build-time output directory
- * of the PTX modules is returned.
+ * This is the build-time output directory of the PTX modules, unless the environment variable ATCG_PTX_DIR is set.
  *
  * @return The path
  */
-ATCG_INLINE std::filesystem::path ptx_directory()
-{
-    const char* env_dir = std::getenv("ATCG_PTX_DIR");
-    if(env_dir != nullptr && env_dir[0] != '\0')
-    {
-        return std::filesystem::path(env_dir);
-    }
-    return std::filesystem::path(ATCG_PTX_DIR);
-}
+ATCG_API std::filesystem::path ptx_directory();
 }    // namespace atcg

@@ -1,18 +1,17 @@
-#include <Asset/AssetPanel.h>
+#include <GUI/AssetPanel.h>
 
-#ifndef ATCG_HEADLESS
-    #include <implot.h>
-#endif
+#include <implot.h>
 
 #include <Core/Application.h>
 #include <Core/glm.h>
 #include <Asset/AssetManagerSystem.h>
 #include <portable-file-dialogs.h>
-#include <Scene/ComponentGUIHandler.h>
+#include <GUI/ComponentGUIHandler.h>
 #include <Asset/Project.h>
 #include <Scene/Scene.h>
 #include <Core/Path.h>
 #include <Utils/Utils.h>
+#include <Scene/Clipboard.h>
 #include <Renderer/Renderer.h>
 #include <Scene/SceneRenderer.h>
 
@@ -85,7 +84,6 @@ AssetPanel::AssetPanel()
 
 void AssetPanel::displayMaterial(AssetHandle handle)
 {
-#ifndef ATCG_HEADLESS
     const std::string key = "material";
     auto material_        = AssetManager::getAsset<Material>(handle);
 
@@ -159,12 +157,10 @@ void AssetPanel::displayMaterial(AssetHandle handle)
     {
         atcg::RevisionStack::endRecording();
     }
-#endif
 }
 
 void AssetPanel::displayGraph(AssetHandle handle)
 {
-#ifndef ATCG_HEADLESS
     auto graph     = atcg::AssetManager::getAsset<Graph>(handle);
     int n_vertices = graph ? graph->n_vertices() : 0;
     int n_faces    = graph ? graph->n_faces() : 0;
@@ -224,14 +220,10 @@ void AssetPanel::displayGraph(AssetHandle handle)
     atcg::Renderer::drawVAO(graph->getVerticesArray(), camera, glm::mat4(1.0f), pipeline, graph->n_vertices());
 
     atcg::GraphicsCommand::endRenderPass();
-
-#endif
 }
 
 void AssetPanel::displayScript(AssetHandle handle)
 {
-#ifndef ATCG_HEADLESS
-
     auto current_script = AssetManager::getAsset<PythonScript>(handle);
 
     if(ImGui::Button("Load Script"))
@@ -256,12 +248,10 @@ void AssetPanel::displayScript(AssetHandle handle)
         std::string source = current_script->getSource();
         ImGui::TextUnformatted(source.c_str());
     }
-#endif
 }
 
 void AssetPanel::displayShader(AssetHandle handle)
 {
-#ifndef ATCG_HEADLESS
     auto shader = AssetManager::getAsset<Shader>(handle);
 
     // if(shader)
@@ -421,13 +411,10 @@ void AssetPanel::displayShader(AssetHandle handle)
     {
         ImGui::Text("Invalid Shader");
     }
-
-#endif
 }
 
 void AssetPanel::displayTexture2D(AssetHandle handle)
 {
-#ifndef ATCG_HEADLESS
     if(ImGui::Button(("Load Image##tex2dasset")))
     {
         auto f     = pfd::open_file("Choose files to read",
@@ -468,13 +455,10 @@ void AssetPanel::displayTexture2D(AssetHandle handle)
                      ImVec2 {0, 1},
                      ImVec2 {1, 0});
     }
-
-#endif
 }
 
 void AssetPanel::displayTexture3D(AssetHandle handle)
 {
-#ifndef ATCG_HEADLESS
     auto texture = AssetManager::getAsset<Texture3D>(handle);
 
 
@@ -564,12 +548,10 @@ void AssetPanel::displayTexture3D(AssetHandle handle)
                      ImVec2 {0, 1},
                      ImVec2 {1, 0});
     }
-#endif
 }
 
 void AssetPanel::displayScene(AssetHandle handle)
 {
-#ifndef ATCG_HEADLESS
     auto scene = AssetManager::getAsset<Scene>(handle);
 
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();
@@ -699,21 +681,23 @@ void AssetPanel::displayScene(AssetHandle handle)
 
     if(ImGui::Button("Make active"))
     {
+        auto old_active_scene = Project::getActive()->getActiveScene();
         Project::getActive()->setActiveScene(handle);
+        Project::getActive()->getActiveScene()->setCamera(old_active_scene->getCamera());
     }
-
-#endif
 }
 
-#ifndef ATCG_HEADLESS
 ATCG_INLINE static bool ImageTextButton(ImTextureID textureID,
                                         const char* label,
                                         ImVec2 imageSize,
+                                        bool selected  = false,
+                                        bool outlined  = false,
                                         float spacing  = 4.0f,
                                         ImVec2 padding = ImVec2(4, 4))
 {
-    ImDrawList* drawList = ImGui::GetWindowDrawList();
-    ImVec2 textSize      = ImGui::CalcTextSize(label);
+    const ImVec4 selection_outline_color = ImVec4(1.0f, 0.69f, 0.0f, 1.0f);
+    ImDrawList* drawList                 = ImGui::GetWindowDrawList();
+    ImVec2 textSize                      = ImGui::CalcTextSize(label);
 
     // compute button size
     float buttonWidth  = std::max(imageSize.x, textSize.x) + padding.x * 2.0f;
@@ -732,6 +716,8 @@ ATCG_INLINE static bool ImageTextButton(ImTextureID textureID,
         col = ImGui::GetColorU32(ImGuiCol_ButtonActive);
     else if(ImGui::IsItemHovered())
         col = ImGui::GetColorU32(ImGuiCol_ButtonHovered);
+    else if(selected)
+        col = ImGui::GetColorU32(ImGuiCol_Header);
 
     if(col != 0)
     {
@@ -753,13 +739,21 @@ ATCG_INLINE static bool ImageTextButton(ImTextureID textureID,
     ImVec2 textPos = ImVec2(pos.x + (buttonWidth - textSize.x) * 0.5f, imagePos.y + imageSize.y + spacing);
     drawList->AddText(textPos, ImGui::GetColorU32(ImGuiCol_Text), label);
 
+    if(outlined)
+    {
+        drawList->AddRect(pos,
+                          ImVec2(pos.x + buttonSize.x, pos.y + buttonSize.y),
+                          ImGui::GetColorU32(selection_outline_color),
+                          ImGui::GetStyle().FrameRounding,
+                          0,
+                          2.0f);
+    }
+
     return clicked;
 }
-#endif
 
 void AssetPanel::drawAssetList()
 {
-#ifndef ATCG_HEADLESS
     // Begin a scrollable horizontal region
     ImGui::BeginChild("AssetListHorizontal", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
 
@@ -839,8 +833,9 @@ void AssetPanel::drawAssetList()
             auto handle     = entry.first;
             std::string tag = data.name;
 
-            bool isSelected = (handle == _selected_handle);
-            if(isSelected) ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.5f, 0.9f, 1.0f));
+            // Gray background if the asset is selected, additional outline if it is the most recent selection
+            bool is_selected = (handle == _selected_handle);
+            bool is_outlined = is_selected && isAssetSelectionActive();
 
             auto icon = _script_icon;
 
@@ -858,26 +853,49 @@ void AssetPanel::drawAssetList()
             }
 
             ImGui::PushID(handle);
-            if(ImageTextButton((ImTextureID)icon->getID(), tag.c_str(), ImVec2(content_scale * 96, content_scale * 96)))
+            if(ImageTextButton((ImTextureID)icon->getID(),
+                               tag.c_str(),
+                               ImVec2(content_scale * 96, content_scale * 96),
+                               is_selected,
+                               is_outlined))
             {
                 selectAsset(handle);
             }
-            ImGui::PopID();
+            // Assets can be dragged onto entities, selection combo boxes and the viewport
+            Utils::beginAssetDragSource(handle);
 
-            if(isSelected) ImGui::PopStyleColor();    // always pop if you pushed
+            if(ImGui::BeginPopupContextItem("AssetContext"))
+            {
+                if(ImGui::MenuItem("Copy", "Ctrl+C"))
+                {
+                    Clipboard::copyAsset(handle);
+                }
+                ImGui::EndPopup();
+            }
+            ImGui::PopID();
 
             ImGui::SameLine();
         }
     }
 
+    // Right click on empty space of the asset list
+    if(ImGui::BeginPopupContextWindow("AssetListContext",
+                                      ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+    {
+        if(ImGui::MenuItem("Paste", "Ctrl+V", false, Clipboard::hasAsset()))
+        {
+            // The pasted asset is selected
+            AssetHandle pasted = Clipboard::pasteAsset();
+            if(pasted != 0) selectAsset(pasted);
+        }
+        ImGui::EndPopup();
+    }
+
     ImGui::EndChild();
-#endif
 }
 
 void AssetPanel::drawAdd()
 {
-#ifndef ATCG_HEADLESS
-
     if(ImGui::Button("Create new Asset"))
     {
         AssetHandle new_asset = 0;
@@ -934,12 +952,10 @@ void AssetPanel::drawAdd()
             selectAsset(new_asset);
         }
     }
-#endif
 }
 
 void AssetPanel::drawAssetPanel()
 {
-#ifndef ATCG_HEADLESS
     ImGui::Begin("Assets");
 
     if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive())
@@ -947,15 +963,26 @@ void AssetPanel::drawAssetPanel()
         selectAsset(0);
     }
 
+    // The most recent selection wins: if the entity selection changes, the asset stays open in the editor but is no
+    // longer the active selection (see isAssetSelectionActive).
+    const auto& scene = Project::getActive()->getActiveScene();
+    if(scene)
+    {
+        std::vector<Entity> entity_selection = scene->getSelectedEntities();
+        if(entity_selection != _last_entity_selection)
+        {
+            if(!entity_selection.empty()) _asset_selection_active = false;
+            _last_entity_selection = std::move(entity_selection);
+        }
+    }
+
     drawAssetList();
 
     ImGui::End();
-#endif
 }
 
 void AssetPanel::drawAssetEditor()
 {
-#ifndef ATCG_HEADLESS
     ImGui::Begin("Asset Editor");
 
     if(_selected_handle != 0)
@@ -1029,23 +1056,19 @@ void AssetPanel::drawAssetEditor()
     }
 
     ImGui::End();
-#endif
 }
 
 void AssetPanel::renderPanel()
 {
-#ifndef ATCG_HEADLESS
-
     drawAssetPanel();
 
     drawAssetEditor();
-
-#endif
 }
 
 void AssetPanel::selectAsset(AssetHandle handle)
 {
-    _selected_handle = handle;
+    _selected_handle        = handle;
+    _asset_selection_active = handle != 0;
 
     // Clean up
     _current_vertex_path   = "";

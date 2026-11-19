@@ -149,4 +149,14 @@ void SceneRendererSystem::setShadowPassResolution(uint32_t resolution)
     impl->_render_graph          = impl->createRenderGraph();
 }
 
+uint32_t SceneRendererSystem::getNumberMSAASamples() const
+{
+    return impl->num_msaa_samples;
+}
+
+uint32_t SceneRendererSystem::getShadowPassResolution() const
+{
+    return impl->shadow_pass_resolution;
+}
+
 }    // namespace atcg

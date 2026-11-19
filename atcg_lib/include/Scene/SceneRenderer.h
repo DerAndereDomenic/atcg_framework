@@ -68,6 +68,20 @@ public:
      */
     void setShadowPassResolution(uint32_t resolution);
 
+    /**
+     * @brief Get the number of MSAA samples used in the forward pass
+     *
+     * @return The number of MSAA samples
+     */
+    uint32_t getNumberMSAASamples() const;
+
+    /**
+     * @brief Get the resolution of the shadow maps used in the shadow pass
+     *
+     * @return The resolution (width and height) of the shadow maps
+     */
+    uint32_t getShadowPassResolution() const;
+
 private:
     class Impl;
     std::unique_ptr<Impl> impl;
@@ -129,6 +143,26 @@ ATCG_INLINE void setNumberMSAASamples(uint32_t num_samples)
 ATCG_INLINE void setShadowPassResolution(uint32_t resolution)
 {
     SystemRegistry::instance()->getSystem<SceneRendererSystem>()->setShadowPassResolution(resolution);
+}
+
+/**
+ * @brief Get the number of MSAA samples used in the forward pass
+ *
+ * @return The number of MSAA samples
+ */
+ATCG_INLINE uint32_t getNumberMSAASamples()
+{
+    return SystemRegistry::instance()->getSystem<SceneRendererSystem>()->getNumberMSAASamples();
+}
+
+/**
+ * @brief Get the resolution of the shadow maps used in the shadow pass
+ *
+ * @return The resolution (width and height) of the shadow maps
+ */
+ATCG_INLINE uint32_t getShadowPassResolution()
+{
+    return SystemRegistry::instance()->getSystem<SceneRendererSystem>()->getShadowPassResolution();
 }
 
 }    // namespace SceneRenderer

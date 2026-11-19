@@ -9,11 +9,12 @@
 namespace atcg
 {
 /**
- * @brief A RenderPass that renders only the currently selected entity into an entity id mask.
+ * @brief A RenderPass that renders only the currently selected entities into an entity id mask.
  *
- * The mask is a single RINT texture ("selection_mask") that holds the selected entity's id where the entity covers the
- * pixel and -1 everywhere else. No depth test against the rest of the scene is performed, so the mask contains the
- * full silhouette of the selected entity, even where it is occluded.
+ * The mask is a single RINT texture ("selection_mask") that holds the id of a selected entity where it covers the
+ * pixel and -1 everywhere else. No depth test is performed, so the mask contains the full silhouettes of the selected
+ * entities, even where they are occluded. The active entity is drawn last, so its id wins where selected entities
+ * overlap.
  */
 class ATCG_API SelectionMaskPass : public RenderPass
 {
@@ -51,6 +52,8 @@ private:
                               Entity entity,
                               const atcg::ref_ptr<Shader>& mask_shader,
                               Dictionary& auxiliary);
+
+    void renderEntityMask(const RenderContext& ctx, Entity entity, Dictionary& auxiliary);
 
     atcg::ref_ptr<Shader> _mask_shader_base;
     atcg::ref_ptr<Shader> _mask_shader_instanced;

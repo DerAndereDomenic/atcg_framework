@@ -79,7 +79,10 @@ void Window::resize(const uint32_t& _width, const uint32_t& _height)
     context_data->surface = eglCreatePbufferSurface(context_data->display, eglConfig, pbufferAttribs);
 }
 
-void Window::toggleVSync(bool vsync) {}
+void Window::toggleVSync(bool vsync)
+{
+    _data.vsync = vsync;
+}
 
 void Window::toggleFullscreen() {}
 

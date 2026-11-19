@@ -22,7 +22,8 @@ public:
     atcg::ref_ptr<Skybox> skybox;
     bool has_skybox = false;
 
-    Entity selected_entity;
+    // Selection order, the last element is the active entity
+    std::vector<entt::entity> _selected_entities;
 };
 
 Scene::Impl::Impl()
@@ -84,6 +85,9 @@ void Scene::removeEntity(UUID id)
     Entity entity(entity_handle, this);
     auto& name = entity.getComponent<atcg::NameComponent>();
 
+    // Keep the selection valid
+    std::erase(impl->_selected_entities, entity_handle);
+
     impl->_entities.erase(id);
     auto& entities_with_name = impl->_entites_by_name[name.name()];
 
@@ -112,6 +116,7 @@ void Scene::removeAllEntites()
     _registry.clear();
     impl->_entites_by_name.clear();
     impl->_entities.clear();
+    impl->_selected_entities.clear();
 
     atcg::RevisionStack::clearChache();
 }
@@ -189,14 +194,80 @@ void Scene::_updateEntityName(atcg::Entity entity, const std::string& old_name, 
     entities.push_back((entt::entity)entity.entity_handle());
 }
 
-void Scene::setSelectedEntity(Entity entity)
-{
-    impl->selected_entity = entity;
-}
-
 Entity Scene::getSelectedEntity() const
 {
-    return impl->selected_entity;
+    return getActiveEntity();
+}
+
+void Scene::selectEntity(Entity entity, bool additive)
+{
+    if(!additive)
+    {
+        impl->_selected_entities.clear();
+    }
+
+    if(!entity || entity.scene() != this)
+    {
+        return;
+    }
+
+    // Already selected entities are moved to the back to make them active
+    std::erase(impl->_selected_entities, entity._entity_handle);
+    impl->_selected_entities.push_back(entity._entity_handle);
+}
+
+void Scene::deselectEntity(Entity entity)
+{
+    std::erase(impl->_selected_entities, entity._entity_handle);
+}
+
+void Scene::toggleEntitySelection(Entity entity)
+{
+    if(isSelected(entity))
+    {
+        deselectEntity(entity);
+    }
+    else
+    {
+        selectEntity(entity, true);
+    }
+}
+
+void Scene::clearSelection()
+{
+    impl->_selected_entities.clear();
+}
+
+bool Scene::isSelected(Entity entity) const
+{
+    if(!entity || entity.scene() != this)
+    {
+        return false;
+    }
+
+    return std::find(impl->_selected_entities.begin(), impl->_selected_entities.end(), entity._entity_handle) !=
+           impl->_selected_entities.end();
+}
+
+std::vector<Entity> Scene::getSelectedEntities() const
+{
+    std::vector<Entity> entities;
+    entities.reserve(impl->_selected_entities.size());
+    for(auto handle: impl->_selected_entities)
+    {
+        entities.emplace_back(handle, (Scene*)this);
+    }
+    return entities;
+}
+
+Entity Scene::getActiveEntity() const
+{
+    if(impl->_selected_entities.empty())
+    {
+        return Entity();
+    }
+
+    return Entity(impl->_selected_entities.back(), (Scene*)this);
 }
 
 }    // namespace atcg

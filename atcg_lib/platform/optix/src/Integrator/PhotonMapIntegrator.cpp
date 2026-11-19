@@ -26,6 +26,12 @@ PhotonMapIntegrator::PhotonMapIntegrator(const atcg::ref_ptr<RaytracingContext>&
     : Integrator(context, dict)
 {
     initializePipeline(dict);
+
+    _reduction_factor = dict.getValueOr<float>("reduction_factor", 0.7f);
+    _gather_radius    = dict.getValueOr<float>("gather_radius", 0.25f);
+    _max_photon_depth = dict.getValueOr<uint32_t>("max_photon_depth", 16);
+    _max_camera_depth = dict.getValueOr<uint32_t>("max_camera_depth", 16);
+    _max_num_photons  = dict.getValueOr<uint32_t>("max_num_photons", 1000000);
 }
 
 PhotonMapIntegrator::~PhotonMapIntegrator() {}
@@ -52,8 +58,8 @@ void PhotonMapIntegrator::initializePipeline(const Dictionary& dict)
     _pipeline->createPipeline();
     _sbt->createSBT();
 
-    _photon_data   = DeviceBuffer<PhotonMapData>(PHOTON_MAP_MAX_NUM_PHOTONS);
-    _photon_bounds = DeviceBuffer<cuBQL::box3f>(PHOTON_MAP_MAX_NUM_PHOTONS);
+    _photon_data   = DeviceBuffer<PhotonMapData>(_max_num_photons);
+    _photon_bounds = DeviceBuffer<cuBQL::box3f>(_max_num_photons);
     _photon_gather_data =
         DeviceBuffer<PhotonGatherData>(dict.getValue<uint32_t>("width") * dict.getValue<uint32_t>("height"));
 }
@@ -103,8 +109,12 @@ void PhotonMapIntegrator::tracePhotons()
     int zero             = 0;
     _photon_index.upload(&zero);
     params.photon_index       = _photon_index.get();
-    params.max_num_photons    = PHOTON_MAP_MAX_NUM_PHOTONS;
-    params.photons_per_launch = PHOTON_MAP_PHOTONS_PER_LAUNCH;
+    params.max_num_photons    = _max_num_photons;
+    params.photons_per_launch = ((_max_num_photons) / (_max_photon_depth));
+    params.reduction_factor   = _reduction_factor;
+    params.gather_radius_sq   = _gather_radius * _gather_radius;
+    params.max_photon_depth   = _max_photon_depth;
+    params.max_camera_depth   = _max_camera_depth;
 
     _launch_params.upload(&params);
 
@@ -113,7 +123,7 @@ void PhotonMapIntegrator::tracePhotons()
                             (CUdeviceptr)_launch_params.get(),
                             sizeof(PhotonMapParams),
                             _sbt->getSBT(_raygen_sample_photons_index),
-                            PHOTON_MAP_PHOTONS_PER_LAUNCH,
+                            params.photons_per_launch,
                             1,
                             1));    // depth
 
@@ -168,6 +178,12 @@ void PhotonMapIntegrator::generateRays(Dictionary& in_out_dictionary)
     params.photon_index       = _photon_index.get();
     params.photon_gather_data = _photon_gather_data.get();
 
+    params.photons_per_launch = ((_max_num_photons) / (_max_photon_depth));
+    params.reduction_factor   = _reduction_factor;
+    params.gather_radius_sq   = _gather_radius * _gather_radius;
+    params.max_photon_depth   = _max_photon_depth;
+    params.max_camera_depth   = _max_camera_depth;
+
     _launch_params.upload(&params);
 
     OPTIX_CHECK(optixLaunch(_pipeline->getPipeline(),
@@ -190,7 +206,51 @@ void PhotonMapIntegrator::generateRays(Dictionary& in_out_dictionary)
 
 void PhotonMapIntegrator::registerIntegrator(IntegratorRegistry::Registry* registry)
 {
-    ATCG_REGISTER_INTEGRATOR(registry, "PhotonMapping", PhotonMapIntegrator);
+    ATCG_REGISTER_INTEGRATOR(registry, PhotonMapIntegrator::getType(), PhotonMapIntegrator);
+}
+
+
+bool IntegratorSettings<PhotonMapIntegrator>::renderSettings()
+{
+    bool updated = false;
+#ifndef ATCG_HEADLESS
+    updated = ImGui::DragInt("Max Photon Depth", (int*)&_max_photon_depth, 1.0f, 1, INT_MAX) || updated;
+    updated = ImGui::DragInt("Max Camera Depth", (int*)&_max_camera_depth, 1.0f, 1, INT_MAX) || updated;
+    updated = ImGui::DragInt("Max Number of Photons", (int*)&_max_num_photons, 1.0f, 1, INT_MAX) || updated;
+    updated = ImGui::DragFloat("Gather Radius", &_gather_radius, 0.1f, 0.1f, 100.0f) || updated;
+    updated = ImGui::DragFloat("Reduction Factor", &_reduction_factor, 0.1f, 0.1f, 1.0f) || updated;
+#endif
+    return updated;
+}
+
+atcg::Dictionary IntegratorSettings<PhotonMapIntegrator>::toDictionary() const
+{
+    atcg::Dictionary dict;
+    dict.setValue("reduction_factor", _reduction_factor);
+    dict.setValue("gather_radius_sq", _gather_radius);
+    dict.setValue("max_photon_depth", _max_photon_depth);
+    dict.setValue("max_camera_depth", _max_camera_depth);
+    return dict;
+}
+
+nlohmann::json IntegratorSettings<PhotonMapIntegrator>::toJson() const
+{
+    static nlohmann::json j;
+    j["reduction_factor"] = _reduction_factor;
+    j["gather_radius"]    = _gather_radius;
+    j["max_photon_depth"] = _max_photon_depth;
+    j["max_camera_depth"] = _max_camera_depth;
+    j["max_num_photons"]  = _max_num_photons;
+    return j;
+}
+
+void IntegratorSettings<PhotonMapIntegrator>::fromJson(const nlohmann::json& j)
+{
+    _reduction_factor = j.value("reduction_factor", 0.7f);
+    _gather_radius    = j.value("gather_radius", 0.25f);
+    _max_photon_depth = j.value("max_photon_depth", 16);
+    _max_camera_depth = j.value("max_camera_depth", 16);
+    _max_num_photons  = j.value("max_num_photons", 1000000);
 }
 
 }    // namespace atcg

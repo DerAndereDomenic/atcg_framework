@@ -83,10 +83,19 @@ class PythonLayer(atcg.Layer):
         self.camera_controller = atcg.FirstPersonController(camera)
 
         atcg.Project.getActive().setActiveScene(atcg.Scene())
+        # The integrator controller path traces from the main camera of the scene
+        atcg.Project.getActive().getActiveScene().setCamera(camera)
 
         self.panel = atcg.SceneHierarchyPanel()
         self.asset_panel = atcg.AssetPanel()
         self.performance_panel = atcg.PerformancePanel()
+
+        # Render settings (vsync, MSAA, shadows) and path tracing (start/stop, integrator, settings)
+        self.render_settings_panel = atcg.RenderSettingsPanel()
+        self.show_render_settings = True
+        self.integrator_controller = atcg.IntegratorController()
+        self.integrator_panel = atcg.IntegratorPanel(self.integrator_controller)
+        self.show_integrator_settings = True
         entity = atcg.Project.getActive().getActiveScene().createEntity("Cylinder")
         self.graph = atcg.read_mesh(f"{atcg.resource_directory()}/cylinder.obj")
         entity.addGeometryComponent(self.graph)
@@ -114,15 +123,22 @@ class PythonLayer(atcg.Layer):
         self.create_instance()
 
         self.current_operation = atcg.ImGui.GuizmoOperation.TRANSLATE
+        self.current_mode = atcg.ImGui.GuizmoMode.LOCAL
 
     def onUpdate(self, dt):
         self.performance_panel.registerFrameTime(dt)
         self.camera_controller.onUpdate(dt)
 
-        atcg.handleScriptUpdates(atcg.Project.getActive().getActiveScene(), dt)
+        scene = atcg.Project.getActive().getActiveScene()
+        atcg.handleScriptUpdates(scene, dt)
+
+        # Path trace if the integrator is running. The controller rebuilds or resets the integrator itself
+        # if the scene, camera or viewport changed.
+        if self.integrator_controller.render(scene, atcg.Renderer.getFramebuffer()):
+            return
 
         atcg.SceneRenderer.render(
-            atcg.Project.getActive().getActiveScene(),
+            scene,
             self.camera_controller.getCamera(),
             atcg.Renderer.getFramebuffer(),
         )
@@ -136,14 +152,20 @@ class PythonLayer(atcg.Layer):
 
         self.asset_panel.renderPanel()
 
-        selected_entity = self.panel.getSelectedEntity()
-
         self.performance_panel.renderPanel(True)
 
+        self.show_render_settings = self.render_settings_panel.renderPanel(
+            self.show_render_settings
+        )
+        self.show_integrator_settings = self.integrator_panel.renderPanel(
+            self.show_integrator_settings
+        )
+
+        # Draws the guizmo for all selected entities of the scene
         atcg.ImGui.drawGuizmo(
             atcg.Project.getActive().getActiveScene(),
-            selected_entity,
             self.current_operation,
+            self.current_mode,
             self.camera_controller.getCamera(),
         )
 

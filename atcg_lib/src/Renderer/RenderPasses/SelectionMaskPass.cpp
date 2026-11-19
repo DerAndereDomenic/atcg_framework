@@ -58,6 +58,19 @@ void SelectionMaskPass::renderWithMaskShader(const RenderContext& ctx,
     renderComponent<ComponentT>(ctx.renderer, entity, ctx.camera, auxiliary);
 }
 
+void SelectionMaskPass::renderEntityMask(const RenderContext& ctx, Entity entity, Dictionary& auxiliary)
+{
+    renderWithMaskShader<MeshRenderComponent>(ctx, entity, _mask_shader_base, auxiliary);
+    renderWithMaskShader<PointRenderComponent>(ctx, entity, _mask_shader_base, auxiliary);
+    renderWithMaskShader<PointSphereRenderComponent>(ctx, entity, _mask_shader_base, auxiliary);
+    renderWithMaskShader<MeshLightComponent>(ctx, entity, _mask_shader_base, auxiliary);
+    renderWithMaskShader<InstanceRenderComponent>(ctx, entity, _mask_shader_instanced, auxiliary);
+    renderWithMaskShader<EdgeCylinderRenderComponent>(ctx, entity, _mask_shader_cylinder, auxiliary);
+    renderWithMaskShader<EdgeRenderComponent>(ctx, entity, _mask_shader_edge, auxiliary);
+    renderWithMaskShader<CameraComponent>(ctx, entity, _mask_shader_edge, auxiliary);
+    renderWithMaskShader<PointLightComponent>(ctx, entity, _mask_shader_circle, auxiliary);
+}
+
 void SelectionMaskPass::execute(const RenderContext& ctx, const ResourceTable& resources)
 {
     auto target = resources.getTargetFBO();
@@ -70,8 +83,9 @@ void SelectionMaskPass::execute(const RenderContext& ctx, const ResourceTable& r
         target->getColorAttachement(0)->fill(&value);
     }
 
-    Entity selected = ctx.scene->getSelectedEntity();
-    if(!selected)
+    // The active entity is the last element, so it is drawn last and wins where selected entities overlap
+    std::vector<Entity> selected_entities = ctx.scene->getSelectedEntities();
+    if(selected_entities.empty())
     {
         GraphicsCommand::endRenderPass();
         return;
@@ -81,15 +95,10 @@ void SelectionMaskPass::execute(const RenderContext& ctx, const ResourceTable& r
     auxiliary.setValue("draw_cameras", ctx.draw_cameras);
     auxiliary.setValue("has_skybox", false);
 
-    renderWithMaskShader<MeshRenderComponent>(ctx, selected, _mask_shader_base, auxiliary);
-    renderWithMaskShader<PointRenderComponent>(ctx, selected, _mask_shader_base, auxiliary);
-    renderWithMaskShader<PointSphereRenderComponent>(ctx, selected, _mask_shader_base, auxiliary);
-    renderWithMaskShader<MeshLightComponent>(ctx, selected, _mask_shader_base, auxiliary);
-    renderWithMaskShader<InstanceRenderComponent>(ctx, selected, _mask_shader_instanced, auxiliary);
-    renderWithMaskShader<EdgeCylinderRenderComponent>(ctx, selected, _mask_shader_cylinder, auxiliary);
-    renderWithMaskShader<EdgeRenderComponent>(ctx, selected, _mask_shader_edge, auxiliary);
-    renderWithMaskShader<CameraComponent>(ctx, selected, _mask_shader_edge, auxiliary);
-    renderWithMaskShader<PointLightComponent>(ctx, selected, _mask_shader_circle, auxiliary);
+    for(Entity entity: selected_entities)
+    {
+        renderEntityMask(ctx, entity, auxiliary);
+    }
 
     GraphicsCommand::endRenderPass();
 }

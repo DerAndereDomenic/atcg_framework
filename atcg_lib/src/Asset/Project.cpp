@@ -1,6 +1,11 @@
 #include <Asset/Project.h>
 #include <Asset/AssetManagerSystem.h>
 #include <Scene/RevisionStack.h>
+#include <Plugin/Plugin.h>
+
+#ifdef ATCG_CUDA_BACKEND
+    #include <Integrator/IntegratorRegistry.h>
+#endif
 
 namespace atcg
 {
@@ -109,9 +114,25 @@ void Project::serializeProjectInformation_ver1()
     o << std::setw(4) << j << std::endl;
 }
 
+void Project::serializeIntegratorSettings_ver1()
+{
+#ifdef ATCG_CUDA_BACKEND
+    if(_integrator_settings)
+    {
+        nlohmann::json j = _integrator_settings->toJson();
+
+        j["Type"] = _integrator_settings->getType();
+        std::ofstream o(_project_path / "IntegratorSettings.json");
+        o << std::setw(4) << j << std::endl;
+    }
+#endif
+}
+
 void Project::serializeProjectInformation()
 {
     serializeProjectInformation_ver1();
+    serializeIntegratorSettings_ver1();
+    serializePlugins_ver1();
 }
 
 void Project::deserializeProjectInformation_ver1(const nlohmann::json& j)
@@ -121,23 +142,93 @@ void Project::deserializeProjectInformation_ver1(const nlohmann::json& j)
     _active_scene         = (AssetHandle)j["Scene"];
 }
 
+void Project::deserializeIntegratorSettings_ver1(const nlohmann::json& j)
+{
+#ifdef ATCG_CUDA_BACKEND
+    if(j.contains("Type"))
+    {
+        std::string type = j["Type"];
+
+        _integrator_settings = atcg::IntegratorRegistry::createIntegratorSettings(type);
+
+        if(_integrator_settings)
+        {
+            _integrator_settings->fromJson(j);
+        }
+    }
+#endif
+}
+
 void Project::deserializeProjectInformation()
 {
-    std::ifstream i(_project_path / "Project.json");
-    nlohmann::json j;
-    i >> j;
+    std::ifstream project_info_file(_project_path / "Project.json");
+    nlohmann::json project_info_json;
+    project_info_file >> project_info_json;
 
-    if(!j.contains("Version"))
+    if(!project_info_json.contains("Version"))
     {
         ATCG_WARN("Got invalid Project file with unrecognized version. Abort...");
         return;
     }
 
-    std::string version = j["Version"];
+    std::string version = project_info_json["Version"];
 
     if(version == "1.0")
     {
-        deserializeProjectInformation_ver1(j);
+        deserializeProjectInformation_ver1(project_info_json);
+
+        if(std::filesystem::exists(_project_path / "IntegratorSettings.json"))
+        {
+            std::ifstream integrator_settings_file(_project_path / "IntegratorSettings.json");
+            nlohmann::json integrator_settings_json;
+            integrator_settings_file >> integrator_settings_json;
+
+            deserializeIntegratorSettings_ver1(integrator_settings_json);
+        }
+        else
+        {
+// Load default settings
+#ifdef ATCG_CUDA_BACKEND
+            _integrator_settings = atcg::IntegratorRegistry::createIntegratorSettings("VolPathtracing");
+#endif
+        }
+
+        if(std::filesystem::exists(_project_path / "Plugins.json"))
+        {
+            std::ifstream plugins_file(_project_path / "Plugins.json");
+            nlohmann::json plugins_json;
+            plugins_file >> plugins_json;
+
+            deserializePlugins_ver1(plugins_json);
+        }
     }
 }
+
+void Project::serializePlugins_ver1()
+{
+    nlohmann::json j;
+
+    auto loaded_plugins = PluginManager::getLoadedPlugins();
+
+    for(const auto& [path, handle]: loaded_plugins)
+    {
+        std::string filename = path.filename().stem().string();
+        j["Plugins"].push_back(filename);
+    }
+
+    std::ofstream o(_project_path / "Plugins.json");
+    o << std::setw(4) << j << std::endl;
+}
+
+void Project::deserializePlugins_ver1(const nlohmann::json& j)
+{
+    if(j.contains("Plugins"))
+    {
+        for(const auto& plugin_name: j["Plugins"])
+        {
+            PluginManager::loadPluginFromName(plugin_name);
+        }
+    }
+}
+
 }    // namespace atcg

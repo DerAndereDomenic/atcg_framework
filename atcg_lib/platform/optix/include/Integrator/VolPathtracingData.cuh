@@ -30,5 +30,9 @@ struct VolPathtracingParams
     const EmitterVPtrTable* environment_emitter;
 
     const SensorVPtrTable* sensor;
+
+    bool use_rr;
+    uint32_t max_depth;
+    bool hide_emitters;
 };
 }    // namespace atcg

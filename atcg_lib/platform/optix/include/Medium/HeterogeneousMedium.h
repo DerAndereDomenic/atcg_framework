@@ -7,7 +7,7 @@
 #include <Renderer/Texture.h>
 #include <Asset/AssetManagerSystem.h>
 
-#include <Scene/ComponentGUIHandler.h>
+#include <GUI/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
 
 namespace atcg

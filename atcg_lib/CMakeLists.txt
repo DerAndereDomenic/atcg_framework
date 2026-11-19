@@ -2,6 +2,11 @@
 charonload_add_torch_library(atcg_lib SHARED)
 
 target_compile_definitions(atcg_lib PRIVATE ATCG_EXPORT_DLL)
+target_compile_definitions(atcg_lib PUBLIC
+    $<$<CONFIG:Debug>:ATCG_BUILD_DEBUG>
+    $<$<CONFIG:Release>:ATCG_BUILD_RELEASE>
+    $<$<CONFIG:RelWithDebInfo>:ATCG_BUILD_RELWITHDEBINFO>
+)
 
 # Link against cuda if requested
 if(ATCG_CUDA_BACKEND)

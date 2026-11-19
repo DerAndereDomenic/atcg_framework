@@ -6,6 +6,12 @@
 #include <Scene/Components.h>
 
 #include <numeric>
+#include <functional>
+
+/**
+ * @brief The ImGui drag and drop payload type of assets. The payload data is an atcg::AssetHandle.
+ */
+#define ATCG_ASSET_PAYLOAD "ATCG_ASSET"
 
 namespace atcg
 {
@@ -244,6 +250,95 @@ ATCG_API AssetHandle displayTexture3DSelection(const std::string& key, AssetHand
  * @return The selected cull mode
  */
 ATCG_API CullMode displayCullModeSelection(const std::string& key, CullMode cull_mode, bool& deactivated);
+
+/**
+ * @brief Make the last ImGui item a drag source for an asset (payload type ATCG_ASSET_PAYLOAD).
+ * Call this directly after submitting the item that should be dragged.
+ *
+ * @param handle The handle of the asset
+ *
+ * @return True if the item is currently being dragged
+ */
+ATCG_API bool beginAssetDragSource(AssetHandle handle);
+
+/**
+ * @brief Make the last ImGui item a drop target for assets (payload type ATCG_ASSET_PAYLOAD).
+ * Call this directly after submitting the item that should accept the drop. The target is only highlighted and only
+ * accepts the asset if the filter returns true for it.
+ *
+ * @param handle Is set to the handle of the dropped asset if an asset was dropped
+ * @param filter Decides if an asset can be dropped onto this target. If empty, every asset is accepted.
+ *
+ * @return True if an asset was dropped this frame
+ */
+ATCG_API bool acceptAssetDrop(AssetHandle& handle, const std::function<bool(AssetHandle)>& filter = {});
+
+/**
+ * @brief Make the last ImGui item a drop target for assets of the given type.
+ * Call this directly after submitting the item that should accept the drop.
+ *
+ * @param type The accepted asset type
+ * @param handle Is set to the handle of the dropped asset if an asset was dropped
+ *
+ * @return True if an asset was dropped this frame
+ */
+ATCG_API bool acceptAssetDrop(AssetType type, AssetHandle& handle);
+
+/**
+ * @brief Check if an asset can be applied to an entity with applyAssetToEntities.
+ * Materials and shaders need a component that holds a material/shader. Graphs and scripts can always be applied (the
+ * components are added if necessary). Other asset types can't be applied to an entity.
+ *
+ * @param entity The entity
+ * @param handle The asset handle
+ *
+ * @return True if the asset can be applied
+ */
+ATCG_API bool canApplyAsset(Entity entity, AssetHandle handle);
+
+/**
+ * @brief Apply an asset to entities. This is used for drag and drop in the editor.
+ * - Material: sets the material of all components that have a material
+ * - Shader: sets the shader of all components that have a shader
+ * - Graph: sets the graph of the GeometryComponent. A GeometryComponent, a MeshRenderComponent (if the entity has no
+ *   render component) and a TransformComponent are added if they are missing.
+ * - Script: sets the script of the ScriptComponent (added if missing) and recreates its behavior
+ * Entities to which the asset can't be applied are skipped. All changes are recorded as a single revision.
+ *
+ * @param scene The scene
+ * @param entities The entities
+ * @param handle The asset handle
+ *
+ * @return True if the asset was applied to at least one entity
+ */
+ATCG_API bool
+applyAssetToEntities(const atcg::ref_ptr<Scene>& scene, const std::vector<Entity>& entities, AssetHandle handle);
+
+/**
+ * @brief Create a new entity from an asset. Currently only graphs are supported: the entity is named after the asset
+ * and gets a TransformComponent, a GeometryComponent and a MeshRenderComponent. The creation is recorded as a single
+ * revision.
+ *
+ * @param scene The scene
+ * @param handle The asset handle
+ *
+ * @return The new entity or an invalid entity if no entity can be created from this asset
+ */
+ATCG_API Entity createEntityFromAsset(const atcg::ref_ptr<Scene>& scene, AssetHandle handle);
+
+/**
+ * @brief Default handling of an asset that was dropped onto the viewport (see AssetDroppedEvent).
+ * If an entity is under the mouse, the asset is applied to it (or to the whole selection if the entity is selected).
+ * Otherwise, a new entity is created from the asset if possible and selected.
+ *
+ * @param scene The scene
+ * @param handle The asset handle
+ * @param mouse_pos The drop position in viewport coordinates (as used by pickEntity)
+ *
+ * @return True if the scene was changed
+ */
+ATCG_API bool
+handleViewportAssetDrop(const atcg::ref_ptr<Scene>& scene, AssetHandle handle, const glm::vec2& mouse_pos);
 
 /**
  * @brief Serialize a buffer

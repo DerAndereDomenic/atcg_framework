@@ -8,7 +8,8 @@
 #include <Emitter/PointEmitter.h>
 #include <Sensor/Sensor.h>
 #include <Scene/OptixScene.h>
-#include <Scene/SceneHierarchyPanel.h>
+#include <GUI/SceneHierarchyPanel.h>
+#include <Integrator/IntegratorSettings.h>
 
 namespace atcg
 {
@@ -53,6 +54,8 @@ public:
 
     static void registerIntegrator(IntegratorRegistry::Registry* registry);
 
+    static std::string getType() { return "VolPathtracing"; }
+
 private:
     /**
      * @brief Initialize a pipeline.
@@ -67,5 +70,29 @@ private:
     uint32_t _frame_counter = 0;
 
     GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("VolPath");
+
+    // Settings:
+    bool _use_rr        = true;
+    uint32_t _max_depth = 512;
+    bool _hide_emitters = false;
 };
+
+template<>
+struct IntegratorSettings<VolPathtracingIntegrator> : public IntegratorSettingsBase
+{
+    std::string getType() const override { return VolPathtracingIntegrator::getType(); }
+
+    bool renderSettings() override;
+
+    atcg::Dictionary toDictionary() const override;
+
+    nlohmann::json toJson() const override;
+
+    void fromJson(const nlohmann::json& j) override;
+
+    bool _use_rr        = true;
+    uint32_t _max_depth = 512;
+    bool _hide_emitters = false;
+};
+
 }    // namespace atcg

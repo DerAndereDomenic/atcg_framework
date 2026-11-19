@@ -5,6 +5,7 @@
 #include <Renderer/Material.h>
 #include <Renderer/Framebuffer.h>
 #include <Scene/Scene.h>
+#include <Scene/Entity.h>
 
 namespace atcg
 {
@@ -33,6 +34,23 @@ public:
      */
     void selectAsset(AssetHandle handle);
 
+    /**
+     * @brief Get the selected asset, i.e., the asset that is open in the asset editor.
+     *
+     * @return The handle of the selected asset or 0 if no asset is selected
+     */
+    ATCG_INLINE AssetHandle getSelectedAsset() const { return _selected_handle; }
+
+    /**
+     * @brief Check if the selected asset is the most recent selection.
+     * The asset stays selected when entities of the active scene are selected afterwards, but it is no longer the most
+     * recent selection. Like this, the application can decide whether an action (e.g. copy) refers to the selected
+     * asset or to the selected entities.
+     *
+     * @return True if an asset is selected and no entities were selected after it
+     */
+    ATCG_INLINE bool isAssetSelectionActive() const { return _selected_handle != 0 && _asset_selection_active; }
+
 private:
     void drawAssetPanel();
 
@@ -58,6 +76,10 @@ private:
 
 private:
     AssetHandle _selected_handle = 0;
+
+    // Whether the asset or the entities were selected most recently
+    bool _asset_selection_active = false;
+    std::vector<Entity> _last_entity_selection;
 
     std::string _current_vertex_path   = "";
     std::string _current_fragment_path = "";

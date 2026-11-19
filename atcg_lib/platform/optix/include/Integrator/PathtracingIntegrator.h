@@ -7,6 +7,7 @@
 #include <Emitter/EnvironmentEmitter.h>
 #include <Emitter/PointEmitter.h>
 #include <Scene/OptixScene.h>
+#include <Integrator/IntegratorSettings.h>
 
 namespace atcg
 {
@@ -52,6 +53,8 @@ public:
 
     static void registerIntegrator(IntegratorRegistry::Registry* registry);
 
+    static std::string getType() { return "Pathtracing"; }
+
 private:
     /**
      * @brief Initialize a pipeline.
@@ -65,5 +68,29 @@ private:
     atcg::ref_ptr<OptixScene> _optix_scene;
     atcg::dref_ptr<PathtracingParams> _launch_params;
     uint32_t _frame_counter = 0;
+
+    // Settings
+    bool _use_rr        = true;
+    uint32_t _max_depth = 8;
+    bool _hide_emitters = false;
 };
+
+template<>
+struct IntegratorSettings<PathtracingIntegrator> : public IntegratorSettingsBase
+{
+    std::string getType() const override { return PathtracingIntegrator::getType(); }
+
+    bool renderSettings() override;
+
+    atcg::Dictionary toDictionary() const override;
+
+    nlohmann::json toJson() const override;
+
+    void fromJson(const nlohmann::json& j) override;
+
+    bool _use_rr        = true;
+    uint32_t _max_depth = 8;
+    bool _hide_emitters = false;
+};
+
 }    // namespace atcg

@@ -57,6 +57,13 @@ public:
      */
     virtual void reset() override;
 
+    /**
+     * @brief The name of the integrator in the IntegratorRegistry
+     *
+     * @return The integrator type
+     */
+    static std::string getType() { return "NRC"; }
+
 private:
     /**
      * @brief Initialize a pipeline.

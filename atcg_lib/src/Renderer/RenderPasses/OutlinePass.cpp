@@ -68,7 +68,7 @@ void OutlinePass::execute(const RenderContext& ctx, const ResourceTable& resourc
 
     shader->setInt("input_color_buffer", color_id);
     shader->setInt("selection_mask", mask_id);
-    shader->setInt("selected_entity_id", ctx.scene->getSelectedEntity().entity_handle());
+    shader->setInt("active_entity_id", ctx.scene->getActiveEntity().entity_handle());
 
     GraphicsCommand::bindTexture(color_id, input_color);
     GraphicsCommand::bindTexture(mask_id, selection_mask);

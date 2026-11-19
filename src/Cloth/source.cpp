@@ -149,9 +149,8 @@ public:
                 auto& comp = entities[0].getComponent<atcg::MeshRenderComponent>();
                 comp.shader()->setFloat("checker_size", 0.1f);
 
-                hovered_entity = {entt::null, scene.get()};
-                panel          = atcg::GUI::SceneHierarchyPanel();
-                panel.selectEntity(hovered_entity);
+                scene->clearSelection();
+                panel = atcg::GUI::SceneHierarchyPanel();
             }
 
 
@@ -174,9 +173,8 @@ public:
         }
 
         panel.renderPanel(scene);
-        hovered_entity = panel.getSelectedEntity();
 
-        atcg::drawGuizmo(scene, hovered_entity, current_operation, camera_controller->getCamera());
+        atcg::drawGuizmo(scene, current_operation, atcg::GuizmoMode::LOCAL, camera_controller->getCamera());
     }
 #endif
 
@@ -225,8 +223,7 @@ public:
     {
         if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !atcg::isOverGuizmo())
         {
-            hovered_entity = atcg::Utils::pickEntity(mouse_pos);
-            panel.selectEntity(hovered_entity);
+            scene->selectEntity(atcg::Utils::pickEntity(mouse_pos));
         }
         return true;
     }
@@ -247,7 +244,6 @@ public:
 
 private:
     atcg::ref_ptr<atcg::Scene> scene;
-    atcg::Entity hovered_entity;
 
     atcg::ref_ptr<atcg::FocusedController> camera_controller;
     atcg::ref_ptr<atcg::Graph> grid;
