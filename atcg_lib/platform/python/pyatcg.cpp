@@ -1785,7 +1785,7 @@ inline void defineBindings(py::module_& m)
     m_plugin_manager.def("loadPlugin", [](const std::string& path) { return atcg::PluginManager::loadPlugin(path); })
         .def("releasePlugin", [](const std::string& path) { return atcg::PluginManager::releasePlugin(path); })
         .def("releaseAllPlugins", &atcg::PluginManager::releaseAllPlugins)
-        .def("loadPluginFormName",
+        .def("loadPluginFromName",
              [](const std::string& name) { return atcg::PluginManager::loadPluginFromName(name); })
         .def("releasePluginFromName",
              [](const std::string& name) { return atcg::PluginManager::releasePluginFromName(name); });
