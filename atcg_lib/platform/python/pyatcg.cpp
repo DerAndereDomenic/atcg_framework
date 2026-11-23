@@ -70,7 +70,8 @@ inline void defineBindings(py::module_& m)
     auto m_key_released_event    = py::class_<atcg::KeyReleasedEvent, atcg::KeyEvent>(m, "KeyReleasedEvent");
     auto m_key_typed_event       = py::class_<atcg::KeyTypedEvent, atcg::KeyEvent>(m, "KeyTypedEvent");
     auto m_viewport_resize_event = py::class_<atcg::ViewportResizeEvent, atcg::Event>(m, "ViewportResizeEvent");
-    auto m_asset_dropped_event   = py::class_<atcg::AssetDroppedEvent, atcg::Event>(m, "AssetDroppedEvent");    auto m_timer                 = py::class_<atcg::Timer>(m, "Timer");
+    auto m_asset_dropped_event   = py::class_<atcg::AssetDroppedEvent, atcg::Event>(m, "AssetDroppedEvent");
+    auto m_timer                 = py::class_<atcg::Timer>(m, "Timer");
     auto m_vertex_specification  = py::class_<atcg::VertexSpecification>(m, "VertexSpecification");
     auto m_edge_specification    = py::class_<atcg::EdgeSpecification>(m, "EdgeSpecification");
     auto m_graph                 = py::class_<atcg::Graph, atcg::Asset, atcg::ref_ptr<atcg::Graph>>(m, "Graph");
@@ -1783,7 +1784,11 @@ inline void defineBindings(py::module_& m)
     // ------------------- Plugins ---------------------------------
     m_plugin_manager.def("loadPlugin", [](const std::string& path) { return atcg::PluginManager::loadPlugin(path); })
         .def("releasePlugin", [](const std::string& path) { return atcg::PluginManager::releasePlugin(path); })
-        .def("releaseAllPlugins", &atcg::PluginManager::releaseAllPlugins);
+        .def("releaseAllPlugins", &atcg::PluginManager::releaseAllPlugins)
+        .def("loadPluginFormName",
+             [](const std::string& name) { return atcg::PluginManager::loadPluginFromName(name); })
+        .def("releasePluginFromName",
+             [](const std::string& name) { return atcg::PluginManager::releasePluginFromName(name); });
 
 // ------------------- Pathtracing ---------------------------------
 #ifdef ATCG_CUDA_BACKEND
