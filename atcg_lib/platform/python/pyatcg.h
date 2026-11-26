@@ -18,6 +18,9 @@ public:
     // This is run at the start of the program
     virtual void onAttach() override { PYBIND11_OVERRIDE(void, atcg::Layer, onAttach); }
 
+    // This is run when the layer is destroyed
+    virtual void onDetach() override { PYBIND11_OVERRIDE(void, atcg::Layer, onDetach); }
+
     // This gets called each frame
     virtual void onUpdate(float delta_time) override { PYBIND11_OVERRIDE(void, atcg::Layer, onUpdate, delta_time); }
 

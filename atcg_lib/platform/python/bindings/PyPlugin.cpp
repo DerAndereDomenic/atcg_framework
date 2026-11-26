@@ -17,13 +17,33 @@ void bindPlugin(BindingContext& ctx)
         [=]() mutable
         {
             m_plugin_manager
-                .def("loadPlugin", [](const std::string& path) { return atcg::PluginManager::loadPlugin(path); })
-                .def("releasePlugin", [](const std::string& path) { return atcg::PluginManager::releasePlugin(path); })
+                .def(
+                    "loadPlugin",
+                    [](const std::string& path) { return atcg::PluginManager::loadPlugin(path); },
+                    "path"_a)
+                .def(
+                    "releasePlugin",
+                    [](const std::string& path) { return atcg::PluginManager::releasePlugin(path); },
+                    "path"_a)
                 .def("releaseAllPlugins", &atcg::PluginManager::releaseAllPlugins)
-                .def("loadPluginFromName",
-                     [](const std::string& name) { return atcg::PluginManager::loadPluginFromName(name); })
-                .def("releasePluginFromName",
-                     [](const std::string& name) { return atcg::PluginManager::releasePluginFromName(name); });
+                .def(
+                    "loadPluginFromName",
+                    [](const std::string& name) { return atcg::PluginManager::loadPluginFromName(name); },
+                    "name"_a)
+                .def(
+                    "releasePluginFromName",
+                    [](const std::string& name) { return atcg::PluginManager::releasePluginFromName(name); },
+                    "name"_a)
+                .def("getLoadedPlugins",
+                     []()
+                     {
+                         std::vector<std::string> paths;
+                         for(const auto& [path, handle]: atcg::PluginManager::getLoadedPlugins())
+                         {
+                             paths.push_back(path.string());
+                         }
+                         return paths;
+                     });
         });
 }
 }    // namespace python

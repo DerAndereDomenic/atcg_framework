@@ -28,27 +28,33 @@ void bindMaterial(BindingContext& ctx)
         {
             m_material
                 .def("asOpaque",
-                     [](const atcg::ref_ptr<atcg::Material>& self)
+                     [](const atcg::ref_ptr<atcg::Material>& self) -> atcg::ref_ptr<atcg::OpaqueMaterial>
                      {
                          auto ptr = std::dynamic_pointer_cast<atcg::OpaqueMaterial>(self);
-                         if(!ptr) throw std::runtime_error("Not an OpaqueMaterial");
+                         if(!ptr) ATCG_WARN("Material is not an OpaqueMaterial");
                          return ptr;
                      })
                 .def("asDielectric",
-                     [](const atcg::ref_ptr<atcg::Material>& self)
+                     [](const atcg::ref_ptr<atcg::Material>& self) -> atcg::ref_ptr<atcg::DielectricMaterial>
                      {
                          auto ptr = std::dynamic_pointer_cast<atcg::DielectricMaterial>(self);
-                         if(!ptr) throw std::runtime_error("Not a DielectricMaterial");
+                         if(!ptr) ATCG_WARN("Material is not a DielectricMaterial");
                          return ptr;
                      })
                 .def("asNull",
-                     [](const atcg::ref_ptr<atcg::Material>& self)
+                     [](const atcg::ref_ptr<atcg::Material>& self) -> atcg::ref_ptr<atcg::NullMaterial>
                      {
                          auto ptr = std::dynamic_pointer_cast<atcg::NullMaterial>(self);
-                         if(!ptr) throw std::runtime_error("Not a NullMaterial");
+                         if(!ptr) ATCG_WARN("Material is not a NullMaterial");
                          return ptr;
                      })
-                .def("getMaterialType", &atcg::Material::getMaterialType);
+                .def("getMaterialType", &atcg::Material::getMaterialType)
+                .def("clone", &atcg::Material::clone)
+                .def_static("getStaticType", &atcg::Material::getStaticType);
+
+            m_opaque_material.attr("TypeName")     = py::str(atcg::OpaqueMaterial::TypeName);
+            m_dielectric_material.attr("TypeName") = py::str(atcg::DielectricMaterial::TypeName);
+            m_null_material.attr("TypeName")       = py::str(atcg::NullMaterial::TypeName);
 
             m_opaque_material.def(py::init<>())
                 .def("getDiffuseTexture", &atcg::OpaqueMaterial::getDiffuseTexture)
@@ -85,6 +91,82 @@ void bindMaterial(BindingContext& ctx)
                      { material.setDiffuseColor(color); })
                 .def("setRoughness", &atcg::DielectricMaterial::setRoughness)
                 .def("setIor", &atcg::DielectricMaterial::setIor);
+
+            m_null_material.def(py::init<>());
+
+            m_material_registry
+                .def(
+                    "createMaterial",
+                    [](const std::string& type, const atcg::Dictionary& dict) -> atcg::ref_ptr<atcg::Material>
+                    {
+                        auto registry = atcg::MaterialRegistry::getRegistry();
+                        if(!registry->find(type))
+                        {
+                            ATCG_ERROR("Material type '{0}' is not registered", type);
+                            return nullptr;
+                        }
+                        return atcg::MaterialRegistry::createMaterial(registry, type, dict);
+                    },
+                    "type"_a,
+                    "dict"_a)
+                .def(
+                    "createMaterial",
+                    [](const std::string& type) -> atcg::ref_ptr<atcg::Material>
+                    {
+                        auto registry = atcg::MaterialRegistry::getRegistry();
+                        if(!registry->find(type))
+                        {
+                            ATCG_ERROR("Material type '{0}' is not registered", type);
+                            return nullptr;
+                        }
+                        atcg::Dictionary dict;
+                        return atcg::MaterialRegistry::createMaterial(registry, type, dict);
+                    },
+                    "type"_a)
+                .def("getRegisteredMaterialTypes",
+                     []() { return atcg::MaterialRegistry::getRegisteredMaterialTypes(); })
+                .def(
+                    "serializeMaterial",
+                    [](const atcg::ref_ptr<atcg::Material>& material, const std::string& path)
+                    {
+                        if(!material)
+                        {
+                            ATCG_ERROR("Cannot serialize an empty material");
+                            return;
+                        }
+                        auto registry = atcg::MaterialRegistry::getRegistry();
+                        if(!registry->find(material->getMaterialType()))
+                        {
+                            ATCG_ERROR("Material type '{0}' is not registered", material->getMaterialType());
+                            return;
+                        }
+                        atcg::MaterialRegistry::serializeMaterial(registry, material, std::filesystem::path(path));
+                    },
+                    "material"_a,
+                    "path"_a);
+#ifndef ATCG_HEADLESS
+            m_material_registry.def(
+                "renderMaterialGUI",
+                [](const atcg::ref_ptr<atcg::Material>& material, const std::string& key) -> py::tuple
+                {
+                    bool deactivated = false;
+                    if(!material)
+                    {
+                        ATCG_ERROR("Cannot render the GUI of an empty material");
+                        return py::make_tuple(false, deactivated);
+                    }
+                    auto registry = atcg::MaterialRegistry::getRegistry();
+                    if(!registry->find(material->getMaterialType()))
+                    {
+                        ATCG_ERROR("Material type '{0}' is not registered", material->getMaterialType());
+                        return py::make_tuple(false, deactivated);
+                    }
+                    bool changed = atcg::MaterialRegistry::renderMaterialGUI(registry, material, key, deactivated);
+                    return py::make_tuple(changed, deactivated);
+                },
+                "material"_a,
+                "key"_a);
+#endif
         });
 }
 }    // namespace python

@@ -17,6 +17,10 @@ void bindImGui(BindingContext& ctx)
     auto m_guizmo_operation = py::enum_<atcg::GuizmoOperation>(m_imgui, "GuizmoOperation");
     auto m_guizmo_mode      = py::enum_<atcg::GuizmoMode>(m_imgui, "GuizmoMode");
 
+    // The layer is owned by the application, so python never deletes it. Layer uses the same holder.
+    auto m_imgui_layer =
+        py::class_<atcg::ImGuiLayer, atcg::Layer, std::unique_ptr<atcg::ImGuiLayer, py::nodelete>>(m, "ImGuiLayer");
+
     ctx.define(
         [=]() mutable
         {
@@ -109,7 +113,8 @@ void bindImGui(BindingContext& ctx)
                 "Text",
                 [](const char* fmt)
                 {
-                    ImGui::Text(fmt);
+                    // The text is not used as a format string
+                    ImGui::TextUnformatted(fmt);
                     return;
                 },
                 py::arg("fmt"),
@@ -127,33 +132,41 @@ void bindImGui(BindingContext& ctx)
                 py::arg("height"),
                 py::return_value_policy::automatic_reference);
 
-            m_imgui.def("plot",
-                        [](std::vector<std::vector<float>>& data,
-                           const std::vector<std::string>& names,
-                           const float line_width = -1)
-                        {
-                            if(ImPlot::BeginPlot("##", ImVec2(-1, -1)))
-                            {
-                                ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
-                                ImPlot::SetupLegend(ImPlotLocation_North,
-                                                    ImPlotLegendFlags_Horizontal | ImPlotLegendFlags_Outside);
-                                for(int i = 0; i < data.size(); ++i)
-                                {
-                                    std::vector<float> x(data[i].size());
-                                    std::iota(x.begin(), x.end(), 0.0f);
+            m_imgui.def(
+                "plot",
+                [](std::vector<std::vector<float>>& data, const std::vector<std::string>& names, const float line_width)
+                {
+                    if(names.size() < data.size())
+                    {
+                        ATCG_WARN("ImGui.plot: {0} names given for {1} lines", names.size(), data.size());
+                    }
 
-                                    ImPlot::SetNextLineStyle(IMPLOT_AUTO_COL, line_width);
-                                    ImPlot::PlotLine(names[i].c_str(),
-                                                     x.data(),
-                                                     data[i].data(),
-                                                     data[i].size(),
-                                                     0,
-                                                     0,
-                                                     sizeof(float));
-                                }
-                                ImPlot::EndPlot();
-                            }
-                        });
+                    if(ImPlot::BeginPlot("##", ImVec2(-1, -1)))
+                    {
+                        ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+                        ImPlot::SetupLegend(ImPlotLocation_North,
+                                            ImPlotLegendFlags_Horizontal | ImPlotLegendFlags_Outside);
+                        for(size_t i = 0; i < data.size(); ++i)
+                        {
+                            std::vector<float> x(data[i].size());
+                            std::iota(x.begin(), x.end(), 0.0f);
+
+                            ImPlot::SetNextLineStyle(IMPLOT_AUTO_COL, line_width);
+                            std::string label = i < names.size() ? names[i] : "Line " + std::to_string(i);
+                            ImPlot::PlotLine(label.c_str(),
+                                             x.data(),
+                                             data[i].data(),
+                                             data[i].size(),
+                                             0,
+                                             0,
+                                             sizeof(float));
+                        }
+                        ImPlot::EndPlot();
+                    }
+                },
+                "data"_a,
+                "names"_a,
+                "line_width"_a = -1.0f);
 
             m_imgui.def("isUsing", &atcg::isUsingGuizmo);
             m_imgui.def("isOver", &atcg::isOverGuizmo);
@@ -166,6 +179,12 @@ void bindImGui(BindingContext& ctx)
                 .value("WORLD", atcg::GuizmoMode::WORLD)
                 .export_values();
             m_imgui.def("drawGuizmo", &atcg::drawGuizmo, "scene"_a, "operation"_a, "mode"_a, "camera"_a);
+
+            m_imgui_layer.def("blockEvents", &atcg::ImGuiLayer::blockEvents, "block"_a)
+                .def("enableDockSpace", &atcg::ImGuiLayer::enableDockSpace, "enable"_a)
+                .def("dockspaceEnabled", &atcg::ImGuiLayer::dockspaceEnabled)
+                .def("getViewportSize", &atcg::ImGuiLayer::getViewportSize)
+                .def("getViewportPosition", &atcg::ImGuiLayer::getViewportPosition);
         });
 }
 }    // namespace python

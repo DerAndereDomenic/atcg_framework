@@ -6,7 +6,117 @@ namespace atcg
 {
 namespace python
 {
-// Entities, scenes, scene renderer, ray tracing queries and clipboard
+namespace
+{
+/**
+ * @brief Bind has/get/replace/remove accessors of a component to the entity.
+ * The getter returns a copy of the component.
+ *
+ * @tparam Component The component type
+ * @param entity The entity class
+ * @param name The name of the component in the accessor names, e.g. "TransformComponent"
+ * @param replace_arg The argument name of the replace function
+ */
+template<typename Component>
+void bindComponentAccessors(py::class_<atcg::Entity>& entity,
+                            const std::string& name,
+                            const char* replace_arg = "component")
+{
+    entity.def(("has" + name).c_str(), &atcg::Entity::hasComponent<Component>)
+        .def(("get" + name).c_str(), &atcg::Entity::getComponent<Component>)
+        .def(("replace" + name).c_str(),
+             [](atcg::Entity& self, Component& component) { return self.replaceComponent<Component>(component); },
+             py::arg(replace_arg))
+        .def(("remove" + name).c_str(), &atcg::Entity::removeComponent<Component>);
+}
+
+/**
+ * @brief Create a templated component revision for the component whose python type matches component_type.
+ * A single entity creates a plain revision, several entities create a MultiEntityRevision.
+ *
+ * @tparam RevisionType The templated revision (ComponentAddedRevision, ComponentRemovedRevision, ...)
+ * @tparam Component The component type to test
+ * @tparam Rest The remaining component types
+ * @param component_type The python type of the component
+ * @param scene The scene
+ * @param entities The entities
+ *
+ * @return The revision or nullptr if the component type is not supported
+ */
+template<template<typename> class RevisionType, typename Component, typename... Rest>
+atcg::ref_ptr<atcg::Revision> createComponentRevision(const py::object& component_type,
+                                                      const atcg::ref_ptr<atcg::Scene>& scene,
+                                                      const std::vector<atcg::Entity>& entities)
+{
+    if(component_type.is(py::type::of<Component>()))
+    {
+        if(entities.size() == 1)
+        {
+            return atcg::make_ref<RevisionType<Component>>(scene, entities[0]);
+        }
+        return atcg::make_ref<atcg::MultiEntityRevision<RevisionType<Component>>>(scene, entities);
+    }
+
+    if constexpr(sizeof...(Rest) > 0)
+    {
+        return createComponentRevision<RevisionType, Rest...>(component_type, scene, entities);
+    }
+    else
+    {
+        ATCG_ERROR("RevisionStack: component type {0} does not support revisions",
+                   py::str(component_type).cast<std::string>());
+        return nullptr;
+    }
+}
+
+/**
+ * @brief Create a templated component revision for all components that are bound to python.
+ *
+ * @tparam RevisionType The templated revision (ComponentAddedRevision, ComponentRemovedRevision, ...)
+ * @param component_type The python type of the component
+ * @param scene The scene
+ * @param entities The entities
+ *
+ * @return The revision or nullptr if the component type is not supported or no entity is given
+ */
+template<template<typename> class RevisionType>
+atcg::ref_ptr<atcg::Revision> createComponentRevision(const py::object& component_type,
+                                                      const atcg::ref_ptr<atcg::Scene>& scene,
+                                                      const std::vector<atcg::Entity>& entities)
+{
+    if(!scene)
+    {
+        ATCG_ERROR("RevisionStack: scene is None");
+        return nullptr;
+    }
+
+    if(entities.empty())
+    {
+        ATCG_ERROR("RevisionStack: no entities given");
+        return nullptr;
+    }
+
+    return createComponentRevision<RevisionType,
+                                   atcg::TransformComponent,
+                                   atcg::GeometryComponent,
+                                   atcg::MeshRenderComponent,
+                                   atcg::PointRenderComponent,
+                                   atcg::PointSphereRenderComponent,
+                                   atcg::EdgeRenderComponent,
+                                   atcg::EdgeCylinderRenderComponent,
+                                   atcg::InstanceRenderComponent,
+                                   atcg::CameraComponent,
+                                   atcg::NameComponent,
+                                   atcg::PointLightComponent,
+                                   atcg::ScriptComponent,
+                                   atcg::MeshLightComponent,
+                                   atcg::TransparencyComponent,
+                                   atcg::HomogeneousMediumComponent,
+                                   atcg::HeterogeneousMediumComponent>(component_type, scene, entities);
+}
+}    // namespace
+
+// Entities, scenes, scene renderer, ray tracing queries, clipboard and undo/redo
 void bindScene(BindingContext& ctx)
 {
     py::module_ m = ctx.module();
@@ -22,10 +132,39 @@ void bindScene(BindingContext& ctx)
 
     auto m_clipboard = m.def_submodule("Clipboard");
 
+    auto m_revision_stack = m.def_submodule("RevisionStack");
+    auto m_revision       = py::class_<atcg::Revision, atcg::ref_ptr<atcg::Revision>>(m, "Revision");
+    auto m_composite_revision =
+        py::class_<atcg::CompositeRevision, atcg::Revision, atcg::ref_ptr<atcg::CompositeRevision>>(m,
+                                                                                                    "CompositeRevisio"
+                                                                                                    "n");
+    auto m_entity_added_revision =
+        py::class_<atcg::EntityAddedRevision, atcg::Revision, atcg::ref_ptr<atcg::EntityAddedRevision>>(m,
+                                                                                                        "EntityAddedRev"
+                                                                                                        "ision");
+    auto m_entity_removed_revision =
+        py::class_<atcg::EntityRemovedRevision, atcg::Revision, atcg::ref_ptr<atcg::EntityRemovedRevision>>(m,
+                                                                                                            "EntityRemo"
+                                                                                                            "vedRevisio"
+                                                                                                            "n");
+    auto m_asset_added_revision =
+        py::class_<atcg::AssetAddedRevision, atcg::Revision, atcg::ref_ptr<atcg::AssetAddedRevision>>(m,
+                                                                                                      "AssetAddedRevisi"
+                                                                                                      "on");
+    auto m_asset_removed_revision =
+        py::class_<atcg::AssetRemovedRevision, atcg::Revision, atcg::ref_ptr<atcg::AssetRemovedRevision>>(m,
+                                                                                                          "AssetRemoved"
+                                                                                                          "Revision");
+    auto m_asset_edited_revision =
+        py::class_<atcg::AssetEditedRevision, atcg::Revision, atcg::ref_ptr<atcg::AssetEditedRevision>>(m,
+                                                                                                        "AssetEditedRev"
+                                                                                                        "ision");
+
     ctx.define(
         [=]() mutable
         {
-            m_entity_handle.def(py::init<uint32_t>(), "handle"_a);
+            m_entity_handle.def(py::init<uint32_t>(), "handle"_a)
+                .def("__int__", [](entt::entity handle) { return (uint32_t)handle; });
 
             m_entity.def(py::init<>())
                 .def(py::init<entt::entity, atcg::Scene*>(), "handle"_a, "scene"_a)
@@ -40,156 +179,152 @@ void bindScene(BindingContext& ctx)
                        const glm::vec3& scale,
                        const glm::vec3& rotation)
                     { return entity.addComponent<atcg::TransformComponent>(position, scale, rotation); },
-                    "positiona"_a,
-                    "scale"_a,
-                    "rotation"_a)
-                .def(
-                    "replaceTransformComponent",
-                    [](atcg::Entity& entity, atcg::TransformComponent& transform)
-                    { return entity.replaceComponent<atcg::TransformComponent>(transform); },
-                    "transform"_a)
+                    "position"_a = glm::vec3(0),
+                    "scale"_a    = glm::vec3(1),
+                    "rotation"_a = glm::vec3(0))
                 .def(
                     "addGeometryComponent",
                     [](atcg::Entity& entity, const atcg::ref_ptr<atcg::Graph>& graph)
                     { return entity.addComponent<atcg::GeometryComponent>(graph); },
                     "graph"_a)
                 .def(
-                    "replaceGeometryComponent",
-                    [](atcg::Entity& entity, atcg::GeometryComponent& geometry)
-                    { return entity.replaceComponent<atcg::GeometryComponent>(geometry); },
-                    "geometry"_a)
-                .def(
                     "addMeshRenderComponent",
                     [](atcg::Entity& entity, const atcg::ref_ptr<atcg::Shader>& shader)
-                    { return entity.addComponent<atcg::MeshRenderComponent>(shader); },
-                    "shader"_a)
-                .def(
-                    "replaceMeshRenderComponent",
-                    [](atcg::Entity& entity, atcg::MeshRenderComponent& component)
-                    { return entity.replaceComponent<atcg::MeshRenderComponent>(component); },
-                    "component"_a)
+                    {
+                        if(!shader) return entity.addComponent<atcg::MeshRenderComponent>();
+                        return entity.addComponent<atcg::MeshRenderComponent>(shader);
+                    },
+                    "shader"_a = nullptr)
                 .def(
                     "addPointRenderComponent",
                     [](atcg::Entity& entity,
                        const atcg::ref_ptr<atcg::Shader>& shader,
                        const glm::vec3& color,
                        float point_size)
-                    { return entity.addComponent<atcg::PointRenderComponent>(shader, color, point_size); },
-                    "shader"_a,
-                    "color"_a,
-                    "point_size"_a)
-                .def(
-                    "replacePointRenderComponent",
-                    [](atcg::Entity& entity, atcg::PointRenderComponent& component)
-                    { return entity.replaceComponent<atcg::PointRenderComponent>(component); },
-                    "component_a")
+                    {
+                        if(!shader) return entity.addComponent<atcg::PointRenderComponent>(color, point_size);
+                        return entity.addComponent<atcg::PointRenderComponent>(shader, color, point_size);
+                    },
+                    "shader"_a     = nullptr,
+                    "color"_a      = glm::vec3(1),
+                    "point_size"_a = 1.0f)
                 .def(
                     "addPointSphereRenderComponent",
                     [](atcg::Entity& entity, const atcg::ref_ptr<atcg::Shader>& shader, float point_size)
-                    { return entity.addComponent<atcg::PointSphereRenderComponent>(shader, point_size); },
-                    "shader"_a,
-                    "point_size"_a)
-                .def(
-                    "replacePointSphereRenderComponent",
-                    [](atcg::Entity& entity, atcg::PointSphereRenderComponent& component)
-                    { return entity.replaceComponent<atcg::PointSphereRenderComponent>(component); },
-                    "component"_a)
+                    {
+                        if(!shader) return entity.addComponent<atcg::PointSphereRenderComponent>(point_size);
+                        return entity.addComponent<atcg::PointSphereRenderComponent>(shader, point_size);
+                    },
+                    "shader"_a     = nullptr,
+                    "point_size"_a = 0.1f)
                 .def(
                     "addEdgeRenderComponent",
                     [](atcg::Entity& entity, const glm::vec3& color)
                     { return entity.addComponent<atcg::EdgeRenderComponent>(color); },
-                    "color"_a)
-                .def(
-                    "replaceEdgeRenderComponent",
-                    [](atcg::Entity& entity, atcg::EdgeRenderComponent& component)
-                    { return entity.replaceComponent<atcg::EdgeRenderComponent>(component); },
-                    "component"_a)
+                    "color"_a = glm::vec3(1))
                 .def(
                     "addEdgeCylinderRenderComponent",
                     [](atcg::Entity& entity, float radius)
                     { return entity.addComponent<atcg::EdgeCylinderRenderComponent>(radius); },
-                    "radius"_a)
-                .def(
-                    "replaceEdgeCylinderRenderComponent",
-                    [](atcg::Entity& entity, atcg::EdgeCylinderRenderComponent& component)
-                    { return entity.replaceComponent<atcg::EdgeCylinderRenderComponent>(component); },
-                    "component"_a)
+                    "radius"_a = 0.001f)
                 .def("addInstanceRenderComponent",
                      [](atcg::Entity& entity) { return entity.addComponent<atcg::InstanceRenderComponent>(); })
-                .def(
-                    "replaceInstanceRenderComponent",
-                    [](atcg::Entity& entity, atcg::InstanceRenderComponent& component)
-                    { return entity.replaceComponent<atcg::InstanceRenderComponent>(component); },
-                    "component"_a)
                 .def(
                     "addPointLightComponent",
                     [](atcg::Entity& entity, float intensity, const glm::vec3& color)
                     { return entity.addComponent<atcg::PointLightComponent>(intensity, color); },
-                    "intensity"_a,
-                    "color"_a)
-                .def(
-                    "replacePointLightComponent",
-                    [](atcg::Entity& entity, atcg::PointLightComponent& component)
-                    { return entity.replaceComponent<atcg::PointLightComponent>(component); },
-                    "component"_a)
+                    "intensity"_a = 1.0f,
+                    "color"_a     = glm::vec3(1))
                 .def(
                     "addCameraComponent",
                     [](atcg::Entity& entity,
-                       const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
+                       const atcg::ref_ptr<atcg::Camera>& camera,
                        const uint32_t width,
                        const uint32_t height)
                     { return entity.addComponent<atcg::CameraComponent>(camera, width, height); },
                     "camera"_a,
-                    "width"_a,
-                    "height"_a)
+                    "width"_a  = 1024,
+                    "height"_a = 1024)
                 .def(
-                    "replaceCameraComponent",
-                    [](atcg::Entity& entity, atcg::CameraComponent& component)
-                    { return entity.replaceComponent<atcg::CameraComponent>(component); },
-                    "component"_a)
-                .def("addNameComponent",
-                     [](atcg::Entity& entity, const std::string& name)
-                     { return entity.addComponent<atcg::NameComponent>(name); })
-                .def("replaceNameComponent",
-                     [](atcg::Entity& entity, atcg::NameComponent& component)
-                     { return entity.replaceComponent<atcg::NameComponent>(component); })
-                .def("addScriptComponent",
-                     [](atcg::Entity& entity, const atcg::ref_ptr<atcg::PythonScript>& script)
-                     { return entity.addComponent<atcg::ScriptComponent>(script); })
-                .def("replaceScriptComponent",
-                     [](atcg::Entity& entity, atcg::ScriptComponent component)
-                     { return entity.replaceComponent<atcg::ScriptComponent>(component); })
+                    "addNameComponent",
+                    [](atcg::Entity& entity, const std::string& name)
+                    { return entity.addOrReplaceComponent<atcg::NameComponent>(name); },
+                    "name"_a)
+                .def(
+                    "addScriptComponent",
+                    [](atcg::Entity& entity, const atcg::ref_ptr<atcg::Script>& script)
+                    {
+                        if(!script) return entity.addComponent<atcg::ScriptComponent>();
+                        return entity.addComponent<atcg::ScriptComponent>(script);
+                    },
+                    "script"_a)
                 .def("addMeshLightComponent",
                      [](atcg::Entity& entity) { return entity.addComponent<atcg::MeshLightComponent>(); })
-                .def("replaceMeshLightComponent",
-                     [](atcg::Entity& entity, atcg::MeshLightComponent& component)
-                     { return entity.replaceComponent<atcg::MeshLightComponent>(component); })
-                .def("hasTransformComponent", &atcg::Entity::hasComponent<atcg::TransformComponent>)
-                .def("hasGeometryComponent", &atcg::Entity::hasComponent<atcg::GeometryComponent>)
-                .def("hasMeshRenderComponent", &atcg::Entity::hasComponent<atcg::MeshRenderComponent>)
-                .def("hasPointRenderComponent", &atcg::Entity::hasComponent<atcg::PointRenderComponent>)
-                .def("hasPointSphereRenderComponent", &atcg::Entity::hasComponent<atcg::PointSphereRenderComponent>)
-                .def("hasEdgeRenderComponent", &atcg::Entity::hasComponent<atcg::EdgeRenderComponent>)
-                .def("hasEdgeCylinderRenderComponent", &atcg::Entity::hasComponent<atcg::EdgeCylinderRenderComponent>)
-                .def("hasInstanceRenderComponent", &atcg::Entity::hasComponent<atcg::InstanceRenderComponent>)
-                .def("hasPointLightComponent", &atcg::Entity::hasComponent<atcg::PointLightComponent>)
-                .def("hasNameComponent", &atcg::Entity::hasComponent<atcg::NameComponent>)
-                .def("hasScriptComponent", &atcg::Entity::hasComponent<atcg::ScriptComponent>)
-                .def("hasMeshLightComponent", &atcg::Entity::hasComponent<atcg::MeshLightComponent>)
-                .def("getTransformComponent", &atcg::Entity::getComponent<atcg::TransformComponent>)
-                .def("getGeometryComponent", &atcg::Entity::getComponent<atcg::GeometryComponent>)
-                .def("getMeshRenderComponent", &atcg::Entity::getComponent<atcg::MeshRenderComponent>)
-                .def("getPointRenderComponent", &atcg::Entity::getComponent<atcg::PointRenderComponent>)
-                .def("getPointSphereRenderComponent", &atcg::Entity::getComponent<atcg::PointSphereRenderComponent>)
-                .def("getEdgeRenderComponent", &atcg::Entity::getComponent<atcg::EdgeRenderComponent>)
-                .def("getPointLightComponent", &atcg::Entity::getComponent<atcg::PointLightComponent>)
-                .def("getMeshLightComponent", &atcg::Entity::getComponent<atcg::MeshLightComponent>)
-                .def("getEdgeCylinderRenderComponent", &atcg::Entity::getComponent<atcg::EdgeCylinderRenderComponent>)
-                .def("getInstanceRenderComponent", &atcg::Entity::getComponent<atcg::InstanceRenderComponent>)
-                .def("getScriptComponent", &atcg::Entity::getComponent<atcg::ScriptComponent>)
-                .def("getCameraComponent", &atcg::Entity::getComponent<atcg::CameraComponent>)
-                .def("getNameComponent", &atcg::Entity::getComponent<atcg::NameComponent>)
-                .def("handle", &atcg::Entity::entity_handle);
+                .def(
+                    "addTransparencyComponent",
+                    [](atcg::Entity& entity, bool transparent)
+                    { return entity.addComponent<atcg::TransparencyComponent>(transparent); },
+                    "transparent"_a = true)
+                .def("addHomogeneousMediumComponent",
+                     [](atcg::Entity& entity) { return entity.addComponent<atcg::HomogeneousMediumComponent>(); })
+                .def(
+                    "addHomogeneousMediumComponent",
+                    [](atcg::Entity& entity, const atcg::HomogeneousMediumComponent& component)
+                    { return entity.addComponent<atcg::HomogeneousMediumComponent>(component); },
+                    "component"_a)
+                .def("addHeterogeneousMediumComponent",
+                     [](atcg::Entity& entity) { return entity.addComponent<atcg::HeterogeneousMediumComponent>(); })
+                .def(
+                    "addHeterogeneousMediumComponent",
+                    [](atcg::Entity& entity, const atcg::HeterogeneousMediumComponent& component)
+                    { return entity.addComponent<atcg::HeterogeneousMediumComponent>(component); },
+                    "component"_a)
+                .def("hasIDComponent", &atcg::Entity::hasComponent<atcg::IDComponent>)
+                .def("getIDComponent", &atcg::Entity::getComponent<atcg::IDComponent>)
+                .def("getID",
+                     [](atcg::Entity& entity) -> uint64_t
+                     {
+                         if(!entity.hasComponent<atcg::IDComponent>())
+                         {
+                             ATCG_WARN("Entity.getID: entity has no IDComponent");
+                             return 0;
+                         }
+                         return (uint64_t)entity.getComponent<atcg::IDComponent>().ID();
+                     })
+                .def("handle", &atcg::Entity::entity_handle)
+                .def("scene",
+                     [](const atcg::Entity& entity) -> atcg::ref_ptr<atcg::Scene>
+                     {
+                         atcg::Scene* scene = entity.scene();
+                         if(!scene) return nullptr;
+                         return scene->weak_from_this().lock();
+                     })
+                .def("isValid", [](const atcg::Entity& entity) { return entity.scene() != nullptr && (bool)entity; })
+                .def("__bool__", [](const atcg::Entity& entity) { return entity.scene() != nullptr && (bool)entity; })
+                .def(
+                    "__eq__",
+                    [](const atcg::Entity& self, const atcg::Entity& other) { return self == other; },
+                    py::is_operator())
+                .def("__hash__",
+                     [](const atcg::Entity& self)
+                     { return py::hash(py::make_tuple(self.entity_handle(), (uintptr_t)self.scene())); });
+
+            bindComponentAccessors<atcg::TransformComponent>(m_entity, "TransformComponent", "transform");
+            bindComponentAccessors<atcg::GeometryComponent>(m_entity, "GeometryComponent", "geometry");
+            bindComponentAccessors<atcg::MeshRenderComponent>(m_entity, "MeshRenderComponent");
+            bindComponentAccessors<atcg::PointRenderComponent>(m_entity, "PointRenderComponent");
+            bindComponentAccessors<atcg::PointSphereRenderComponent>(m_entity, "PointSphereRenderComponent");
+            bindComponentAccessors<atcg::EdgeRenderComponent>(m_entity, "EdgeRenderComponent");
+            bindComponentAccessors<atcg::EdgeCylinderRenderComponent>(m_entity, "EdgeCylinderRenderComponent");
+            bindComponentAccessors<atcg::InstanceRenderComponent>(m_entity, "InstanceRenderComponent");
+            bindComponentAccessors<atcg::PointLightComponent>(m_entity, "PointLightComponent");
+            bindComponentAccessors<atcg::CameraComponent>(m_entity, "CameraComponent");
+            bindComponentAccessors<atcg::NameComponent>(m_entity, "NameComponent");
+            bindComponentAccessors<atcg::ScriptComponent>(m_entity, "ScriptComponent");
+            bindComponentAccessors<atcg::MeshLightComponent>(m_entity, "MeshLightComponent");
+            bindComponentAccessors<atcg::TransparencyComponent>(m_entity, "TransparencyComponent");
+            bindComponentAccessors<atcg::HomogeneousMediumComponent>(m_entity, "HomogeneousMediumComponent");
+            bindComponentAccessors<atcg::HeterogeneousMediumComponent>(m_entity, "HeterogeneousMediumComponent");
 
             m_scene.def(py::init<>([]() { return atcg::make_ref<atcg::Scene>(); }))
                 .def(
@@ -197,7 +332,16 @@ void bindScene(BindingContext& ctx)
                     [](const atcg::ref_ptr<atcg::Scene>& scene, const std::string& name)
                     { return scene->createEntity(name); },
                     "name"_a = "Entity")
-                .def("getEntityByName", &atcg::Scene::getEntitiesByName, "name"_a)
+                .def(
+                    "createEntity",
+                    [](const atcg::ref_ptr<atcg::Scene>& scene,
+                       entt::entity handle,
+                       uint64_t uuid,
+                       const std::string& name) { return scene->createEntity(handle, atcg::UUID(uuid), name); },
+                    "handle"_a,
+                    "uuid"_a,
+                    "name"_a)
+                .def("getEntitiesByName", &atcg::Scene::getEntitiesByName, "name"_a)
                 .def("getEntities",
                      [](const atcg::ref_ptr<atcg::Scene>& scene)
                      {
@@ -230,9 +374,7 @@ void bindScene(BindingContext& ctx)
                     [](const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) { scene->removeEntity(entity); },
                     "entity"_a)
                 .def("removeAllEntities", &atcg::Scene::removeAllEntites)
-                .def("setCamera",
-                     [](const atcg::ref_ptr<atcg::Scene>& self, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
-                     { self->setCamera(camera); })
+                .def("setCamera", &atcg::Scene::setCamera, "camera"_a)
                 .def("getCamera", &atcg::Scene::getCamera)
                 .def("removeCamera", &atcg::Scene::removeCamera)
                 .def(
@@ -247,6 +389,7 @@ void bindScene(BindingContext& ctx)
                     "skybox"_a)
                 .def("hasSkybox", &atcg::Scene::hasSkybox)
                 .def("removeSkybox", &atcg::Scene::removeSkybox)
+                .def("getSkybox", &atcg::Scene::getSkybox)
                 .def("getSkyboxTexture", &atcg::Scene::getSkyboxTexture)
                 .def("getSkyboxCubeMap", &atcg::Scene::getSkyboxCubemap)
                 .def("getSelectedEntity", &atcg::Scene::getSelectedEntity)
@@ -256,68 +399,99 @@ void bindScene(BindingContext& ctx)
                 .def("clearSelection", &atcg::Scene::clearSelection)
                 .def("isSelected", &atcg::Scene::isSelected, "entity"_a)
                 .def("getSelectedEntities", &atcg::Scene::getSelectedEntities)
-                .def("getActiveEntity", &atcg::Scene::getActiveEntity);
+                .def("getActiveEntity", &atcg::Scene::getActiveEntity)
+                .def_static("getStaticType", &atcg::Scene::getStaticType);
 
             m_scene_renderer
-                .def("render",
-                     [](const atcg::ref_ptr<atcg::Scene>& scene,
-                        const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
-                        const atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
-                     { atcg::SceneRenderer::render(scene, camera, framebuffer); })
+                .def(
+                    "render",
+                    [](const atcg::ref_ptr<atcg::Scene>& scene,
+                       const atcg::ref_ptr<atcg::Camera>& camera,
+                       const atcg::ref_ptr<atcg::Framebuffer>& framebuffer,
+                       bool draw_cameras) { atcg::SceneRenderer::render(scene, camera, framebuffer, draw_cameras); },
+                    "scene"_a,
+                    "camera"_a,
+                    "framebuffer"_a,
+                    "draw_cameras"_a = true)
+                .def("getRenderGraph", []() { return atcg::SceneRenderer::getRenderGraph(); })
+                .def(
+                    "setRenderGraph",
+                    [](atcg::ref_ptr<atcg::RenderGraph> graph) { atcg::SceneRenderer::setRenderGraph(graph); },
+                    "graph"_a)
                 .def("setNumberMSAASamples", &atcg::SceneRenderer::setNumberMSAASamples, "samples"_a)
                 .def("setShadowPassResolution", &atcg::SceneRenderer::setShadowPassResolution, "resolution"_a)
                 .def("getNumberMSAASamples", &atcg::SceneRenderer::getNumberMSAASamples)
                 .def("getShadowPassResolution", &atcg::SceneRenderer::getShadowPassResolution);
 
-            m_hit_info.def_readonly("position", &atcg::Tracing::HitInfo::position)
+            m_hit_info.def(py::init<>())
+                .def_readonly("position", &atcg::Tracing::HitInfo::position)
                 .def_readonly("incoming_direction", &atcg::Tracing::HitInfo::incoming_direction)
                 .def_readonly("incoming_distance", &atcg::Tracing::HitInfo::incoming_distance)
+                .def_readonly("pdf", &atcg::Tracing::HitInfo::pdf)
                 .def_readonly("normal", &atcg::Tracing::HitInfo::normal)
                 .def_readonly("barys", &atcg::Tracing::HitInfo::barys)
                 .def_readonly("uv", &atcg::Tracing::HitInfo::uv)
                 .def_readonly("primitive_idx", &atcg::Tracing::HitInfo::primitive_idx)
+                .def_readonly("entity_id", &atcg::Tracing::HitInfo::entity_id)
+                .def_readonly("dx_du", &atcg::Tracing::HitInfo::dx_du)
+                .def_readonly("dx_dv", &atcg::Tracing::HitInfo::dx_dv)
                 .def("isValid", &atcg::Tracing::HitInfo::isValid)
                 .def("setInvalid", &atcg::Tracing::HitInfo::setInvalid)
                 .def("isFinite", &atcg::Tracing::HitInfo::isFinite)
                 .def("setInfinite", &atcg::Tracing::HitInfo::setInfinite);
 
-            m.def("prepareAccelerationStructure", &atcg::Tracing::prepareAccelerationStructure);
-            m.def("traceRay", atcg::Tracing::traceRay);
-            m.def("traceRay",
-                  [](atcg::Entity entity,
-                     py::array_t<float> ray_origins,
-                     py::array_t<float> ray_dirs,
-                     float t_min,
-                     float t_max)
-                  {
-                      py::buffer_info origin_info = ray_origins.request();
-                      py::buffer_info dir_info    = ray_dirs.request();
+            m.def("prepareAccelerationStructure", &atcg::Tracing::prepareAccelerationStructure, "entity"_a);
+            m.def("traceRay", &atcg::Tracing::traceRay, "entity"_a, "ray_origin"_a, "ray_dir"_a, "t_min"_a, "t_max"_a);
+            m.def(
+                "traceRay",
+                [](atcg::Entity entity,
+                   py::array_t<float, py::array::c_style | py::array::forcecast> ray_origins,
+                   py::array_t<float, py::array::c_style | py::array::forcecast> ray_dirs,
+                   float t_min,
+                   float t_max)
+                {
+                    py::buffer_info origin_info = ray_origins.request();
+                    py::buffer_info dir_info    = ray_dirs.request();
 
-                      auto result_hit      = py::array_t<bool>(origin_info.shape[0]);
-                      bool* result_hit_ptr = (bool*)result_hit.request().ptr;
+                    if(origin_info.ndim != 2 || origin_info.shape[1] != 3 || dir_info.ndim != 2 ||
+                       dir_info.shape[1] != 3 || origin_info.shape[0] != dir_info.shape[0])
+                    {
+                        ATCG_ERROR("traceRay: ray_origins and ray_dirs must both have the shape (N, 3)");
+                        return std::make_tuple(py::array_t<bool>(py::ssize_t {0}),
+                                               py::array_t<float>(std::vector<py::ssize_t> {0, 3}),
+                                               py::array_t<uint32_t>(py::ssize_t {0}));
+                    }
 
-                      auto result_p           = py::array_t<float>(origin_info.size);
-                      glm::vec3* result_p_ptr = (glm::vec3*)result_p.request().ptr;
+                    py::ssize_t num_rays = origin_info.shape[0];
 
-                      auto result_idx          = py::array_t<uint32_t>(origin_info.shape[0]);
-                      uint32_t* result_idx_ptr = (uint32_t*)result_idx.request().ptr;
+                    auto result_hit      = py::array_t<bool>(num_rays);
+                    bool* result_hit_ptr = (bool*)result_hit.request().ptr;
 
-                      uint32_t num_rays = origin_info.shape[0];
+                    auto result_p           = py::array_t<float>(std::vector<py::ssize_t> {num_rays, 3});
+                    glm::vec3* result_p_ptr = (glm::vec3*)result_p.request().ptr;
 
-                      for(int i = 0; i < num_rays; ++i)
-                      {
-                          glm::vec3 o = *((glm::vec3*)origin_info.ptr + i);
-                          glm::vec3 d = *((glm::vec3*)dir_info.ptr + i);
+                    auto result_idx          = py::array_t<uint32_t>(num_rays);
+                    uint32_t* result_idx_ptr = (uint32_t*)result_idx.request().ptr;
 
-                          auto info = atcg::Tracing::traceRay(entity, o, d, t_min, t_max);
+                    const glm::vec3* origins    = (const glm::vec3*)origin_info.ptr;
+                    const glm::vec3* directions = (const glm::vec3*)dir_info.ptr;
 
-                          result_hit_ptr[i] = info.isValid();
-                          result_p_ptr[i]   = info.position;
-                          result_idx_ptr[i] = info.primitive_idx;
-                      }
+                    for(py::ssize_t i = 0; i < num_rays; ++i)
+                    {
+                        auto info = atcg::Tracing::traceRay(entity, origins[i], directions[i], t_min, t_max);
 
-                      return std::make_tuple(result_hit, result_p, result_idx);
-                  });
+                        result_hit_ptr[i] = info.isValid();
+                        result_p_ptr[i]   = info.position;
+                        result_idx_ptr[i] = info.primitive_idx;
+                    }
+
+                    return std::make_tuple(result_hit, result_p, result_idx);
+                },
+                "entity"_a,
+                "ray_origins"_a,
+                "ray_dirs"_a,
+                "t_min"_a,
+                "t_max"_a);
 
             m_clipboard.def("copyEntities", &atcg::Clipboard::copyEntities, "entities"_a)
                 .def("pasteEntities", &atcg::Clipboard::pasteEntities, "scene"_a)
@@ -326,6 +500,133 @@ void bindScene(BindingContext& ctx)
                 .def("hasEntities", &atcg::Clipboard::hasEntities)
                 .def("hasAsset", &atcg::Clipboard::hasAsset)
                 .def("clear", &atcg::Clipboard::clear);
+
+            // Revisions
+            m_revision.def("apply", &atcg::Revision::apply)
+                .def("rollback", &atcg::Revision::rollback)
+                .def("record_start_state", &atcg::Revision::record_start_state)
+                .def("record_end_state", &atcg::Revision::record_end_state);
+
+            m_composite_revision.def(py::init<>())
+                .def(
+                    "add",
+                    [](atcg::CompositeRevision& self, const atcg::ref_ptr<atcg::Revision>& revision)
+                    {
+                        if(!revision)
+                        {
+                            ATCG_WARN("CompositeRevision.add: revision is None");
+                            return;
+                        }
+                        self.add(revision);
+                    },
+                    "revision"_a)
+                .def("empty", &atcg::CompositeRevision::empty);
+
+            m_entity_added_revision.def(py::init<const atcg::ref_ptr<atcg::Scene>&, atcg::Entity>(),
+                                        "scene"_a,
+                                        "entity"_a);
+            m_entity_removed_revision.def(py::init<const atcg::ref_ptr<atcg::Scene>&, atcg::Entity>(),
+                                          "scene"_a,
+                                          "entity"_a);
+            m_asset_added_revision.def(py::init<atcg::AssetHandle>(), "handle"_a);
+            m_asset_removed_revision.def(py::init<atcg::AssetHandle>(), "handle"_a);
+            m_asset_edited_revision.def(py::init<atcg::AssetHandle>(), "handle"_a);
+
+            // Revision stack
+            m_revision_stack
+                .def(
+                    "startRecording",
+                    [](const atcg::ref_ptr<atcg::Revision>& revision)
+                    {
+                        if(!revision)
+                        {
+                            ATCG_WARN("RevisionStack.startRecording: revision is None");
+                            return;
+                        }
+                        if(atcg::RevisionStack::isRecording())
+                        {
+                            ATCG_WARN("RevisionStack.startRecording: a revision is already being recorded");
+                            return;
+                        }
+                        atcg::RevisionStack::startRecording(revision);
+                    },
+                    "revision"_a)
+                .def("endRecording",
+                     []()
+                     {
+                         if(!atcg::RevisionStack::isRecording())
+                         {
+                             ATCG_WARN("RevisionStack.endRecording: no revision is being recorded");
+                             return;
+                         }
+                         atcg::RevisionStack::endRecording();
+                     })
+                .def("apply", &atcg::RevisionStack::apply)
+                .def("rollback", &atcg::RevisionStack::rollback)
+                .def("numUndos", &atcg::RevisionStack::numUndos)
+                .def("numRedos", &atcg::RevisionStack::numRedos)
+                .def("isRecording", &atcg::RevisionStack::isRecording)
+                .def("totalRevisions", &atcg::RevisionStack::totalRevisions)
+                .def("clearCache",
+                     []()
+                     {
+                         if(atcg::RevisionStack::isRecording())
+                         {
+                             ATCG_WARN("RevisionStack.clearCache: can't clear the cache while recording");
+                             return;
+                         }
+                         atcg::RevisionStack::clearChache();
+                     })
+                .def(
+                    "createComponentAddedRevision",
+                    [](const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity, const py::object& component_type)
+                    { return createComponentRevision<atcg::ComponentAddedRevision>(component_type, scene, {entity}); },
+                    "scene"_a,
+                    "entity"_a,
+                    "component_type"_a)
+                .def(
+                    "createComponentAddedRevision",
+                    [](const atcg::ref_ptr<atcg::Scene>& scene,
+                       const std::vector<atcg::Entity>& entities,
+                       const py::object& component_type)
+                    { return createComponentRevision<atcg::ComponentAddedRevision>(component_type, scene, entities); },
+                    "scene"_a,
+                    "entities"_a,
+                    "component_type"_a)
+                .def(
+                    "createComponentRemovedRevision",
+                    [](const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity, const py::object& component_type) {
+                        return createComponentRevision<atcg::ComponentRemovedRevision>(component_type, scene, {entity});
+                    },
+                    "scene"_a,
+                    "entity"_a,
+                    "component_type"_a)
+                .def(
+                    "createComponentRemovedRevision",
+                    [](const atcg::ref_ptr<atcg::Scene>& scene,
+                       const std::vector<atcg::Entity>& entities,
+                       const py::object& component_type) {
+                        return createComponentRevision<atcg::ComponentRemovedRevision>(component_type, scene, entities);
+                    },
+                    "scene"_a,
+                    "entities"_a,
+                    "component_type"_a)
+                .def(
+                    "createComponentEditedRevision",
+                    [](const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity, const py::object& component_type)
+                    { return createComponentRevision<atcg::ComponentEditedRevision>(component_type, scene, {entity}); },
+                    "scene"_a,
+                    "entity"_a,
+                    "component_type"_a)
+                .def(
+                    "createComponentEditedRevision",
+                    [](const atcg::ref_ptr<atcg::Scene>& scene,
+                       const std::vector<atcg::Entity>& entities,
+                       const py::object& component_type)
+                    { return createComponentRevision<atcg::ComponentEditedRevision>(component_type, scene, entities); },
+                    "scene"_a,
+                    "entities"_a,
+                    "component_type"_a);
         });
 }
 }    // namespace python

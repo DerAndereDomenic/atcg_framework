@@ -20,6 +20,10 @@ void bindGUI(BindingContext& ctx)
 #ifdef ATCG_CUDA_BACKEND
     auto m_integrator_panel = py::class_<atcg::GUI::IntegratorPanel>(m, "IntegratorPanel");
 #endif
+#ifndef ATCG_HEADLESS
+    // PluginPanel has no headless implementation
+    auto m_plugin_panel = py::class_<atcg::GUI::PluginPanel>(m, "PluginPanel");
+#endif
 
     ctx.define(
         [=]() mutable
@@ -51,10 +55,13 @@ void bindGUI(BindingContext& ctx)
                     },
                     "show_window"_a);
 
-            m_scene_hierarchy_panel.def(py::init<>())
-                .def(py::init<>())
-                .def("renderPanel", &atcg::GUI::SceneHierarchyPanel::renderPanel)
+            m_scene_hierarchy_panel.def(py::init<const std::string&>(), "uuid"_a = "Main")
+                .def("renderPanel", &atcg::GUI::SceneHierarchyPanel::renderPanel, "scene"_a)
                 .def("setEntitySelectionActive", &atcg::GUI::SceneHierarchyPanel::setEntitySelectionActive, "active"_a);
+
+#ifndef ATCG_HEADLESS
+            m_plugin_panel.def(py::init<>()).def("renderPanel", &atcg::GUI::PluginPanel::renderPanel);
+#endif
 
 #ifdef ATCG_CUDA_BACKEND
             m_integrator_panel.def(py::init<>())
