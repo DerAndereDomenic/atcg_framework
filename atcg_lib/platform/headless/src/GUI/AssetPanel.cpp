@@ -26,8 +26,6 @@ void AssetPanel::drawAssetList() {}
 
 void AssetPanel::drawAdd() {}
 
-void AssetPanel::pasteAsset() {}
-
 void AssetPanel::drawAssetPanel() {}
 
 void AssetPanel::drawAssetEditor() {}
