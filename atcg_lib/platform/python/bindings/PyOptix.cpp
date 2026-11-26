@@ -3,6 +3,10 @@
 #ifdef ATCG_CUDA_BACKEND
 
     #include <BSDF/BSDFRegistry.h>
+    #include <Medium/Medium.h>
+    #include <Medium/PhaseFunction.h>
+    #include <Scene/OptixScene.h>
+    #include <Shape/ShapeSampler.h>
 
 using namespace pybind11::literals;
 
@@ -104,6 +108,42 @@ void bindOptix(BindingContext& ctx)
     auto m_bsdf_registry       = m.def_submodule("BSDFRegistry");
     auto m_integrator_controller =
         py::class_<atcg::IntegratorController, atcg::ref_ptr<atcg::IntegratorController>>(m, "IntegratorController");
+
+    // Optix components
+    auto m_bsdf_component_type = py::enum_<atcg::BSDFComponentType>(m, "BSDFComponentType", py::arithmetic());
+    auto m_emitter_flags       = py::enum_<atcg::EmitterFlags>(m, "EmitterFlags", py::arithmetic());
+
+    auto m_optix_component = py::class_<atcg::OptixComponent, atcg::ref_ptr<atcg::OptixComponent>>(m, "OptixComponent");
+    auto m_bsdf            = py::class_<atcg::BSDF, atcg::OptixComponent, atcg::ref_ptr<atcg::BSDF>>(m, "BSDF");
+    auto m_emitter = py::class_<atcg::Emitter, atcg::OptixComponent, atcg::ref_ptr<atcg::Emitter>>(m, "Emitter");
+    auto m_environment_emitter =
+        py::class_<atcg::EnvironmentEmitter, atcg::Emitter, atcg::ref_ptr<atcg::EnvironmentEmitter>>(m,
+                                                                                                     "EnvironmentEmitt"
+                                                                                                     "er");
+    auto m_medium = py::class_<atcg::Medium, atcg::OptixComponent, atcg::ref_ptr<atcg::Medium>>(m, "Medium");
+    auto m_phase_function =
+        py::class_<atcg::PhaseFunction, atcg::OptixComponent, atcg::ref_ptr<atcg::PhaseFunction>>(m, "PhaseFunction");
+    auto m_shape = py::class_<atcg::Shape, atcg::OptixComponent, atcg::ref_ptr<atcg::Shape>>(m, "Shape");
+    auto m_shape_sampler =
+        py::class_<atcg::ShapeSampler, atcg::OptixComponent, atcg::ref_ptr<atcg::ShapeSampler>>(m, "ShapeSampler");
+    auto m_shape_instance =
+        py::class_<atcg::ShapeInstance, atcg::OptixComponent, atcg::ref_ptr<atcg::ShapeInstance>>(m, "ShapeInstance");
+    auto m_film   = py::class_<atcg::Film, atcg::OptixComponent, atcg::ref_ptr<atcg::Film>>(m, "Film");
+    auto m_sensor = py::class_<atcg::Sensor, atcg::OptixComponent, atcg::ref_ptr<atcg::Sensor>>(m, "Sensor");
+    auto m_ias =
+        py::class_<atcg::InstanceAccelerationStructure, atcg::ref_ptr<atcg::InstanceAccelerationStructure>>(m,
+                                                                                                            "InstanceAc"
+                                                                                                            "celeration"
+                                                                                                            "Structur"
+                                                                                                            "e");
+
+    // Optix scene and the components of its entities
+    auto m_optix_scene    = py::class_<atcg::OptixScene, atcg::Scene, atcg::ref_ptr<atcg::OptixScene>>(m, "OptixScene");
+    auto m_bsdf_component = py::class_<atcg::BSDFComponent>(m, "BSDFComponent");
+    auto m_emitter_component        = py::class_<atcg::EmitterComponent>(m, "EmitterComponent");
+    auto m_medium_component         = py::class_<atcg::MediumComponent>(m, "MediumComponent");
+    auto m_phase_function_component = py::class_<atcg::PhaseFunctionComponent>(m, "PhaseFunctionComponent");
+    auto m_shape_component          = py::class_<atcg::ShapeComponent>(m, "ShapeComponent");
 
     ctx.define(
         [=]() mutable
@@ -290,6 +330,72 @@ void bindOptix(BindingContext& ctx)
                 .def("render", &atcg::IntegratorController::render, "scene"_a, "target"_a)
                 .def("getOutputTexture", &atcg::IntegratorController::getOutputTexture)
                 .def("getOutputEntityTexture", &atcg::IntegratorController::getOutputEntityTexture);
+
+            // Optix components
+            m_bsdf_component_type.value("None", atcg::BSDFComponentType::None)
+                .value("IdealReflection", atcg::BSDFComponentType::IdealReflection)
+                .value("GlossyReflection", atcg::BSDFComponentType::GlossyReflection)
+                .value("DiffuseReflection", atcg::BSDFComponentType::DiffuseReflection)
+                .value("IdealTransmission", atcg::BSDFComponentType::IdealTransmission)
+                .value("GlossyTransmission", atcg::BSDFComponentType::GlossyTransmission)
+                .value("DiffuseTransmission", atcg::BSDFComponentType::DiffuseTransmission)
+                .value("NullTransmission", atcg::BSDFComponentType::NullTransmission)
+                .value("AnyDelta", atcg::BSDFComponentType::AnyDelta)
+                .value("AnyReflection", atcg::BSDFComponentType::AnyReflection)
+                .value("AnyTransmission", atcg::BSDFComponentType::AnyTransmission)
+                .value("Any", atcg::BSDFComponentType::Any);
+
+            m_emitter_flags.value("None", atcg::EmitterFlags::None)
+                .value("DistantEmitter", atcg::EmitterFlags::DistantEmitter)
+                .value("InfinitesimalSize", atcg::EmitterFlags::InfinitesimalSize);
+
+            m_optix_component.def("isInitialized", &atcg::OptixComponent::isInitialized);
+    #ifndef ATCG_HEADLESS
+            m_optix_component.def("onImGuiRender", &atcg::OptixComponent::onImGuiRender);
+    #endif
+
+
+            m_bsdf.def("flags", &atcg::BSDF::flags);
+
+            m_emitter.def("flags", &atcg::Emitter::flags);
+
+            m_medium.def("getPhaseFunction", &atcg::Medium::getPhaseFunction);
+
+            m_shape.def("getShapeType", &atcg::Shape::getShapeType);
+
+            m_shape_instance.def("getShape", &atcg::ShapeInstance::getShape)
+                .def("getBSDF", &atcg::ShapeInstance::getBSDF)
+                .def("getEmitter", &atcg::ShapeInstance::getEmitter)
+                .def("getInsideMedium", &atcg::ShapeInstance::getInsideMedium)
+                .def("getOutsideMedium", &atcg::ShapeInstance::getOutsideMedium)
+                .def("getSampler", &atcg::ShapeInstance::getSampler)
+                .def("getTransform", &atcg::ShapeInstance::getTransform)
+                .def("entity_id", &atcg::ShapeInstance::entity_id)
+                .def("color", &atcg::ShapeInstance::color);
+
+            m_film.def("getWidth", &atcg::Film::getWidth)
+                .def("getHeight", &atcg::Film::getHeight)
+                .def("resize", &atcg::Film::resize, "width"_a, "height"_a)
+                .def("develop", &atcg::Film::develop)
+                .def("clear", &atcg::Film::clear);
+
+            m_sensor.def("getFilm", &atcg::Sensor::getFilm)
+                .def("getCamera", &atcg::Sensor::getCamera)
+                .def("markDirty", &atcg::Sensor::markDirty);
+
+            // Optix scene and the components of its entities
+            m_optix_scene.def("getShapes", &atcg::OptixScene::getShapes)
+                .def("getEmitter", &atcg::OptixScene::getEmitter)
+                .def("getEnvironmentEmitter", &atcg::OptixScene::getEnvironmentEmitter)
+                .def("getIAS", &atcg::OptixScene::getIAS)
+                .def("getSensor", &atcg::OptixScene::getSensor)
+                .def("setSensor", &atcg::OptixScene::setSensor, "sensor"_a);
+
+            m_bsdf_component.def_readonly("bsdf", &atcg::BSDFComponent::bsdf);
+            m_emitter_component.def_readonly("emitter", &atcg::EmitterComponent::emitter);
+            m_medium_component.def_readonly("medium", &atcg::MediumComponent::medium);
+            m_phase_function_component.def_readonly("phase_function", &atcg::PhaseFunctionComponent::phase_function);
+            m_shape_component.def_readonly("shape", &atcg::ShapeComponent::shape);
         });
 }
 }    // namespace python

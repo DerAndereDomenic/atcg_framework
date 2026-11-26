@@ -104,6 +104,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - materials: `MaterialRegistry` functions
   - scene: `TransparencyComponent`, the medium components, `IDComponent` and `Entity.getID`, `remove*Component`, and undo/redo through `RevisionStack`
   - path tracing (CUDA): integrator settings, registry type listings and `BSDFRegistry`
+  - optix components (CUDA): `OptixComponent`, `BSDF`, `Emitter`, `EnvironmentEmitter`, `Medium`, `PhaseFunction`, `Shape`, `ShapeSampler`, `ShapeInstance`, `Film`, `Sensor`, `InstanceAccelerationStructure` and the `BSDFComponentType`/`EmitterFlags` enums
+  - optix scene (CUDA): `OptixScene` and its entity components (`BSDFComponent`, `EmitterComponent`, `MediumComponent`, `PhaseFunctionComponent`, `ShapeComponent`) with `Entity.has*Component`/`get*Component`
   - GUI: `PluginPanel`, `ImGuiLayer`, and the asset selection and drag & drop helpers
   - scripting: the `ScriptBase`/`ScriptEngineBase` base classes
   - many missing methods, fields and default arguments of already bound classes

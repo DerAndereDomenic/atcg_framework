@@ -1,5 +1,13 @@
 #include "Bindings.h"
 
+#ifdef ATCG_CUDA_BACKEND
+    #include <BSDF/BSDF.h>
+    #include <Emitter/Emitter.h>
+    #include <Medium/Medium.h>
+    #include <Medium/PhaseFunction.h>
+    #include <Shape/Shape.h>
+#endif
+
 using namespace pybind11::literals;
 
 namespace atcg
@@ -325,6 +333,20 @@ void bindScene(BindingContext& ctx)
             bindComponentAccessors<atcg::TransparencyComponent>(m_entity, "TransparencyComponent");
             bindComponentAccessors<atcg::HomogeneousMediumComponent>(m_entity, "HomogeneousMediumComponent");
             bindComponentAccessors<atcg::HeterogeneousMediumComponent>(m_entity, "HeterogeneousMediumComponent");
+
+#ifdef ATCG_CUDA_BACKEND
+            // Components of the entities of an OptixScene. The python types are declared in bindOptix.
+            m_entity.def("hasBSDFComponent", &atcg::Entity::hasComponent<atcg::BSDFComponent>)
+                .def("getBSDFComponent", &atcg::Entity::getComponent<atcg::BSDFComponent>)
+                .def("hasEmitterComponent", &atcg::Entity::hasComponent<atcg::EmitterComponent>)
+                .def("getEmitterComponent", &atcg::Entity::getComponent<atcg::EmitterComponent>)
+                .def("hasMediumComponent", &atcg::Entity::hasComponent<atcg::MediumComponent>)
+                .def("getMediumComponent", &atcg::Entity::getComponent<atcg::MediumComponent>)
+                .def("hasPhaseFunctionComponent", &atcg::Entity::hasComponent<atcg::PhaseFunctionComponent>)
+                .def("getPhaseFunctionComponent", &atcg::Entity::getComponent<atcg::PhaseFunctionComponent>)
+                .def("hasShapeComponent", &atcg::Entity::hasComponent<atcg::ShapeComponent>)
+                .def("getShapeComponent", &atcg::Entity::getComponent<atcg::ShapeComponent>);
+#endif
 
             m_scene.def(py::init<>([]() { return atcg::make_ref<atcg::Scene>(); }))
                 .def(
