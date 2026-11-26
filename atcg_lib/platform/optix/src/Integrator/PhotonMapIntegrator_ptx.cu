@@ -14,6 +14,7 @@
 #include <BSDF/BSDFFunctions.h>
 
 #include <cuBQL/traversal/fixedRadiusQuery.h>
+#include <Core/GlobalAtomicAdd.h>
 
 extern "C"
 {
@@ -95,7 +96,7 @@ extern "C" __global__ void __raygen__sample_photons()
 
         if(!atcg::hasBSDFFlag(si.bsdf->flags, atcg::BSDFComponentType::AnyDelta))
         {
-            int photon_index = atomicAdd(params.photon_index, 1);
+            int photon_index = atcg::globalAtomicAdd(params.photon_index, 1);
 
             if(photon_index >= params.max_num_photons)
             {

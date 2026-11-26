@@ -1,5 +1,7 @@
 #include <cuda_fp16.h>
 
+#include <Core/GlobalAtomicAdd.h>
+
 namespace atcg
 {
 
@@ -150,14 +152,14 @@ ATCG_DEVICE glm::vec3 DeviceHashGrid<T, L, F>::backward(const glm::vec3& positio
 
             if constexpr(accumulate)
             {
-                atomicAdd(&layer_grads[hash000 * F + f], dc000);
-                atomicAdd(&layer_grads[hash001 * F + f], dc001);
-                atomicAdd(&layer_grads[hash010 * F + f], dc010);
-                atomicAdd(&layer_grads[hash011 * F + f], dc011);
-                atomicAdd(&layer_grads[hash100 * F + f], dc100);
-                atomicAdd(&layer_grads[hash101 * F + f], dc101);
-                atomicAdd(&layer_grads[hash110 * F + f], dc110);
-                atomicAdd(&layer_grads[hash111 * F + f], dc111);
+                atcg::globalAtomicAdd(&layer_grads[hash000 * F + f], dc000);
+                atcg::globalAtomicAdd(&layer_grads[hash001 * F + f], dc001);
+                atcg::globalAtomicAdd(&layer_grads[hash010 * F + f], dc010);
+                atcg::globalAtomicAdd(&layer_grads[hash011 * F + f], dc011);
+                atcg::globalAtomicAdd(&layer_grads[hash100 * F + f], dc100);
+                atcg::globalAtomicAdd(&layer_grads[hash101 * F + f], dc101);
+                atcg::globalAtomicAdd(&layer_grads[hash110 * F + f], dc110);
+                atcg::globalAtomicAdd(&layer_grads[hash111 * F + f], dc111);
             }
 
 
