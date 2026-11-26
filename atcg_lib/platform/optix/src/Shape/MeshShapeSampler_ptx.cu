@@ -11,6 +11,26 @@
 #include <DataStructure/Frame.h>
 #include <BSDF/Sampling.h>
 
+namespace detail
+{
+// Returns the uv coordinates of the point (1 - t) * edge.x + t * edge.y as seen from the given face. faces_3d and
+// faces_uv are parallel index buffers, so the uv index of a vertex is found through its corner within the face.
+ATCG_DEVICE ATCG_INLINE glm::vec3
+interpolateEdgeUV(const atcg::MeshSamplerData* data, const int32_t face, const glm::u32vec2& edge, const float t)
+{
+    glm::u32vec3 face_vertex_indices = data->faces_3d[face];
+    glm::u32vec3 face_uv_indices     = data->faces_uv[face];
+
+    uint32_t uv_index_0 = face_vertex_indices.x == edge.x   ? face_uv_indices.x
+                          : face_vertex_indices.y == edge.x ? face_uv_indices.y
+                                                            : face_uv_indices.z;
+    uint32_t uv_index_1 = face_vertex_indices.x == edge.y   ? face_uv_indices.x
+                          : face_vertex_indices.y == edge.y ? face_uv_indices.y
+                                                            : face_uv_indices.z;
+
+    return (1.0f - t) * data->uvs[uv_index_0] + t * data->uvs[uv_index_1];
+}
+}    // namespace detail
 
 extern "C" __device__ atcg::ShapeSampleResult __direct_callable__sample_point_mesh(atcg::PCG32& rng)
 {
@@ -133,6 +153,7 @@ extern "C" __device__ atcg::EdgeSampleResult __direct_callable__sample_edge_mesh
 
         glm::vec3 local_normal = glm::cross(p1 - p0, p2 - p0);
         result.normal_left     = glm::normalize(glm::transpose(glm::mat3(sbt_data->world_to_local)) * local_normal);
+        result.uvs_left        = detail::interpolateEdgeUV(sbt_data, face_indices.x, vertex_indices, edge_barys);
     }
 
     if(face_indices.y != -1)
@@ -146,6 +167,7 @@ extern "C" __device__ atcg::EdgeSampleResult __direct_callable__sample_edge_mesh
 
         glm::vec3 local_normal = glm::cross(p1 - p0, p2 - p0);
         result.normal_right    = glm::normalize(glm::transpose(glm::mat3(sbt_data->world_to_local)) * local_normal);
+        result.uvs_right       = detail::interpolateEdgeUV(sbt_data, face_indices.y, vertex_indices, edge_barys);
     }
 
     // Assemble sampling result

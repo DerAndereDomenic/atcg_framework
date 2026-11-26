@@ -15,6 +15,10 @@ atcg::ref_ptr<Project> Project::create(const std::filesystem::path& path)
     s_active_project->_project_path         = path;
     s_active_project->_asset_pack_directory = path / "AssetPack.json";
 
+#ifdef ATCG_CUDA_BACKEND
+    s_active_project->_integrator_settings = atcg::IntegratorRegistry::createIntegratorSettings("VolPathtracing");
+#endif
+
     return s_active_project;
 }
 

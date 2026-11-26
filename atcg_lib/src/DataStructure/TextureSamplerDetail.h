@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Core/GlobalAtomicAdd.h>
+
 namespace atcg
 {
 
@@ -456,11 +458,11 @@ ATCG_INLINE ATCG_DEVICE void TexelUpdater<TexelWriteMode::ATOMIC_ADD>::operator(
 #ifdef __CUDA_ARCH__
     if constexpr(std::is_integral_v<T>)
     {
-        atomicAdd((int*)data, (int)val);    // TODO?
+        atcg::globalAtomicAdd((int*)data, (int)val);    // TODO?
     }
     else if constexpr(std::is_floating_point_v<T>)
     {
-        atomicAdd((float*)data, (float)val);
+        atcg::globalAtomicAdd((float*)data, (float)val);
     }
     else
     {

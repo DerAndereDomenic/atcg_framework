@@ -91,6 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added copy & paste of entities (hierarchy and viewport) and assets (asset panel) with Ctrl+C / Ctrl+V and context menus, based on a new `Clipboard` system
 - Key presses with Ctrl held (shortcuts) are no longer blocked by focused ImGui windows, unless text is typed
 - Added `ComponentCopier` to define how components are copied, e.g. to give copies their own camera, instance buffers or script behavior
+- Edge samples of mesh shape samplers now return the uv coordinates of the sample in both adjacent faces (`uvs_left`, `uvs_right`)
 
 ### Changed
 

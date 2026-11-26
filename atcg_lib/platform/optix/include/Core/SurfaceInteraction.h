@@ -42,6 +42,8 @@ struct SurfaceInteraction : public Interaction
     glm::vec3 color;
     glm::vec2 barys;
     glm::vec2 uv;
+    glm::vec3 dx_du;
+    glm::vec3 dx_dv;
     uint32_t primitive_idx;
     uint32_t entity_id;
 
