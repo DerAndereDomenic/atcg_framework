@@ -92,6 +92,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Key presses with Ctrl held (shortcuts) are no longer blocked by focused ImGui windows, unless text is typed
 - Added `ComponentCopier` to define how components are copied, e.g. to give copies their own camera, instance buffers or script behavior
 - Edge samples of mesh shape samplers now return the uv coordinates of the sample in both adjacent faces (`uvs_left`, `uvs_right`)
+- Added python bindings for:
+  - core: `Window`, `Input` and key codes, a `Log` submodule, path functions, `EventType`/`EventCategory`, `FileDroppedEvent`, and the remaining `Application`/`Layer` methods
+  - math: buffer protocol, operators and indexing for the glm types
+  - assets: `AssetHandle` int conversion, the asset registry, standard assets, `AssetImporter`/`AssetExporter`
+  - cameras: `Camera`, `OrthographicCamera`, `CameraController`, `FocusedController`, `CameraUtils`
+  - data structures: `BoundingBox`, `GraphType`, and GPU JPEG encoder/decoder (CUDA)
+  - textures: `Texture`, `Texture3D`, `TextureArray`, `TextureCubeArray`, `Texture2DMultiSample`, `Skybox`
+  - raw drawing: `VertexArray`, `IndexBuffer`, `FramebufferSpecification` and the `GraphicsCommand` draw functions
+  - render graph: `RenderGraph`, `RenderPass`, `RenderPassRegistry`
+  - materials: `MaterialRegistry` functions
+  - scene: `TransparencyComponent`, the medium components, `IDComponent` and `Entity.getID`, `remove*Component`, and undo/redo through `RevisionStack`
+  - path tracing (CUDA): integrator settings, registry type listings and `BSDFRegistry`
+  - GUI: `PluginPanel`, `ImGuiLayer`, and the asset selection and drag & drop helpers
+  - scripting: the `ScriptBase`/`ScriptEngineBase` base classes
+  - many missing methods, fields and default arguments of already bound classes
 
 ### Changed
 
@@ -186,6 +201,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The python build writes its binaries into its own build directory
 - Replaced the unused `UnionRevision` with `CompositeRevision`
 - The asset editor keeps the selected asset open when entities are selected. Selected assets and entities have a gray background in the asset panel and scene hierarchy, and the most recent selection is outlined
+- Python bindings: renamed `WindowProps.tile` to `title`, `Timer.ellapsedMillis`/`ellapsedSeconds` to `elapsedMillis`/`elapsedSeconds`, `BufferElement.getStgetComponentCountride` to `getComponentCount` and `Scene.getEntityByName` to `getEntitiesByName`. The `KeyPressedEvent` argument `key_pressed` is now `is_repeat`. The old names are removed
+- Python bindings: functions taking a camera accept any `Camera`, `mat3()`/`mat4()` create identity matrices, and `Script`/`ScriptEngine` derive from `ScriptBase`/`ScriptEngineBase`
 
 ### Fixed
 
@@ -216,6 +233,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed redo of `ComponentEditedRevision` on entities that no longer have the component
 - Fixed redo of `EntityAddedRevision`, which recreated the entity without its components
 - Fixed the component registry not being registered as a system in builds without the CUDA backend
+- Fixed python bindings that could not be called or misbehaved:
+  - functions taking file paths
+  - `Texture` and `Camera` arguments
+  - `Graph.unmapFacePointer`
+  - `Framebuffer.currentFramebuffer`
+  - `ivec3.numpy`
+  - `Texture2D.__setitem__`
+  - `TextureSpecification` argument order
+  - `traceRay` output shape
+  - `Entity.addNameComponent` on existing names
+- Fixed unsafe python bindings:
+  - `ImGui.Text` with `%` in the text
+  - out-of-bounds reads in `ImGui.plot`, the `Network` read/write helpers and the glm array constructors
+  - `Network` calls holding the GIL while blocking
 
 ## [0.2.1-beta]
 
