@@ -77,9 +77,11 @@ private:
     torch::Tensor _normals;
     torch::Tensor _colors;
     torch::Tensor _uvs;
+    torch::Tensor _tangents;
     torch::Tensor _faces_3d;
     torch::Tensor _faces_uv;
     torch::Tensor _faces_normals;
+    torch::Tensor _faces_tangents;
     torch::Tensor _faces_color;
     torch::Tensor _edges;
     torch::Tensor _edge_faces;

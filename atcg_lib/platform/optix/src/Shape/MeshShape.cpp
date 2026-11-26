@@ -35,25 +35,33 @@ MeshShape::MeshShape(const Dictionary& dict)
     auto colors    = mesh->getDeviceColors().clone();
     auto uvs       = mesh->getDeviceUVs().clone();
     auto faces     = mesh->getDeviceFaces().clone();
+    auto tangents  = mesh->getDeviceTangents().clone();
 
-    std::tie(_positions, _faces_3d)    = detail::makeIndexedAttribute(positions, faces);
-    std::tie(_normals, _faces_normals) = detail::makeIndexedAttribute(normals, faces);
-    std::tie(_colors, _faces_color)    = detail::makeIndexedAttribute(colors, faces);
-    std::tie(_uvs, _faces_uv)          = detail::makeIndexedAttribute(uvs, faces);
+    std::tie(_positions, _faces_3d)      = detail::makeIndexedAttribute(positions, faces);
+    std::tie(_normals, _faces_normals)   = detail::makeIndexedAttribute(normals, faces);
+    std::tie(_colors, _faces_color)      = detail::makeIndexedAttribute(colors, faces);
+    std::tie(_uvs, _faces_uv)            = detail::makeIndexedAttribute(uvs, faces);
+    std::tie(_tangents, _faces_tangents) = detail::makeIndexedAttribute(tangents, faces);
+
+    auto tangent_norms = torch::norm(_tangents, 2, 1);
+
+    bool has_tangents = torch::all(tangent_norms > 1e-5f).item<bool>();
 
     std::tie(_edges, _edge_faces) = computeMeshEdges(_faces_3d);
 
     mesh->unmapAllPointers();
 
     MeshShapeData data;
-    data.positions     = (glm::vec3*)_positions.data_ptr();
-    data.normals       = (glm::vec3*)_normals.data_ptr();
-    data.colors        = (glm::vec3*)_colors.data_ptr();
-    data.uvs           = (glm::vec3*)_uvs.data_ptr();
-    data.faces_3d      = (glm::u32vec3*)_faces_3d.data_ptr();
-    data.faces_uv      = (glm::u32vec3*)_faces_uv.data_ptr();
-    data.faces_normals = (glm::u32vec3*)_faces_normals.data_ptr();
-    data.faces_color   = (glm::u32vec3*)_faces_color.data_ptr();
+    data.positions      = (glm::vec3*)_positions.data_ptr();
+    data.normals        = (glm::vec3*)_normals.data_ptr();
+    data.colors         = (glm::vec3*)_colors.data_ptr();
+    data.uvs            = (glm::vec3*)_uvs.data_ptr();
+    data.tangents       = has_tangents ? (glm::vec3*)_tangents.data_ptr() : nullptr;
+    data.faces_3d       = (glm::u32vec3*)_faces_3d.data_ptr();
+    data.faces_uv       = (glm::u32vec3*)_faces_uv.data_ptr();
+    data.faces_normals  = (glm::u32vec3*)_faces_normals.data_ptr();
+    data.faces_color    = (glm::u32vec3*)_faces_color.data_ptr();
+    data.faces_tangents = (glm::u32vec3*)_faces_tangents.data_ptr();
 
     _data.upload(&data);
     _shape_data = _data.get();
