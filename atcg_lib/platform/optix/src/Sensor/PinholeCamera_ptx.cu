@@ -140,3 +140,23 @@ extern "C" __device__ float __direct_callable__jacobian_pinhole(const atcg::Surf
 
     return 1.0f / (A * r_2 * cos_theta * cos_theta * cos_theta);
 }
+
+extern "C" __device__ glm::mat4 __direct_callable__extrinsics_pinhole()
+{
+    const atcg::PinholeCameraData* camera =
+        *reinterpret_cast<const atcg::PinholeCameraData**>(optixGetSbtDataPointer());
+
+    glm::vec3 cam_eye = camera->cam_eye;
+    glm::vec3 U       = camera->U;
+    glm::vec3 V       = camera->V;
+    glm::vec3 W       = camera->W;
+
+    // Construct the extrinsic matrix using the camera's basis vectors and position
+    glm::mat4 extrinsics(1.0f);
+    extrinsics[0] = glm::vec4(U, 0.0f);
+    extrinsics[1] = glm::vec4(V, 0.0f);
+    extrinsics[2] = glm::vec4(W, 0.0f);
+    extrinsics[3] = glm::vec4(cam_eye, 1.0f);
+
+    return extrinsics;
+}

@@ -26,6 +26,7 @@ struct SensorVPtrTable
     uint32_t addSampleCallIndex;
     uint32_t toPixelCallIndex;
     uint32_t jacobianCallIndex;
+    uint32_t extrinsicsCallIndex;
 
 #ifdef __CUDACC__
     __device__ CameraRay generateRay(const glm::ivec2& raster_pos, atcg::PCG32& rng) const
@@ -54,6 +55,8 @@ struct SensorVPtrTable
     {
         return optixDirectCall<float, const atcg::SurfaceInteraction&>(jacobianCallIndex, si);
     }
+
+    __device__ glm::mat4 extrinsics() const { return optixDirectCall<glm::mat4>(extrinsicsCallIndex); }
 #endif
 };
 }    // namespace atcg
